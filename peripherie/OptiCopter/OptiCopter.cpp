@@ -5,7 +5,7 @@
  *      Author: helios
  */
 
-#include "ArducopterNg.h"
+#include "OptiCopter.h"
 #include "../Arduino/Arduino.h"
 #include "../Libraries/Hal/HalApm.h"
 

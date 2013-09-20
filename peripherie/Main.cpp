@@ -5,7 +5,7 @@
  *      Author: helios
  */
 
-#include "ArducopterNg/ArducopterNg.h"
+#include "OptiCopter/OptiCopter.h"
 #include "Arduino/Arduino.h"
 
 int main(void) {
