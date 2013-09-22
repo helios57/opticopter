@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ArducopterClient
+Bundle-SymbolicName: ArducopterClient;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: ch.sharpsoft.arducopter.client.application.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.draw2d
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: lib/rxtx.jar,
+ lib/joda-time-2.3.jar,
+ .,
+ lib/org.csstudio.swt.widgets_2.1.0.201209121549.jar,
+ lib/org.csstudio.swt.xygraph_2.1.0.201209121540.jar

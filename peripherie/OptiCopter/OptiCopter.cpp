@@ -190,7 +190,7 @@ namespace arducopterNg {
 
 		}
 		//1hz
-		if ((millis() - t_1000ms) >= 1000) {
+		if ((millis() - t_1000ms) >= 100) {
 			t_1000ms = millis();
 			sendInput();
 		}

@@ -54,3 +54,9 @@ cd ..
 cd ..
 cd ..
 rm -fr trunk
+
+
+//Arm
+add-apt-repository ppa:terry.guo/gcc-arm-embedded
+apt-get update
+apt-get install gcc-arm-none-eabi

@@ -24,17 +24,36 @@ private:
 	unsigned short input[8];
 	unsigned short inputMax[8];
 	unsigned short inputMin[8];
+	unsigned short output[8];
 	double correctionThrust[8];
 	double magScaled[3];
 	double magCompensated[3];
 	int magMax[3]; // { 710, 424, 435 };
 	int magMin[3]; // { -503, -768, -553 };
-	double rollPitchYaw[3];
+	double rollPitchYaw[3]; //Orientation
+	double rollPitchYawLast[3]; //Orientation
+	double rollPitchYawDiff[3]; //Angular Speed
+	double rollPitchYawDiffLast[3]; //Angular Speed
+	double rollPitchYawDiffDiff[3]; //Angular Acceleration
+	double pressure;
+	double pressureLast;
+	double pressureDiff;
+	double pressureDiffLast;
+	double pressureDiffDiff;
+	long t0;
+	long t1;
 
 	static const double declinationAngle = -0.02472549;
 public:
 	DataModel(HalApm *hal) :
 			hal(hal) {
+		t0 = 0;
+		t1 = 0;
+		pressure = 0;
+		pressureLast = 0;
+		pressureDiff = 0;
+		pressureDiffLast = 0;
+		pressureDiffDiff = 0;
 	}
 	virtual ~DataModel() {
 	}

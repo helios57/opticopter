@@ -10,8 +10,14 @@
 #include "Arduino.h"
 
 void DataModel::calculate() {
+	t0 = t1;
+	t1 = millis();
 	hal->getAccel(accel);
 	Math::normalizeVec(accel, accelInG);
+
+	rollPitchYawLast[0] = rollPitchYaw[0];
+	rollPitchYawLast[1] = rollPitchYaw[1];
+	rollPitchYawLast[2] = rollPitchYaw[2];
 
 	rollPitchYaw[0] = atan2(-accelInG[0], accelInG[2]);
 	rollPitchYaw[1] = atan2(accelInG[1], accelInG[2]);
@@ -43,6 +49,25 @@ void DataModel::calculate() {
 	if (rollPitchYaw[2] < -PI) {
 		rollPitchYaw[2] += 2 * PI;
 	}
+
+	rollPitchYawDiffLast[0] = rollPitchYawDiff[0];
+	rollPitchYawDiffLast[1] = rollPitchYawDiff[1];
+	rollPitchYawDiffLast[2] = rollPitchYawDiff[2];
+
+	rollPitchYawDiff[0] = rollPitchYaw[0] - rollPitchYawLast[0];
+	rollPitchYawDiff[1] = rollPitchYaw[1] - rollPitchYawLast[1];
+	rollPitchYawDiff[2] = rollPitchYaw[2] - rollPitchYawLast[2];
+
+	rollPitchYawDiffDiff[0] = rollPitchYawDiff[0] - rollPitchYawDiffLast[0];
+	rollPitchYawDiffDiff[1] = rollPitchYawDiff[1] - rollPitchYawDiffLast[1];
+	rollPitchYawDiffDiff[2] = rollPitchYawDiff[2] - rollPitchYawDiffLast[2];
+
+	pressureLast = pressure;
+	pressure = hal->getPressure();
+	pressureDiffLast = pressureDiff;
+	pressureDiff = pressure - pressureLast;
+	pressureDiffDiff = pressureDiff - pressureDiffLast;
+
 
 	Math::fromEuler(rollPitchYaw[1], rollPitchYaw[2], rollPitchYaw[0], quatCurrent);
 	if (quatLevel[0] == 0) {
