@@ -76,14 +76,14 @@ public class KalmanModel {
 		Q[2][2] = 0.0001;
 	}
 
-	public void putData(final double[] pitchRollYaw, final double[] pitchRollYawGyro) {
-		Xnew[0][0] = pitchRollYaw[0];
-		Xnew[1][1] = pitchRollYaw[1];
-		Xnew[2][2] = pitchRollYaw[2];
+	public void putData(final double[] rollPitchYaw, final double[] rollPitchYawGyro, final double[] rollPitchYawKalman) {
+		Xnew[0][0] = rollPitchYaw[0];
+		Xnew[1][1] = rollPitchYaw[1];
+		Xnew[2][2] = rollPitchYaw[2];
 
-		Uk[0][0] = pitchRollYawGyro[0];
-		Uk[1][1] = pitchRollYawGyro[1];
-		Uk[2][2] = pitchRollYawGyro[2];
+		Uk[0][0] = rollPitchYawGyro[0];
+		Uk[1][1] = rollPitchYawGyro[1];
+		Uk[2][2] = rollPitchYawGyro[2];
 
 		// //////Variables declaration
 
@@ -110,6 +110,8 @@ public class KalmanModel {
 		Matrix.minus(I, K, S);
 		Matrix.multiply(S, Pk, Pk);
 
-		System.err.println("Kalman pitch/roll/yaw " + Xk[0][0] + " " + Xk[1][1] + " " + Xk[2][2]);
+		rollPitchYawKalman[0] = Xk[0][0];
+		rollPitchYawKalman[1] = Xk[1][1];
+		rollPitchYawKalman[2] = Xk[2][2];
 	}
 }

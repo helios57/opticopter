@@ -582,17 +582,17 @@ public class DebugView extends ViewPart implements Runnable {
 		accelY.setText(Integer.toString(dm.getAccel()[1]));
 		accelZ.setText(Integer.toString(dm.getAccel()[2]));
 
-		accelGX.setText(Double.toString(dm.getAccelInG()[0]));
-		accelGY.setText(Double.toString(dm.getAccelInG()[1]));
-		accelGZ.setText(Double.toString(dm.getAccelInG()[2]));
+		accelGX.setText(Double.toString(dm.getAccelRelative()[0]));
+		accelGY.setText(Double.toString(dm.getAccelRelative()[1]));
+		accelGZ.setText(Double.toString(dm.getAccelRelative()[2]));
 
 		gyroX.setText(Integer.toString(dm.getGyro()[0]));
 		gyroY.setText(Integer.toString(dm.getGyro()[1]));
 		gyroZ.setText(Integer.toString(dm.getGyro()[2]));
 
-		gyroDX.setText(Double.toString(dm.getGyroInDegreeSec()[0]));
-		gyroDY.setText(Double.toString(dm.getGyroInDegreeSec()[1]));
-		gyroDZ.setText(Double.toString(dm.getGyroInDegreeSec()[2]));
+		gyroDX.setText(Double.toString(dm.getGyroInRadSec()[0]));
+		gyroDY.setText(Double.toString(dm.getGyroInRadSec()[1]));
+		gyroDZ.setText(Double.toString(dm.getGyroInRadSec()[2]));
 
 		quatW.setText(Double.toString(dm.getQuat()[0]));
 		quatX.setText(Double.toString(dm.getQuat()[1]));
