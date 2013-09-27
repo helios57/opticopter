@@ -13,12 +13,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import ch.sharpsoft.arducopter.client.model.KalmanModel;
 import ch.sharpsoft.arducopter.client.model.KalmanModel1D;
+import ch.sharpsoft.arducopter.client.model.PID;
 import ch.sharpsoft.arducopter.client.view.Quaternion;
 
 public class DatenModel {
 	private DatenModel() {
 		for (int i = 0; i < 4; i++) {
 			outputK[i] = new KalmanModel1D(0.002, 1.0, 0.00, 0);
+		}
+		for (int i = 0; i < 3; i++) {
+			rollPitchYawPid[i] = new PID(0.6, 0.05, 0.02);
 		}
 	}
 
@@ -85,6 +89,7 @@ public class DatenModel {
 	private final KalmanModel1D kalmanModel1D = new KalmanModel1D(0.004, 8.0, 0.46, 500.0);
 	private final KalmanModel1D kalmanModel1Dpitch = new KalmanModel1D(0.004, 1.0, 0.46, 1);
 	private final KalmanModel1D kalmanModel1Droll = new KalmanModel1D(0.004, 1.0, 0.46, 1);
+	private final PID[] rollPitchYawPid = new PID[3];
 
 	public void parse(final int id, final byte[] buffer) {
 		ByteBuffer bb = ByteBuffer.wrap(buffer);
@@ -93,11 +98,11 @@ public class DatenModel {
 			accel[0] = bb.getInt(0);
 			accel[1] = bb.getInt(4);
 			accel[2] = bb.getInt(8);
+			calculate();
 		} else if (id == ID_GYRO) {
 			gyro[0] = bb.getInt(0);
 			gyro[1] = bb.getInt(4);
 			gyro[2] = bb.getInt(8);
-			calculate();
 		} else if (id == ID_BARO) {
 			baro[0] = bb.getFloat();
 		} else if (id == ID_QUAT) {
@@ -155,8 +160,6 @@ public class DatenModel {
 		calculateMag();
 		calculateAltitude();
 		calculateDiffs();
-		// kalmanModel.putData(rollPitchYaw, rollPitchYawDiff,
-		// rollPitchYawKalman);
 		calculateQuaternion();
 		calculateOutput();
 		for (NewDataListener event : events) {
@@ -209,29 +212,18 @@ public class DatenModel {
 
 	private void calculateOutput() {
 		double altitudeDiff = posXYZLevel[2] - posXYZ[2];
-		double timeDiff = System.currentTimeMillis() - lastTimestamp[0];
-		double rollDiff = rollPitchYawLevel[0] - rollPitchYaw[0];
-		double pitchDiff = rollPitchYawLevel[1] - rollPitchYaw[1];
-		double yawDiff = rollPitchYawLevel[2] - rollPitchYaw[2];
+		long timeDiff = System.currentTimeMillis() - lastTimestamp[0];
+		double rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0], rollPitchYaw[0], timeDiff);
+		double pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1], rollPitchYaw[1], timeDiff);
+		double yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYaw[2], timeDiff);
 
-		double rollA = (2 * rollDiff) / (timeDiff * timeDiff * pRollPitchYaw[0]) - (2 * rollPitchYawDiff[0]) / timeDiff - rollPitchYawDiffDiff[2];
-		double pitchA = (2 * pitchDiff) / (timeDiff * timeDiff * pRollPitchYaw[1]) - (2 * rollPitchYawDiff[1]) / timeDiff - rollPitchYawDiffDiff[2];
-		rollA *= 10;
-		pitchA *= 10;
-		// double thrust = (input[0] - 1105.0) / (1876.0 - 1105.0);
-		// double thrust = (input[0] - 1105.0) / (1000);// not 100%; leave some reserve
-		/*
-		 * double thrust = 0.5;// not 100%; leave some reserve outputK[0].update(thrust + rollA); outputK[1].update(thrust - rollA); outputK[2].update(thrust + pitchA); outputK[3].update(thrust - pitchA); output[0] = (short) (1000 + 1000 *
-		 * outputK[0].getValue()); output[1] = (short) (1000 + 1000 * outputK[1].getValue()); output[2] = (short) (1000 + 1000 * outputK[2].getValue()); output[3] = (short) (1000 + 1000 * outputK[3].getValue());
-		 */
-		double yawA = (2 * yawDiff) / (timeDiff * timeDiff * 0.4) - (2 * rollPitchYawDiff[2]) / timeDiff - rollPitchYawDiffDiff[2];
-
-		double thrustInput = (input[0] - 1105.0) / (1000.0); // not 100%; leave some reserve
+		// double thrustInput = (input[0] - 1105.0) / (1000.0); // not 100%; leave some reserve
+		double thrustInput = 0.5;// test
 
 		thrust[0] = rollA + yawA + thrustInput;
 		thrust[1] = -rollA + yawA + thrustInput;
-		thrust[2] = pitchA - yawA + thrustInput;
-		thrust[3] = -pitchA - yawA + thrustInput;
+		thrust[2] = -pitchA - yawA + thrustInput;
+		thrust[3] = pitchA - yawA + thrustInput;
 
 		for (int i = 0; i < 4; i++) {
 			if (thrust[i] > 1) {

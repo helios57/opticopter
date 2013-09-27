@@ -9,27 +9,44 @@
 #include "Math.h"
 #include "Arduino.h"
 
-void DataModel::calculate() {
-	t0 = t1;
-	t1 = millis();
-	hal->getAccel(accel);
+void DataModel::calculateActivation() {
+	if (!active && input[3] > activateTop && tActivate == 0) {
+		tActivate = millis();
+	} else if (!active && input[3] > activateTop && (tActivate + 5000) < millis()) {
+		active = true;
+		tActivate = 0;
+	}
 
-	rollPitchYawLast[0] = rollPitchYaw[0];
-	rollPitchYawLast[1] = rollPitchYaw[1];
-	rollPitchYawLast[2] = rollPitchYaw[2];
+	if (active && input[3] < activateBot && tActivate == 0) {
+		tActivate = millis();
+		rollPitchYawLevel[0] = rollPitchYaw[0];
+		rollPitchYawLevel[1] = rollPitchYaw[1];
+		rollPitchYawLevel[2] = rollPitchYaw[2];
+	} else if (active && input[3] < activateBot && (tActivate + 5000) < millis()) {
+		active = false;
+		tActivate = 0;
+	}
+}
 
-	rollPitchYaw[0] = atan2(-accel[0], accel[2]);
-	rollPitchYaw[1] = atan2(accel[1], accel[2]);
+void DataModel::getInput() {
+	for (unsigned char i = hal->IN0; i < hal->IN7; i++) {
+		if (inputMin[i] == 0 && hal->getPmw(i) > 1000) {
+			inputMin[i] = hal->getPmw(i);
+		}
+		input[i] = hal->getPmw(i);
+	}
+}
+
+void DataModel::getYaw() {
 	hal->getHeading(mag);
-
+	//TODO persisieren
 	for (int i = 0; i < 3; i++) {
 		magMax[i] = max(magMax[i], mag[i]);
 		magMin[i] = min(magMin[i], mag[i]);
 	}
 	for (int i = 0; i < 3; i++) {
-		magScaled[i] = (((double) mag[i] - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
+		magScaled[i] = (((double) (mag[i]) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
 	}
-
 	double rollSin = sin(rollPitchYaw[0]);
 	double rollCos = cos(rollPitchYaw[0]);
 	double pitchSin = sin(rollPitchYaw[1]);
@@ -48,80 +65,39 @@ void DataModel::calculate() {
 	if (rollPitchYaw[2] < -PI) {
 		rollPitchYaw[2] += 2 * PI;
 	}
+}
 
-	rollPitchYawDiffLast[0] = rollPitchYawDiff[0];
-	rollPitchYawDiffLast[1] = rollPitchYawDiff[1];
-	rollPitchYawDiffLast[2] = rollPitchYawDiff[2];
+void DataModel::getRollPitch() {
+	hal->getAccel(accel);
+	rollPitchYaw[0] = atan2(-accel[0], accel[2]);
+	rollPitchYaw[1] = atan2(accel[1], accel[2]);
+}
 
-	rollPitchYawDiff[0] = rollPitchYaw[0] - rollPitchYawLast[0];
-	rollPitchYawDiff[1] = rollPitchYaw[1] - rollPitchYawLast[1];
-	rollPitchYawDiff[2] = rollPitchYaw[2] - rollPitchYawLast[2];
-
-	rollPitchYawDiffDiff[0] = rollPitchYawDiff[0] - rollPitchYawDiffLast[0];
-	rollPitchYawDiffDiff[1] = rollPitchYawDiff[1] - rollPitchYawDiffLast[1];
-	rollPitchYawDiffDiff[2] = rollPitchYawDiff[2] - rollPitchYawDiffLast[2];
-
-	pressureLast = pressure;
-	pressure = hal->getPressure();
-	pressureDiffLast = pressureDiff;
-	pressureDiff = pressure - pressureLast;
-	pressureDiffDiff = pressureDiff - pressureDiffLast;
-
-	for (unsigned char i = hal->IN0; i < hal->IN7; i++) {
-		if (inputMin[i] == 0 && hal->getPmw(i) > 1000) {
-			inputMin[i] = hal->getPmw(i);
-		}
-		input[i] = hal->getPmw(i);
-	}
-
+void DataModel::calcutateOutput() {
 	/**
 	 * <br />
 	 * +y---|-<-c---------<br/ >
 	 * -x---a---0---b--+x<br/ >
 	 * -y-------d->-|-----<br/ >
 	 */
-
 	long timeDiff = t0 - t1;
-	double rollDiff = rollPitchYawLevel[0] - rollPitchYaw[0];
-	double pitchDiff = rollPitchYawLevel[1] - rollPitchYaw[1];
-	double yawDiff = rollPitchYawLevel[2] - rollPitchYaw[2];
-
-	double rollA = (2 * rollDiff) / (timeDiff * timeDiff * 0.4) - (2 * rollPitchYawDiff[0]) / timeDiff - rollPitchYawDiffDiff[0];
-	double pitchA = (2 * pitchDiff) / (timeDiff * timeDiff * 0.4) - (2 * rollPitchYawDiff[1]) / timeDiff - rollPitchYawDiffDiff[1];
-	double yawA = (2 * yawDiff) / (timeDiff * timeDiff * 0.4) - (2 * rollPitchYawDiff[2]) / timeDiff - rollPitchYawDiffDiff[2];
-
+	double rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0], rollPitchYaw[0], timeDiff);
+	double pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1], rollPitchYaw[1], timeDiff);
+	double yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYaw[2], timeDiff);
 	double thrustInput = (input[0] - 1105.0) / (1000.0); // not 100%; leave some reserve
-
 	thrust[0] = rollA + yawA + thrustInput;
 	thrust[1] = -rollA + yawA + thrustInput;
 	thrust[2] = -pitchA - yawA + thrustInput;
 	thrust[3] = pitchA - yawA + thrustInput;
-
-	for (uint8_t i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		if (thrust[i] > 1) {
 			thrust[i] = 1;
 		} else if (thrust[i] < 0) {
 			thrust[i] = 0;
 		}
-		thrust[i] = kalman_update(&outputK[i], thrust[i]);
-	}
 
-	if (!active && input[3] > 1600 && tActivate == 0) {
-		tActivate = millis();
-	} else if (!active && input[3] > activateTop && (tActivate + 5000) < millis()) {
-		active = true;
-		tActivate = 0;
+		thrust[i] = outputKalman[i].kalman_update(thrust[i]);
 	}
-	if (active && input[3] < 1400 && tActivate == 0) {
-		tActivate = millis();
-		rollPitchYawLevel[0] = rollPitchYaw[0];
-		rollPitchYawLevel[1] = rollPitchYaw[1];
-		rollPitchYawLevel[2] = rollPitchYaw[2];
-	} else if (active && input[3] < activateBot && (tActivate + 5000) < millis()) {
-		active = false;
-		tActivate = 0;
-	}
-
 	if (active && thrustInput > 0.01) {
 		hal->setPmw(hal->OUT0, 1105 + (900 * (thrust[0])));
 		hal->setPmw(hal->OUT1, 1105 + (900 * (thrust[1])));
@@ -133,4 +109,16 @@ void DataModel::calculate() {
 		hal->setPmw(hal->OUT2, 1105);
 		hal->setPmw(hal->OUT3, 1105);
 	}
+}
+
+void DataModel::calculate() {
+	t0 = t1;
+	t1 = millis();
+	calculateActivation();
+	getRollPitch();
+	getYaw();
+	//pressure = hal->getPressure();
+
+	getInput();
+	calcutateOutput();
 }
