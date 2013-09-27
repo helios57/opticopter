@@ -21,7 +21,7 @@ namespace arducopterNg {
 		t_5ms = 0;
 		t_10ms = 0;
 		t_20ms = 0;
-		sendData = true;
+		sendData = false;
 		newData = false;
 	}
 
@@ -96,7 +96,7 @@ namespace arducopterNg {
 	}
 
 	void ArducopterNg::sendBaro() {
-		conv4.floating = hal->getPressure();
+		conv4.floating = hal->getBarometerAltitude();
 		serializer->beginn(Serializer::ID_BARO);
 		serializer->write(conv4.byte, 4);
 		serializer->end();
@@ -187,12 +187,13 @@ namespace arducopterNg {
 		}
 		if (newData && !sendData) {
 			dm->calculate();
-
 		}
 		//1hz
 		if ((millis() - t_1000ms) >= 100) {
 			t_1000ms = millis();
-			sendInput();
+			if (sendData) {
+				sendInput();
+			}
 		}
 	}
 } /* namespace arducopterNg */

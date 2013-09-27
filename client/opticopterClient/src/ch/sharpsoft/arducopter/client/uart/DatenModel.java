@@ -11,14 +11,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.commons.collections4.queue.CircularFifoQueue;
-
 import ch.sharpsoft.arducopter.client.model.KalmanModel;
+import ch.sharpsoft.arducopter.client.model.KalmanModel1D;
 import ch.sharpsoft.arducopter.client.view.Quaternion;
 
 public class DatenModel {
 	private DatenModel() {
-
+		for (int i = 0; i < 4; i++) {
+			outputK[i] = new KalmanModel1D(0.002, 1.0, 0.00, 0);
+		}
 	}
 
 	private final static DatenModel instance = new DatenModel();
@@ -55,11 +56,11 @@ public class DatenModel {
 	private final int[] magMax = new int[] { 710, 424, 435 };
 	private final int[] magMin = new int[] { -503, -768, -553 };
 	private final float[] baro = new float[1];
-	private final CircularFifoQueue<Float> baroQueue = new CircularFifoQueue<>(20);
 	private final GPSData gps = new GPSData();
 	private final ConcurrentLinkedQueue<String> debugInfos = new ConcurrentLinkedQueue<>();
 	private final long[] cycles = new long[1];
 	private final double[] rollPitchYaw = new double[3];
+	private final double[] rollPitchYawLevel = new double[3];
 	private final double[] rollPitchYawLast = new double[3];
 	private final double[] rollPitchYawDiff = new double[3];
 	private final double[] rollPitchYawDiffLast = new double[3];
@@ -76,7 +77,14 @@ public class DatenModel {
 
 	private final short[] input = new short[8];
 	private final short[] output = new short[8];
+	private final KalmanModel1D[] outputK = new KalmanModel1D[4];
+	private final long[] lastTimestamp = new long[1];
+	private final double[] pXYZ = new double[] { 0.5, 0.5, 0.5 };
+	private final double[] pRollPitchYaw = new double[] { 0.5, 0.5, 0.5 };
 	private final KalmanModel kalmanModel = new KalmanModel();
+	private final KalmanModel1D kalmanModel1D = new KalmanModel1D(0.004, 8.0, 0.46, 500.0);
+	private final KalmanModel1D kalmanModel1Dpitch = new KalmanModel1D(0.004, 1.0, 0.46, 1);
+	private final KalmanModel1D kalmanModel1Droll = new KalmanModel1D(0.004, 1.0, 0.46, 1);
 
 	public void parse(final int id, final byte[] buffer) {
 		ByteBuffer bb = ByteBuffer.wrap(buffer);
@@ -92,7 +100,6 @@ public class DatenModel {
 			calculate();
 		} else if (id == ID_BARO) {
 			baro[0] = bb.getFloat();
-			baroQueue.add(baro[0]);
 		} else if (id == ID_QUAT) {
 			quat[0] = bb.getInt(0);
 			quat[1] = bb.getInt(4);
@@ -112,9 +119,7 @@ public class DatenModel {
 			}
 		} else if (id == ID_GPS) {
 			/*
-			 * int32_t latitude; int32_t longitude; int32_t altitude; int32_t
-			 * ground_speed; int32_t ground_course; uint8_t satellites; uint8_t
-			 * fix_type; uint32_t utc_date; uint32_t utc_time; uint16_t hdop;
+			 * int32_t latitude; int32_t longitude; int32_t altitude; int32_t ground_speed; int32_t ground_course; uint8_t satellites; uint8_t fix_type; uint32_t utc_date; uint32_t utc_time; uint16_t hdop;
 			 */
 			gps.setLatitude(bb.getInt());
 			gps.setLongitude(bb.getInt());
@@ -148,15 +153,7 @@ public class DatenModel {
 		calculateAccel();
 		calculateGyro();
 		calculateMag();
-		// posXYZ[2] = baro[0];
-		int count = 0;
-		double sum = 0;
-		for (Float f : baroQueue) {
-			count++;
-			sum += f;
-		}
-		posXYZ[2] = sum / count;
-
+		calculateAltitude();
 		calculateDiffs();
 		// kalmanModel.putData(rollPitchYaw, rollPitchYawDiff,
 		// rollPitchYawKalman);
@@ -165,6 +162,12 @@ public class DatenModel {
 		for (NewDataListener event : events) {
 			event.onNewData();
 		}
+		lastTimestamp[0] = System.currentTimeMillis();
+	}
+
+	private void calculateAltitude() {
+		kalmanModel1D.update(baro[0]);
+		posXYZ[2] = kalmanModel1D.getValue();
 	}
 
 	private void calculateDiffs() {
@@ -205,8 +208,45 @@ public class DatenModel {
 	}
 
 	private void calculateOutput() {
-		double thrust = (input[0] - 1105.0) / (1876.0 - 1105.0);
-		output[0] = (short) (1000 + 500 * thrust + 500 * this.thrust[0]);
+		double altitudeDiff = posXYZLevel[2] - posXYZ[2];
+		double timeDiff = System.currentTimeMillis() - lastTimestamp[0];
+		double rollDiff = rollPitchYawLevel[0] - rollPitchYaw[0];
+		double pitchDiff = rollPitchYawLevel[1] - rollPitchYaw[1];
+		double yawDiff = rollPitchYawLevel[2] - rollPitchYaw[2];
+
+		double rollA = (2 * rollDiff) / (timeDiff * timeDiff * pRollPitchYaw[0]) - (2 * rollPitchYawDiff[0]) / timeDiff - rollPitchYawDiffDiff[2];
+		double pitchA = (2 * pitchDiff) / (timeDiff * timeDiff * pRollPitchYaw[1]) - (2 * rollPitchYawDiff[1]) / timeDiff - rollPitchYawDiffDiff[2];
+		rollA *= 10;
+		pitchA *= 10;
+		// double thrust = (input[0] - 1105.0) / (1876.0 - 1105.0);
+		// double thrust = (input[0] - 1105.0) / (1000);// not 100%; leave some reserve
+		/*
+		 * double thrust = 0.5;// not 100%; leave some reserve outputK[0].update(thrust + rollA); outputK[1].update(thrust - rollA); outputK[2].update(thrust + pitchA); outputK[3].update(thrust - pitchA); output[0] = (short) (1000 + 1000 *
+		 * outputK[0].getValue()); output[1] = (short) (1000 + 1000 * outputK[1].getValue()); output[2] = (short) (1000 + 1000 * outputK[2].getValue()); output[3] = (short) (1000 + 1000 * outputK[3].getValue());
+		 */
+		double yawA = (2 * yawDiff) / (timeDiff * timeDiff * 0.4) - (2 * rollPitchYawDiff[2]) / timeDiff - rollPitchYawDiffDiff[2];
+
+		double thrustInput = (input[0] - 1105.0) / (1000.0); // not 100%; leave some reserve
+
+		thrust[0] = rollA + yawA + thrustInput;
+		thrust[1] = -rollA + yawA + thrustInput;
+		thrust[2] = pitchA - yawA + thrustInput;
+		thrust[3] = -pitchA - yawA + thrustInput;
+
+		for (int i = 0; i < 4; i++) {
+			if (thrust[i] > 1) {
+				thrust[i] = 1;
+			} else if (thrust[i] < 0) {
+				thrust[i] = 0;
+			}
+			outputK[i].update(thrust[i]);
+			thrust[i] = outputK[i].getValue();
+		}
+
+		output[0] = (short) (1105 + (900 * (thrust[0])));
+		output[1] = (short) (1105 + (900 * (thrust[1])));
+		output[2] = (short) (1105 + (900 * (thrust[2])));
+		output[3] = (short) (1105 + (900 * (thrust[3])));
 	}
 
 	private void calculateMag() {
@@ -269,8 +309,13 @@ public class DatenModel {
 
 	private void calculateAccel() {
 		Quaternion.normalizeVec(accel, accelRelative);
-		rollPitchYaw[0] = Math.atan2(-accelRelative[0], accelRelative[2]);
-		rollPitchYaw[1] = Math.atan2(accelRelative[1], accelRelative[2]);
+		rollPitchYaw[0] = Math.atan2(-accel[0], accel[2]);
+		rollPitchYaw[1] = Math.atan2(accel[1], accel[2]);
+
+		kalmanModel1Droll.update(rollPitchYaw[0]);
+		rollPitchYawKalman[0] = kalmanModel1Droll.getValue();
+		kalmanModel1Dpitch.update(rollPitchYaw[1]);
+		rollPitchYawKalman[1] = kalmanModel1Droll.getValue();
 
 		// TODO optimize, rotate accel - vetctor with rollPitchYaw instead of
 		// accelRelative
@@ -376,6 +421,10 @@ public class DatenModel {
 		for (int i = 0; i < 3; i++) {
 			posXYZLevel[i] = posXYZ[i];
 		}
+		for (int i = 0; i < 3; i++) {
+			rollPitchYawLevel[i] = rollPitchYaw[i];
+		}
+
 	}
 
 	public double[] getAccelRelative() {
@@ -420,5 +469,9 @@ public class DatenModel {
 
 	public final double[] getPosXYZDiffDiff() {
 		return posXYZDiffDiff;
+	}
+
+	public final short[] getOutput() {
+		return output;
 	}
 }

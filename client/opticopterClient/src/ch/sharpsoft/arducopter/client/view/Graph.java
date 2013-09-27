@@ -16,6 +16,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.part.ViewPart;
 
 import ch.sharpsoft.arducopter.client.uart.DatenModel;
@@ -72,24 +73,36 @@ public class Graph extends ViewPart {
 			xyGraph.addAxis(yAxis);
 
 			final CircularBufferDataProvider rollData = createTrace("Roll");
-			final CircularBufferDataProvider rollDataD = createTrace("RollD");
-			final CircularBufferDataProvider rollDataDD = createTrace("RollDD");
-			final CircularBufferDataProvider rollDataGyro = createTrace("RollGyro");
-			final CircularBufferDataProvider rollDataKalman = createTrace("RollKalman");
+			// final CircularBufferDataProvider rollDataD = createTrace("RollD");
+			// final CircularBufferDataProvider rollDataDD = createTrace("RollDD");
+			// final CircularBufferDataProvider rollDataGyro = createTrace("RollGyro");
+			// final CircularBufferDataProvider rollDataKalman = createTrace("RollKalman");
 			final CircularBufferDataProvider pitchData = createTrace("Pitch");
-			final CircularBufferDataProvider pitchDataD = createTrace("PitchD");
-			final CircularBufferDataProvider pitchDataDD = createTrace("PitchDD");
-			final CircularBufferDataProvider pitchDataGyro = createTrace("PitchGyro");
-			final CircularBufferDataProvider pitchDataKalman = createTrace("PitchKalman");
-			final CircularBufferDataProvider yawData = createTrace("Yaw");
-			final CircularBufferDataProvider yawDataD = createTrace("YawD");
-			final CircularBufferDataProvider yawDataDD = createTrace("YawDD");
-			final CircularBufferDataProvider yawDataGyro = createTrace("YawGyro");
-			final CircularBufferDataProvider yawDataKalman = createTrace("YawKalman");
-			final CircularBufferDataProvider posDataZ = createTrace("Z");
-			final CircularBufferDataProvider posDataZD = createTrace("ZD");
-			final CircularBufferDataProvider posDataZDD = createTrace("ZDD");
-			final CircularBufferDataProvider posDataZRel = createTrace("ZRel");
+			// final CircularBufferDataProvider pitchDataD = createTrace("PitchD");
+			// final CircularBufferDataProvider pitchDataDD = createTrace("PitchDD");
+			// final CircularBufferDataProvider pitchDataGyro = createTrace("PitchGyro");
+			// final CircularBufferDataProvider pitchDataKalman = createTrace("PitchKalman");
+			// final CircularBufferDataProvider yawData = createTrace("Yaw");
+			// final CircularBufferDataProvider yawDataD = createTrace("YawD");
+			// final CircularBufferDataProvider yawDataDD = createTrace("YawDD");
+			// final CircularBufferDataProvider yawDataGyro = createTrace("YawGyro");
+			// final CircularBufferDataProvider yawDataKalman = createTrace("YawKalman");
+			// final CircularBufferDataProvider posDataZ = createTrace("Z");
+			// final CircularBufferDataProvider posDataZD = createTrace("ZD");
+			// final CircularBufferDataProvider posDataZDD = createTrace("ZDD");
+			// final CircularBufferDataProvider posDataZRel = createTrace("ZRel");
+			// final CircularBufferDataProvider posDataY = createTrace("Y");
+			// final CircularBufferDataProvider posDataYD = createTrace("YD");
+			// final CircularBufferDataProvider posDataYDD = createTrace("YDD");
+			// final CircularBufferDataProvider posDataYRel = createTrace("YRel");
+			final CircularBufferDataProvider out1Data = createTrace("Out1");
+			final CircularBufferDataProvider out2Data = createTrace("Out2");
+			final CircularBufferDataProvider out3Data = createTrace("Out3");
+			final CircularBufferDataProvider out4Data = createTrace("Out4");
+			final CircularBufferDataProvider in1Data = createTrace("In1");
+			final CircularBufferDataProvider in2Data = createTrace("In2");
+			final CircularBufferDataProvider in3Data = createTrace("In3");
+			final CircularBufferDataProvider in4Data = createTrace("In4");
 
 			toolbarArmedXYGraph = new ToolbarArmedXYGraph(xyGraph);
 			add(toolbarArmedXYGraph);
@@ -110,6 +123,8 @@ public class Graph extends ViewPart {
 					final double[] posXYZD = dm.getPosXYZDiff();
 					final double[] posXYZDD = dm.getPosXYZDiffDiff();
 					final double[] posXYZRel = dm.getPosXYZRelative();
+					final short[] output = dm.getOutput();
+					final short[] input = dm.getInput();
 
 					final long timestamp = System.currentTimeMillis();
 					final Sample roll = new Sample(timestamp, rollPitchYaw[0]);
@@ -137,27 +152,61 @@ public class Graph extends ViewPart {
 					final Sample posZDD = new Sample(timestamp, posXYZDD[2]);
 					final Sample posZRel = new Sample(timestamp, posXYZRel[2]);
 
-					Graph.this.getSite().getShell().getDisplay().asyncExec(new Runnable() {
+					final Sample posY = new Sample(timestamp, posXYZ[1]);
+					final Sample posYD = new Sample(timestamp, posXYZD[1]);
+					final Sample posYDD = new Sample(timestamp, posXYZDD[1]);
+					final Sample posYRel = new Sample(timestamp, posXYZRel[1]);
+
+					final Sample out1 = new Sample(timestamp, output[0]);
+					final Sample out2 = new Sample(timestamp, output[1]);
+					final Sample out3 = new Sample(timestamp, output[2]);
+					final Sample out4 = new Sample(timestamp, output[3]);
+
+					final Sample in1 = new Sample(timestamp, input[0]);
+					final Sample in2 = new Sample(timestamp, input[1]);
+					final Sample in3 = new Sample(timestamp, input[2]);
+					final Sample in4 = new Sample(timestamp, input[3]);
+
+					final Shell shell = Graph.this.getSite().getShell();
+					if (shell == null || shell.isDisposed()) {
+						return;
+					}
+					shell.getDisplay().asyncExec(new Runnable() {
 
 						@Override
 						public void run() {
-							// rollData.addSample(roll);
+							rollData.addSample(roll);
 							// rollDataD.addSample(rollD);
 							// rollDataDD.addSample(rollDD);
 							// rollDataGyro.addSample(rollG);
 							// rollDataKalman.addSample(rollK);
-							// pitchData.addSample(pitch);
+							pitchData.addSample(pitch);
 							// pitchDataD.addSample(pitchD);
 							// pitchDataDD.addSample(pitchDD);
 							// pitchDataGyro.addSample(pitchG);
+							// pitchDataKalman.addSample(pitchK);
 							// yawData.addSample(yaw);
 							// yawDataD.addSample(yawD);
 							// yawDataDD.addSample(yawDD);
 							// yawDataGyro.addSample(yawG);
-							posDataZ.addSample(posZ);
-							posDataZD.addSample(posZD);
-							posDataZDD.addSample(posZDD);
-							posDataZRel.addSample(posZRel);
+							// posDataZ.addSample(posZ);
+							// posDataZD.addSample(posZD);
+							// posDataZDD.addSample(posZDD);
+							// posDataZRel.addSample(posZRel);
+
+							// posDataY.addSample(posY);
+							// posDataYD.addSample(posYD);
+							// posDataYDD.addSample(posYDD);
+							// posDataYRel.addSample(posYRel);
+
+							out1Data.addSample(out1);
+							out2Data.addSample(out2);
+							out3Data.addSample(out3);
+							out4Data.addSample(out4);
+							in1Data.addSample(in1);
+							in2Data.addSample(in2);
+							in3Data.addSample(in3);
+							in4Data.addSample(in4);
 						}
 					});
 				}

@@ -74,6 +74,10 @@ namespace arducopterNg {
 	void HalApm::setPmw(const uint8_t channel, const uint16_t pmw) {
 		if (channel >= OUT0 && channel <= OUT7 && pmw >= 1000 && pmw <= 2000) {
 			rcOutput->write(channel - OUT0, pmw);
+		} else if (channel >= OUT0 && channel <= OUT7 && pmw < 1000) {
+			rcOutput->write(channel - OUT0, 1000);
+		} else if (channel >= OUT0 && channel <= OUT7 && pmw > 2000) {
+			rcOutput->write(channel - OUT0, 2000);
 		}
 	}
 

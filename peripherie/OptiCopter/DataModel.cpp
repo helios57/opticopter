@@ -13,14 +13,13 @@ void DataModel::calculate() {
 	t0 = t1;
 	t1 = millis();
 	hal->getAccel(accel);
-	Math::normalizeVec(accel, accelInG);
 
 	rollPitchYawLast[0] = rollPitchYaw[0];
 	rollPitchYawLast[1] = rollPitchYaw[1];
 	rollPitchYawLast[2] = rollPitchYaw[2];
 
-	rollPitchYaw[0] = atan2(-accelInG[0], accelInG[2]);
-	rollPitchYaw[1] = atan2(accelInG[1], accelInG[2]);
+	rollPitchYaw[0] = atan2(-accel[0], accel[2]);
+	rollPitchYaw[1] = atan2(accel[1], accel[2]);
 	hal->getHeading(mag);
 
 	for (int i = 0; i < 3; i++) {
@@ -68,17 +67,6 @@ void DataModel::calculate() {
 	pressureDiff = pressure - pressureLast;
 	pressureDiffDiff = pressureDiff - pressureDiffLast;
 
-
-	Math::fromEuler(rollPitchYaw[1], rollPitchYaw[2], rollPitchYaw[0], quatCurrent);
-	if (quatLevel[0] == 0) {
-		for (int i = 0; i < 4; i++) {
-			quatLevel[i] = quatCurrent[i];
-		}
-	}
-	Math::normalize(quatLevel);
-	Math::conjugate(quatCurrent, quatDiff);
-	Math::multiply(quatDiff, quatLevel, quatDiff);
-	Math::normalize(quatDiff);
 	for (unsigned char i = hal->IN0; i < hal->IN7; i++) {
 		if (inputMin[i] == 0 && hal->getPmw(i) > 1000) {
 			inputMin[i] = hal->getPmw(i);
@@ -92,26 +80,57 @@ void DataModel::calculate() {
 	 * -x---a---0---b--+x<br/ >
 	 * -y-------d->-|-----<br/ >
 	 */
-	// x,y,z,clockwise (1 = cw, -1 = ccw)
-	double a[] = { -1, 0, 0, 1 };
-	// double[] b = new double[] { 1, 0, 0, 1 };
-	double c[] = { 0, 1, 0, -1 };
-	// double[] d = new double[] { 0, -1, 0, -1 };
 
-	double diffA[3];
-	//Math::multiplyVec(a, quatDiff, diffA);
-	Math::multiplyVec(a, quatCurrent, diffA);
-	double diffC[3];
-	//Math::multiplyVec(c, quatDiff, diffC);
-	Math::multiplyVec(c, quatCurrent, diffC);
-	correctionThrust[0] = diffA[2]; // + diffA[1];
-	correctionThrust[1] = -diffA[2]; // + diffA[1]; // multiplyVec(b, quatDiff)[2];
-	correctionThrust[2] = diffC[2]; // - diffC[0]; // multiplyVec(c, quatDiff)[2];
-	correctionThrust[3] = -diffC[2]; // - diffC[0]; // multiplyVec(d, quatDiff)[2];
+	long timeDiff = t0 - t1;
+	double rollDiff = rollPitchYawLevel[0] - rollPitchYaw[0];
+	double pitchDiff = rollPitchYawLevel[1] - rollPitchYaw[1];
+	double yawDiff = rollPitchYawLevel[2] - rollPitchYaw[2];
 
-	unsigned short thrustDiff = input[0] - 1106;
-	hal->setPmw(hal->OUT0, input[0] + thrustDiff * correctionThrust[0]);
-	hal->setPmw(hal->OUT1, input[0] + thrustDiff * correctionThrust[1]);
-	hal->setPmw(hal->OUT2, input[0] + thrustDiff * correctionThrust[2]);
-	hal->setPmw(hal->OUT3, input[0] + thrustDiff * correctionThrust[3]);
+	double rollA = (2 * rollDiff) / (timeDiff * timeDiff * 0.4) - (2 * rollPitchYawDiff[0]) / timeDiff - rollPitchYawDiffDiff[0];
+	double pitchA = (2 * pitchDiff) / (timeDiff * timeDiff * 0.4) - (2 * rollPitchYawDiff[1]) / timeDiff - rollPitchYawDiffDiff[1];
+	double yawA = (2 * yawDiff) / (timeDiff * timeDiff * 0.4) - (2 * rollPitchYawDiff[2]) / timeDiff - rollPitchYawDiffDiff[2];
+
+	double thrustInput = (input[0] - 1105.0) / (1000.0); // not 100%; leave some reserve
+
+	thrust[0] = rollA + yawA + thrustInput;
+	thrust[1] = -rollA + yawA + thrustInput;
+	thrust[2] = -pitchA - yawA + thrustInput;
+	thrust[3] = pitchA - yawA + thrustInput;
+
+	for (uint8_t i = 0; i < 4; i++) {
+		if (thrust[i] > 1) {
+			thrust[i] = 1;
+		} else if (thrust[i] < 0) {
+			thrust[i] = 0;
+		}
+		thrust[i] = kalman_update(&outputK[i], thrust[i]);
+	}
+
+	if (!active && input[3] > 1600 && tActivate == 0) {
+		tActivate = millis();
+	} else if (!active && input[3] > activateTop && (tActivate + 5000) < millis()) {
+		active = true;
+		tActivate = 0;
+	}
+	if (active && input[3] < 1400 && tActivate == 0) {
+		tActivate = millis();
+		rollPitchYawLevel[0] = rollPitchYaw[0];
+		rollPitchYawLevel[1] = rollPitchYaw[1];
+		rollPitchYawLevel[2] = rollPitchYaw[2];
+	} else if (active && input[3] < activateBot && (tActivate + 5000) < millis()) {
+		active = false;
+		tActivate = 0;
+	}
+
+	if (active && thrustInput > 0.01) {
+		hal->setPmw(hal->OUT0, 1105 + (900 * (thrust[0])));
+		hal->setPmw(hal->OUT1, 1105 + (900 * (thrust[1])));
+		hal->setPmw(hal->OUT2, 1105 + (900 * (thrust[2])));
+		hal->setPmw(hal->OUT3, 1105 + (900 * (thrust[3])));
+	} else {
+		hal->setPmw(hal->OUT0, 1105);
+		hal->setPmw(hal->OUT1, 1105);
+		hal->setPmw(hal->OUT2, 1105);
+		hal->setPmw(hal->OUT3, 1105);
+	}
 }
