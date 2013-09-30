@@ -20,7 +20,6 @@ private:
 public:
 	static const uint8_t PREEAMBLE_1 = 0xE5;
 	static const uint8_t PREEAMBLE_2 = 0xE7;
-	static const uint8_t POSTAMBLE_1 = 0xE8;
 	static const uint8_t ID_ACCEL = 0x01;
 	static const uint8_t ID_GYRO = 0x02;
 	static const uint8_t ID_BARO = 0x03;
@@ -38,6 +37,7 @@ public:
 	void write(uint8_t bytes[], uint8_t len);
 	void write(uint8_t byte);
 	void end();
+	uint8_t read(uint8_t *buffer);
 };
 
 #endif /* SERIALIZER_H_ */

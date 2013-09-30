@@ -6,7 +6,9 @@
  */
 
 #include "PID.h"
-
+void PID::resetI() {
+	iState = 0;
+}
 double PID::updatePID(double target, double cur, long deltaTime) {
 	diff = target - cur;
 
@@ -15,7 +17,7 @@ double PID::updatePID(double target, double cur, long deltaTime) {
 	pTerm = pgain * diff;
 
 	// integrated iState
-	iState += diff * (deltaTime / 1000.0);
+	iState += diff * (deltaTime / 10000.0);
 
 	// limit iTerm
 	if (iState > imax)

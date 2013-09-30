@@ -15,13 +15,16 @@ void DataModel::calculateActivation() {
 	} else if (!active && input[3] > activateTop && (tActivate + 5000) < millis()) {
 		active = true;
 		tActivate = 0;
+		rollPitchYawPid[0].resetI();
+		rollPitchYawPid[1].resetI();
+		rollPitchYawPid[2].resetI();
+		rollPitchYawLevel[0] = rollPitchYaw[0];
+		rollPitchYawLevel[1] = rollPitchYaw[1];
+		rollPitchYawLevel[2] = rollPitchYaw[2];
 	}
 
 	if (active && input[3] < activateBot && tActivate == 0) {
 		tActivate = millis();
-		rollPitchYawLevel[0] = rollPitchYaw[0];
-		rollPitchYawLevel[1] = rollPitchYaw[1];
-		rollPitchYawLevel[2] = rollPitchYaw[2];
 	} else if (active && input[3] < activateBot && (tActivate + 5000) < millis()) {
 		active = false;
 		tActivate = 0;
@@ -80,15 +83,24 @@ void DataModel::calcutateOutput() {
 	 * -x---a---0---b--+x<br/ >
 	 * -y-------d->-|-----<br/ >
 	 */
-	long timeDiff = t0 - t1;
+	long timeDiff = t1 - t0;
 	double rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0], rollPitchYaw[0], timeDiff);
 	double pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1], rollPitchYaw[1], timeDiff);
 	double yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYaw[2], timeDiff);
-	double thrustInput = (input[0] - 1105.0) / (1000.0); // not 100%; leave some reserve
-	thrust[0] = rollA + yawA + thrustInput;
-	thrust[1] = -rollA + yawA + thrustInput;
-	thrust[2] = -pitchA - yawA + thrustInput;
-	thrust[3] = pitchA - yawA + thrustInput;
+
+	double inputThrust = (input[0] - inputMin[0]) / (inputMax[0] - inputMin[0]);
+	double inputRoll = (input[1] - inputMin[1]) / (inputMax[1] - inputMin[1]);
+	double inputPitch = (input[2] - inputMin[2]) / (inputMax[2] - inputMin[2]);
+	double inputYaw = (input[3] - inputMin[3]) / (inputMax[3] - inputMin[3]);
+
+	rollA += inputRoll;
+	pitchA += inputPitch;
+	yawA += inputYaw;
+
+	thrust[0] = rollA + yawA + inputThrust;
+	thrust[1] = -rollA + yawA + inputThrust;
+	thrust[2] = -pitchA - yawA + inputThrust;
+	thrust[3] = pitchA - yawA + inputThrust;
 	for (int i = 0; i < 4; i++) {
 		if (thrust[i] > 1) {
 			thrust[i] = 1;
@@ -98,7 +110,7 @@ void DataModel::calcutateOutput() {
 
 		thrust[i] = outputKalman[i].kalman_update(thrust[i]);
 	}
-	if (active && thrustInput > 0.01) {
+	if (active && inputThrust > 0.01) {
 		hal->setPmw(hal->OUT0, 1105 + (900 * (thrust[0])));
 		hal->setPmw(hal->OUT1, 1105 + (900 * (thrust[1])));
 		hal->setPmw(hal->OUT2, 1105 + (900 * (thrust[2])));
@@ -114,11 +126,17 @@ void DataModel::calcutateOutput() {
 void DataModel::calculate() {
 	t0 = t1;
 	t1 = millis();
-	calculateActivation();
+	getInput();
 	getRollPitch();
 	getYaw();
+	calculateActivation();
 	//pressure = hal->getPressure();
-
-	getInput();
-	calcutateOutput();
+	if (active) {
+		calcutateOutput();
+	} else {
+		hal->setPmw(hal->OUT0, 1105);
+		hal->setPmw(hal->OUT1, 1105);
+		hal->setPmw(hal->OUT2, 1105);
+		hal->setPmw(hal->OUT3, 1105);
+	}
 }

@@ -11,7 +11,7 @@ public class PID {
 		pgain = p;
 		igain = i;
 		dgain = d;
-		imax = Math.PI / 8;
+		imax = (Math.PI) * i;
 	}
 
 	public double updatePID(final double target, final double cur, final long deltaTime) {

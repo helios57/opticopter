@@ -44,6 +44,7 @@ namespace arducopterNg {
 			uint8_t byte[2];
 		} conv2;
 		int32_t buffer[4];
+		uint8_t commandBuffer[64];
 
 		void sendAccel();
 		void sendGyro();

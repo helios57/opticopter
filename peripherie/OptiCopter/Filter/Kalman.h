@@ -12,17 +12,23 @@ class Kalman {
 private:
 	double q; //process noise covariance
 	double r; //measurement noise covariance
-	double x; //value
 	double p; //estimation error covariance
+	double x; //value
 	double k; //kalman gain
 public:
-	Kalman(double q, double r, double p, double intial_value) :
-			q(q), r(r), p(p), x(intial_value) {
-		k = 0;
+	void init(double i_q, double i_r, double i_p, double intial_value) {
+		q = i_q;
+		r = i_r;
+		p = i_p;
+		x = intial_value;
 	}
 	double kalman_update(double measurement);
+	Kalman() {
+		q = r = p = x = k = 0;
+	}
 	virtual ~Kalman() {
 	}
-};
+}
+;
 
 #endif /* KALMAN_H_ */

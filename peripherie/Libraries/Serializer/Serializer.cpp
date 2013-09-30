@@ -41,6 +41,40 @@ void Serializer::end() {
 	serial->write(checkXor);
 	serial->flush();
 }
-Serializer::~Serializer() {
+
+uint8_t Serializer::read(uint8_t *data) {
+	if (serial->available()) {
+		uint8_t read = serial->read();
+		if (PREEAMBLE_1 == read) {
+			read = serial->read();
+			if (PREEAMBLE_2 == read) {
+				uint8_t id = serial->read();
+				if (id == 0) {
+					return 0;
+				}
+				uint8_t length = serial->read();
+				int i = 0;
+				for (; i < (length + 2); i++) {
+					data[i] = serial->read();
+				}
+				if (i < (length + 2)) {
+					return 0;
+				}
+				uint8_t and_ = 0;
+				uint8_t xor_ = 0;
+				for (i = 0; i < length; i++) {
+					and_ += data[i];
+					xor_ ^= data[i];
+				}
+				if (and_ == data[length] && xor_ == data[length + 1]) {
+					return id;
+				}
+			}
+		}
+	}
+	return 0;
 }
 
+Serializer::~Serializer() {
+
+}

@@ -21,7 +21,7 @@ namespace arducopterNg {
 		t_5ms = 0;
 		t_10ms = 0;
 		t_20ms = 0;
-		sendData = false;
+		sendData = true;
 		newData = false;
 	}
 
@@ -142,11 +142,15 @@ namespace arducopterNg {
 
 	void ArducopterNg::loop() {
 		emptyCycles++;
-		//uint16_t thrust = hal->getPmw(hal->IN0);
-		//hal->setPmw(hal->OUT0, thrust);
-		//hal->setPmw(hal->OUT1, thrust);
-		//hal->setPmw(hal->OUT2, thrust);
-		//hal->setPmw(hal->OUT3, thrust);
+		uint8_t id = serializer->read(commandBuffer);
+		if (id > 0) {
+			switch (id) {
+			case 1:
+				break;
+			default:
+				break;
+			}
+		}
 
 		if ((millis() - t_5ms) >= 5) {
 			t_5ms = millis();
@@ -188,8 +192,8 @@ namespace arducopterNg {
 		if (newData && !sendData) {
 			dm->calculate();
 		}
-		//1hz
-		if ((millis() - t_1000ms) >= 100) {
+//1hz
+		if ((millis() - t_1000ms) >= 50) {
 			t_1000ms = millis();
 			if (sendData) {
 				sendInput();
