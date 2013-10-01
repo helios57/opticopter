@@ -10,6 +10,8 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class SerialConnection {
 	private final DatenModel datenModel = DatenModel.getInstance();
@@ -35,6 +37,37 @@ public class SerialConnection {
 
 					in = serialPort.getInputStream();
 					out = serialPort.getOutputStream();
+
+					new Thread(new Runnable() {
+
+						@Override
+						public void run() {
+							while (true) {
+								ByteBuffer bb = ByteBuffer.allocate(14);
+								bb.order(ByteOrder.LITTLE_ENDIAN);
+								bb.put((byte) PREEAMBLE_1);// 1
+								bb.put((byte) PREEAMBLE_2);// 1
+								bb.put((byte) 0x01);// 1
+								bb.put((byte) 8);// 1
+								bb.putLong(3000L);// 8
+								byte and = 0;
+								byte xor = 0;
+								for (int i = 4; i < 12; i++) {
+									and += bb.array()[i];
+									xor ^= bb.array()[i];
+								}
+								bb.put(and);
+								bb.put(xor);
+								try {
+									out.write(bb.array(), 0, 14);
+									Thread.sleep(1000);
+								} catch (IOException | InterruptedException e) {
+									e.printStackTrace();
+								}
+							}
+						}
+					}).start();
+
 					new Thread(new Runnable() {
 
 						long good = 0;

@@ -314,7 +314,7 @@ namespace arducopterNg {
 			handleIn(id);
 		}
 
-		if (sendData && (millis() - t_sendData) >= 0) {
+		if (sendData && millis() > t_sendData) {
 			sendData = false;
 		}
 
@@ -359,7 +359,7 @@ namespace arducopterNg {
 		if (newData && !sendData) {
 			dm->calculate();
 		}
-//1hz
+
 		if ((millis() - t_1000ms) >= 50) {
 			t_1000ms = millis();
 			if (sendData) {
