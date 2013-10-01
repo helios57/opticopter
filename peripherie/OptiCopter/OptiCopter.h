@@ -61,6 +61,10 @@ namespace arducopterNg {
 		void sendGPS();
 		void resetEmptyCycles();
 		void sendInput();
+		void handleInSendData();
+		void handleInReadParam();
+		void handleInWriteData();
+		void handleIn(uint8_t id);
 
 	public:
 		ArducopterNg();

@@ -12,6 +12,7 @@
 namespace arducopterNg {
 
 	ArducopterNg::ArducopterNg() {
+		persistence = 0;
 		emptyCycles = 0;
 		hal = 0;
 		serializer = 0;
@@ -31,6 +32,7 @@ namespace arducopterNg {
 		delete serializer;
 		delete debug;
 		delete dm;
+		delete persistence;
 	}
 
 	int ArducopterNg::main() {
@@ -48,10 +50,11 @@ namespace arducopterNg {
 		Serial1.begin(38400);
 		Serial.flush();
 		Serial1.flush();
+		persistence = new Persistence();
 		serializer = new Serializer(&Serial);
 		debug = new DebugStream(serializer);
 		hal = new HalApm(&Serial, debug);
-		dm = new DataModel(hal);
+		dm = new DataModel(hal, persistence);
 		t_1000ms = millis();
 		t_5ms = millis();
 		t_10ms = millis();
@@ -141,209 +144,227 @@ namespace arducopterNg {
 		serializer->end();
 	}
 
+	void ArducopterNg::handleInSendData() {
+		sendData = true;
+		for (uint8_t i = 0; i < 8; i++) {
+			conv8.byte[i] = commandBuffer[i];
+		}
+		t_sendData = millis() + conv8.ulong;
+	}
+
+	void ArducopterNg::handleInReadParam() {
+		serializer->beginn(Serializer::ID_PARAM);
+		serializer->write(commandBuffer[0]);
+		switch (commandBuffer[0]) {
+		case Serializer::ID_IN_PARAM_MAG_MAX:
+			persistence->readMagMax(buffer_16t);
+			for (uint8_t i = 0; i < 3; i++) {
+				conv2.sint = buffer_16t[i];
+				serializer->write(conv2.byte[0]);
+				serializer->write(conv2.byte[1]);
+			}
+			break;
+		case Serializer::ID_IN_PARAM_MAG_MIN:
+			persistence->readMagMin(buffer_16t);
+			for (uint8_t i = 0; i < 3; i++) {
+				conv2.sint = buffer_16t[i];
+				serializer->write(conv2.byte[0]);
+				serializer->write(conv2.byte[1]);
+			}
+			break;
+		case Serializer::ID_IN_PARAM_RC_IN_MAX:
+			persistence->readRcMax(buffer_u16t, 8);
+			for (uint8_t i = 0; i < 8; i++) {
+				conv2.uint = buffer_u16t[i];
+				serializer->write(conv2.byte[0]);
+				serializer->write(conv2.byte[1]);
+			}
+			break;
+		case Serializer::ID_IN_PARAM_RC_IN_MIN:
+			persistence->readRcMin(buffer_u16t, 8);
+			for (uint8_t i = 0; i < 8; i++) {
+				conv2.uint = buffer_u16t[i];
+				serializer->write(conv2.byte[0]);
+				serializer->write(conv2.byte[1]);
+			}
+			break;
+		case Serializer::ID_IN_PARAM_RC_IN_DEFAULT:
+			persistence->readRcDefault(buffer_u16t, 8);
+			for (uint8_t i = 0; i < 8; i++) {
+				conv2.uint = buffer_u16t[i];
+				serializer->write(conv2.byte[0]);
+				serializer->write(conv2.byte[1]);
+			}
+			break;
+		case Serializer::ID_IN_PARAM_RC_IN_FUNCTION:
+			persistence->readRcInputFunction(buffer_u8t, 8);
+			serializer->write(buffer_u8t, 8);
+			break;
+		case Serializer::ID_IN_PARAM_DECLINATION_ANGLE:
+			conv4.floating = persistence->readDeclinationAngle();
+			serializer->write(conv4.byte, 4);
+			break;
+		case Serializer::ID_IN_PARAM_PID:
+			persistence->readPID(buffer_float);
+			for (uint8_t i = 0; i < 3; i++) {
+				conv4.floating = buffer_float[i];
+				serializer->write(conv4.byte, 4);
+			}
+			break;
+		case Serializer::ID_IN_PARAM_KALMAN:
+			break;
+		default:
+			break;
+		}
+		serializer->end();
+	}
+
+	void ArducopterNg::handleInWriteData() {
+		switch (commandBuffer[0]) {
+		case Serializer::ID_IN_PARAM_MAG_MAX:
+			for (uint8_t i = 0; i < 3; i++) {
+				conv2.byte[0] = commandBuffer[1 + i * 2];
+				conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
+				buffer_16t[i] = conv2.sint;
+			}
+			persistence->saveMagMax(buffer_16t);
+			break;
+		case Serializer::ID_IN_PARAM_MAG_MIN:
+			for (uint8_t i = 0; i < 3; i++) {
+				conv2.byte[0] = commandBuffer[1 + i * 2];
+				conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
+				buffer_16t[i] = conv2.sint;
+			}
+			persistence->saveMagMin(buffer_16t);
+			break;
+		case Serializer::ID_IN_PARAM_RC_IN_MAX:
+			for (uint8_t i = 0; i < 8; i++) {
+				conv2.byte[0] = commandBuffer[1 + i * 2];
+				conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
+				buffer_u16t[i] = conv2.uint;
+			}
+			persistence->saveRcMax(buffer_u16t, 8);
+			break;
+		case Serializer::ID_IN_PARAM_RC_IN_MIN:
+			for (uint8_t i = 0; i < 8; i++) {
+				conv2.byte[0] = commandBuffer[1 + i * 2];
+				conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
+				buffer_u16t[i] = conv2.uint;
+			}
+			persistence->saveRcMin(buffer_u16t, 8);
+			break;
+		case Serializer::ID_IN_PARAM_RC_IN_DEFAULT:
+			for (uint8_t i = 0; i < 8; i++) {
+				conv2.byte[0] = commandBuffer[1 + i * 2];
+				conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
+				buffer_u16t[i] = conv2.uint;
+			}
+			persistence->saveRcDefault(buffer_u16t, 8);
+			break;
+		case Serializer::ID_IN_PARAM_RC_IN_FUNCTION:
+			for (uint8_t i = 0; i < 8; i++) {
+				buffer_u8t[i] = commandBuffer[1 + i];
+			}
+			persistence->saveRcInputFunction(buffer_u8t, 8);
+			break;
+		case Serializer::ID_IN_PARAM_DECLINATION_ANGLE:
+			for (uint8_t i = 0; i < 4; i++) {
+				conv4.byte[i] = commandBuffer[1 + i];
+			}
+			persistence->saveDeclinationAngle(conv4.floating);
+			break;
+		case Serializer::ID_IN_PARAM_PID:
+			for (uint8_t i = 0; i < 3; i++) {
+				for (uint8_t j = 0; j < 4; j++) {
+					conv4.byte[j] = commandBuffer[1 + i * 4 + j];
+				}
+				buffer_float[i] = conv4.floating;
+			}
+			persistence->savePID(buffer_float);
+			break;
+		case Serializer::ID_IN_PARAM_KALMAN:
+			break;
+		default:
+			break;
+		}
+		serializer->end();
+	}
+
+	void ArducopterNg::handleIn(uint8_t id) {
+		switch (id) {
+		case Serializer::ID_IN_SEND_DATA:
+			handleInSendData();
+			break;
+		case Serializer::ID_IN_READ_PARAM:
+			handleInReadParam();
+			break;
+		case Serializer::ID_IN_WRITE_PARAM:
+			handleInWriteData();
+			break;
+		default:
+			break;
+		}
+	}
+
 	void ArducopterNg::loop() {
 		emptyCycles++;
 		uint8_t id = serializer->read(commandBuffer);
+
 		if (id > 0) {
-			switch (id) {
-			case Serializer::ID_IN_SEND_DATA:
-				sendData = true;
-				t_sendData = millis();
-				break;
-			case Serializer::ID_IN_SEND_DATA:
-				sendData = true;
-				for (uint8_t i = 0; i < 8; i++) {
-					conv8.byte[i] = commandBuffer[i];
-				}
-				t_sendData = millis() + conv8.ulong;
-				break;
-			case Serializer::ID_IN_READ_PARAM:
-				uint8_t id_param = commandBuffer[0];
-				serializer->beginn(Serializer::ID_PARAM);
-				serializer->write(id_param);
-				switch (id_param) {
-				case Serializer::ID_IN_PARAM_MAG_MAX:
-					persistence->readMagMax(buffer_16t);
-					for (uint8_t i = 0; i < 3; i++) {
-						conv2.sint = buffer_16t[i];
-						serializer->write(conv2.byte[0]);
-						serializer->write(conv2.byte[1]);
-					}
-					break;
-				case Serializer::ID_IN_PARAM_MAG_MIN:
-					persistence->readMagMin(buffer_16t);
-					for (uint8_t i = 0; i < 3; i++) {
-						conv2.sint = buffer_16t[i];
-						serializer->write(conv2.byte[0]);
-						serializer->write(conv2.byte[1]);
-					}
-					break;
-				case Serializer::ID_IN_PARAM_RC_IN_MAX:
-					persistence->readRcMax(buffer_u16t, 8);
-					for (uint8_t i = 0; i < 8; i++) {
-						conv2.uint = buffer_u16t[i];
-						serializer->write(conv2.byte[0]);
-						serializer->write(conv2.byte[1]);
-					}
-					break;
-				case Serializer::ID_IN_PARAM_RC_IN_MIN:
-					persistence->readRcMin(buffer_u16t, 8);
-					for (uint8_t i = 0; i < 8; i++) {
-						conv2.uint = buffer_u16t[i];
-						serializer->write(conv2.byte[0]);
-						serializer->write(conv2.byte[1]);
-					}
-					break;
-				case Serializer::ID_IN_PARAM_RC_IN_DEFAULT:
-					persistence->readRcDefault(buffer_u16t, 8);
-					for (uint8_t i = 0; i < 8; i++) {
-						conv2.uint = buffer_u16t[i];
-						serializer->write(conv2.byte[0]);
-						serializer->write(conv2.byte[1]);
-					}
-					break;
-				case Serializer::ID_IN_PARAM_RC_IN_FUNCTION:
-					persistence->readRcInputFunction(buffer_u8t, 8);
-					serializer->write(buffer_u8t, 8);
-					break;
-				case Serializer::ID_IN_PARAM_DECLINATION_ANGLE:
-					conv4.floating = persistence->readDeclinationAngle();
-					serializer->write(conv4.byte, 4);
-					break;
-				case Serializer::ID_IN_PARAM_PID:
-					persistence->readPID(buffer_float);
-					for (uint8_t i = 0; i < 3; i++) {
-						conv4.floating = buffer_float[i];
-						serializer->write(conv4.byte, 4);
-					}
-					break;
-				case Serializer::ID_IN_PARAM_KALMAN:
-					break;
-				default:
-					break;
-				}
-				serializer->end();
-				break;
+			handleIn(id);
+		}
 
-			case Serializer::ID_IN_WRITE_PARAM:
-				uint8_t id_param = commandBuffer[0];
-				switch (id_param) {
-				case Serializer::ID_IN_PARAM_MAG_MAX:
-					for (uint8_t i = 0; i < 3; i++) {
-						conv2.byte[0] = commandBuffer[1 + i * 2];
-						conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
-						buffer_16t[i] = conv2.sint;
-					}
-					persistence->writeMagMax(buffer_16t);
-					break;
-				case Serializer::ID_IN_PARAM_MAG_MIN:
-					for (uint8_t i = 0; i < 3; i++) {
-						conv2.byte[0] = commandBuffer[1 + i * 2];
-						conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
-						buffer_16t[i] = conv2.sint;
-					}
-					persistence->writeMagMin(buffer_16t);
-					break;
-				case Serializer::ID_IN_PARAM_RC_IN_MAX:
-					for (uint8_t i = 0; i < 8; i++) {
-						conv2.byte[0] = commandBuffer[1 + i * 2];
-						conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
-						buffer_u16t[i] = conv2.uint;
-					}
-					persistence->saveRcMax(buffer_u16t, 8);
-					break;
-				case Serializer::ID_IN_PARAM_RC_IN_MIN:
-					for (uint8_t i = 0; i < 8; i++) {
-						conv2.byte[0] = commandBuffer[1 + i * 2];
-						conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
-						buffer_u16t[i] = conv2.uint;
-					}
-					persistence->saveRcMin(buffer_u16t, 8);
-					break;
-				case Serializer::ID_IN_PARAM_RC_IN_DEFAULT:
-					for (uint8_t i = 0; i < 8; i++) {
-						conv2.byte[0] = commandBuffer[1 + i * 2];
-						conv2.byte[1] = commandBuffer[1 + i * 2 + 1];
-						buffer_u16t[i] = conv2.uint;
-					}
-					persistence->saveRcDefault(buffer_u16t, 8);
-					break;
-				case Serializer::ID_IN_PARAM_RC_IN_FUNCTION:
-					persistence->readRcInputFunction(buffer_u8t, 8);
-					break;
-				case Serializer::ID_IN_PARAM_DECLINATION_ANGLE:
-					conv4.floating = persistence->readDeclinationAngle();
-					serializer->write(conv4.byte, 4);
-					break;
-				case Serializer::ID_IN_PARAM_PID:
-					persistence->readPID(buffer_float);
-					for (uint8_t i = 0; i < 3; i++) {
-						conv4.floating = buffer_float[i];
-						serializer->write(conv4.byte, 4);
-					}
-					break;
-				case Serializer::ID_IN_PARAM_KALMAN:
-					break;
-				default:
-					break;
-				}
-				serializer->end();
-				break;
-			default:
-				break;
-			}
+		if (sendData && (millis() - t_sendData) >= 0) {
+			sendData = false;
+		}
 
-			if (sendData && (millis() - t_sendData) >= 0) {
-				sendData = false;
-			}
-
-			if ((millis() - t_5ms) >= 5) {
-				t_5ms = millis();
-				resetEmptyCycles();
-				if (hal->pollAccel()) {
-					newData = true;
-					if (sendData) {
-						sendAccel();
-						sendGyro();
-						//sendQuat();
-					}
-				}
-			}
-
-			if ((millis() - t_10ms) >= 10) {
-				t_10ms = millis();
-				if (hal->pollBaro()) {
-					newData = true;
-					if (sendData) {
-						sendBaro();
-					}
-				}
-				if (hal->pollMag()) {
-					newData = true;
-					if (sendData) {
-						sendMag();
-					}
-				}
-			}
-			if ((millis() - t_20ms) >= 20) {
-				t_20ms = millis();
-				if (hal->pollGPS()) {
-					newData = true;
-					if (sendData) {
-						sendGPS();
-					}
-				}
-			}
-
-			if (newData && !sendData) {
-				dm->calculate();
-			}
-//1hz
-			if ((millis() - t_1000ms) >= 50) {
-				t_1000ms = millis();
+		if ((millis() - t_5ms) >= 5) {
+			t_5ms = millis();
+			resetEmptyCycles();
+			if (hal->pollAccel()) {
+				newData = true;
 				if (sendData) {
-					sendInput();
+					sendAccel();
+					sendGyro();
+					//sendQuat();
 				}
 			}
 		}
-	} /* namespace arducopterNg */
+
+		if ((millis() - t_10ms) >= 10) {
+			t_10ms = millis();
+			if (hal->pollBaro()) {
+				newData = true;
+				if (sendData) {
+					sendBaro();
+				}
+			}
+			if (hal->pollMag()) {
+				newData = true;
+				if (sendData) {
+					sendMag();
+				}
+			}
+		}
+		if ((millis() - t_20ms) >= 20) {
+			t_20ms = millis();
+			if (hal->pollGPS()) {
+				newData = true;
+				if (sendData) {
+					sendGPS();
+				}
+			}
+		}
+
+		if (newData && !sendData) {
+			dm->calculate();
+		}
+//1hz
+		if ((millis() - t_1000ms) >= 50) {
+			t_1000ms = millis();
+			if (sendData) {
+				sendInput();
+			}
+		}
+	}
+} /* namespace arducopterNg */
