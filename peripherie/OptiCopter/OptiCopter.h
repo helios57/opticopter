@@ -12,6 +12,7 @@
 #include "Serializer/Serializer.h"
 #include "Util/DebugStream.h"
 #include "DataModel.h"
+#include "Persistence/Persistence.h"
 
 namespace arducopterNg {
 
@@ -21,10 +22,12 @@ namespace arducopterNg {
 		Serializer *serializer;
 		DebugStream *debug;
 		DataModel *dm;
+		Persistence *persistence;
 		bool sendData;
 		bool newData;
 		unsigned long emptyCycles;
 		unsigned long t_1000ms;
+		unsigned long t_sendData;
 		unsigned long t_5ms;
 		unsigned long t_10ms;
 		unsigned long t_20ms;
@@ -44,6 +47,10 @@ namespace arducopterNg {
 			uint8_t byte[2];
 		} conv2;
 		int32_t buffer[4];
+		int16_t buffer_16t[3];
+		uint16_t buffer_u16t[8];
+		uint8_t buffer_u8t[8];
+		float buffer_float[3];
 		uint8_t commandBuffer[64];
 
 		void sendAccel();
