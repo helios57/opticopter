@@ -33,21 +33,27 @@
          <view
                id="ArducopterClient.Console"
                minimized="false"
-               relationship="right"
+               relationship="stack"
                relative="ArducopterClient.Overview"
                standalone="false">
          </view>
          <view
                id="ArducopterClient.DebugView"
                minimized="false"
-               relationship="right"
+               relationship="stack"
                relative="ArducopterClient.Overview">
          </view>
          <view
                id="ch.sharpsoft.arducopter.client.view.Graph"
                minimized="false"
-               relationship="right"
+               relationship="stack"
                relative="ArducopterClient.DebugView">
+         </view>
+         <view
+               id="ch.sharpsoft.arducopter.client.view.Kalibrierung"
+               minimized="false"
+               relationship="stack"
+               relative="ch.sharpsoft.arducopter.client.view.Graph">
          </view>
       </perspectiveExtension>
    </extension>
@@ -103,6 +109,11 @@
             class="ch.sharpsoft.arducopter.client.view.Graph"
             id="ch.sharpsoft.arducopter.client.view.Graph"
             name="Graph">
+      </view>
+      <view
+            class="ch.sharpsoft.arducopter.client.view.Kalibrierung"
+            id="ch.sharpsoft.arducopter.client.view.Kalibrierung"
+            name="Kalibrierung">
       </view>
    </extension>
 

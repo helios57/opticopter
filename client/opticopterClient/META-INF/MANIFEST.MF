@@ -6,7 +6,14 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: ch.sharpsoft.arducopter.client.application.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.eclipse.draw2d
+ org.eclipse.draw2d,
+ org.eclipse.core.databinding,
+ org.eclipse.core.databinding.beans,
+ org.eclipse.core.databinding.observable,
+ org.eclipse.core.databinding.property,
+ org.eclipse.jface.databinding,
+ com.ibm.icu,
+ org.eclipse.ui.forms
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/rxtx.jar,

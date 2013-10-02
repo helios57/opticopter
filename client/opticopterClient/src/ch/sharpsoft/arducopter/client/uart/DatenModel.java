@@ -54,11 +54,11 @@ public class DatenModel {
 	private final double[] quatLevel = new double[] { 1.0, 0, 0, 0 };
 	private final double[] quatDiff = new double[4];
 	private final double[] thrust = new double[4];
-	private final int[] mag = new int[3];
+	private final short[] mag = new short[3];
 	private final double[] magScaled = new double[3];
 	private final double[] magCompensated = new double[3];
-	private final int[] magMax = new int[] { 710, 424, 435 };
-	private final int[] magMin = new int[] { -503, -768, -553 };
+	private final short[] magMax = new short[] { 710, 424, 435 };
+	private final short[] magMin = new short[] { -503, -768, -553 };
 	private final float[] baro = new float[1];
 	private final GPSData gps = new GPSData();
 	private final ConcurrentLinkedQueue<String> debugInfos = new ConcurrentLinkedQueue<>();
@@ -114,10 +114,10 @@ public class DatenModel {
 		} else if (id == ID_MAG) {
 			mag[0] = bb.getShort(0);
 			mag[1] = bb.getShort(2);
-			mag[2] = -bb.getShort(4);
+			mag[2] = (short) -bb.getShort(4);
 			for (int i = 0; i < 3; i++) {
-				magMax[i] = Math.max(magMax[i], mag[i]);
-				magMin[i] = Math.min(magMin[i], mag[i]);
+				magMax[i] = (short) Math.max(magMax[i], mag[i]);
+				magMin[i] = (short) Math.min(magMin[i], mag[i]);
 			}
 			for (int i = 0; i < 3; i++) {
 				magScaled[i] = (((double) mag[i] - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
@@ -373,15 +373,15 @@ public class DatenModel {
 		return thrust;
 	}
 
-	public int[] getMag() {
+	public short[] getMag() {
 		return mag;
 	}
 
-	public int[] getMagMax() {
+	public short[] getMagMax() {
 		return magMax;
 	}
 
-	public int[] getMagMin() {
+	public short[] getMagMin() {
 		return magMin;
 	}
 
