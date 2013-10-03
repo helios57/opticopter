@@ -4,7 +4,8 @@ import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.databinding.observable.value.WritableValue;
 
 public class ModelRC {
-	private final IObservableValue updating = new WritableValue();
+	private final IObservableValue updatingMax = new WritableValue(Boolean.FALSE, Boolean.class);
+	private final IObservableValue updatingMin = new WritableValue(Boolean.FALSE, Boolean.class);
 	private final IObservableValue[] rcMaxSavedOV = new IObservableValue[8];
 	private final IObservableValue[] rcMinSavedOV = new IObservableValue[8];
 	private final IObservableValue[] rcDefaultSavedOV = new IObservableValue[8];
@@ -44,8 +45,10 @@ public class ModelRC {
 			public void run() {
 				for (int i = 0; i < 8; i++) {
 					rcCurrentOV[i].setValue(rc[i]);
-					if ((Boolean) updating.getValue()) {
+					if ((Boolean) updatingMax.getValue()) {
 						rcMaxNewOV[i].setValue((short) Math.max(rc[i], (Short) rcMaxNewOV[i].getValue()));
+					}
+					if ((Boolean) updatingMin.getValue()) {
 						rcMinNewOV[i].setValue((short) Math.min(rc[i], (Short) rcMinNewOV[i].getValue()));
 					}
 				}
@@ -81,7 +84,12 @@ public class ModelRC {
 		return rcCurrentOV[i];
 	}
 
-	public IObservableValue getUpdating() {
-		return updating;
+	public IObservableValue getUpdatingMax() {
+		return updatingMax;
 	}
+
+	public IObservableValue getUpdatingMin() {
+		return updatingMin;
+	}
+
 }

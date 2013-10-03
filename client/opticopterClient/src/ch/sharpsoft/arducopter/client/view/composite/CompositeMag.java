@@ -1,148 +1,109 @@
 package ch.sharpsoft.arducopter.client.view.composite;
 
 import org.eclipse.core.databinding.DataBindingContext;
-import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.jface.databinding.swt.SWTObservables;
-import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 
+import ch.sharpsoft.arducopter.client.model.prop.ModelMag;
+
 public class CompositeMag extends Composite {
 
-	private DataBindingContext m_bindingContext;
-	private ch.sharpsoft.arducopter.client.model.prop.ModelMag modelMag;
-	private final Spinner magMaxXSpinner;
-	private final Spinner magMaxYSpinner;
-	private final Spinner magMaxZSpinner;
-	private final Spinner magMinXSpinner;
-	private final Spinner magMinYSpinner;
-	private final Spinner magMinZSpinner;
-
-	public CompositeMag(final Composite parent, final int style, final ch.sharpsoft.arducopter.client.model.prop.ModelMag newModelMag) {
-		this(parent, style);
-		setModelMag(newModelMag);
-	}
+	private final ModelMag modelMag = new ModelMag();
 
 	public CompositeMag(final Composite parent, final int style) {
 		super(parent, style);
-		setLayout(new GridLayout(2, false));
+		final DataBindingContext bindingContext = new DataBindingContext();
 
-		new Label(this, SWT.NONE).setText("MagMaxX:");
+		setLayout(new GridLayout(6, false));
+		new Label(this, SWT.NONE);
 
-		magMaxXSpinner = new Spinner(this, SWT.BORDER);
-		magMaxXSpinner.setMaximum(Short.MAX_VALUE);
-		magMaxXSpinner.setMinimum(Short.MIN_VALUE);
-		magMaxXSpinner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		Label lblSavedrcmax = new Label(this, SWT.NONE);
+		lblSavedrcmax.setText("SavedMax");
 
-		new Label(this, SWT.NONE).setText("MagMaxY:");
+		Label lblSavedmin = new Label(this, SWT.NONE);
+		lblSavedmin.setText("SavedMin");
 
-		magMaxYSpinner = new Spinner(this, SWT.BORDER);
-		magMaxYSpinner.setMaximum(Short.MAX_VALUE);
-		magMaxYSpinner.setMinimum(Short.MIN_VALUE);
-		magMaxYSpinner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		Label lblCurrent = new Label(this, SWT.NONE);
+		lblCurrent.setText("Current");
 
-		new Label(this, SWT.NONE).setText("MagMaxZ:");
+		Label lblNewLabel = new Label(this, SWT.NONE);
+		lblNewLabel.setText("NewMax");
 
-		magMaxZSpinner = new Spinner(this, SWT.BORDER);
-		magMaxZSpinner.setMaximum(Short.MAX_VALUE);
-		magMaxZSpinner.setMinimum(Short.MIN_VALUE);
-		magMaxZSpinner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		Label lblNewmin = new Label(this, SWT.NONE);
+		lblNewmin.setText("NewMin");
 
-		new Label(this, SWT.NONE).setText("MagMinX:");
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
 
-		magMinXSpinner = new Spinner(this, SWT.BORDER);
-		magMinXSpinner.setMaximum(Short.MAX_VALUE);
-		magMinXSpinner.setMinimum(Short.MIN_VALUE);
-		magMinXSpinner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		Button btnUpdateMax = new Button(this, SWT.CHECK);
+		btnUpdateMax.setText("update");
 
-		new Label(this, SWT.NONE).setText("MagMinY:");
+		Button btnUpdateMin = new Button(this, SWT.CHECK);
+		btnUpdateMin.setText("update");
 
-		magMinYSpinner = new Spinner(this, SWT.BORDER);
-		magMinYSpinner.setMaximum(Short.MAX_VALUE);
-		magMinYSpinner.setMinimum(Short.MIN_VALUE);
-		magMinYSpinner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		final String[] label = new String[] { "x", "y", "z" };
 
-		new Label(this, SWT.NONE).setText("MagMinZ:");
+		for (int i = 0; i < 3; i++) {
+			new Label(this, SWT.NONE).setText(label[i]);
+			final Spinner spinnerSavedMax = new Spinner(this, SWT.BORDER);
+			spinnerSavedMax.setEnabled(false);
+			spinnerSavedMax.setMaximum(Short.MAX_VALUE);
+			spinnerSavedMax.setMinimum(Short.MIN_VALUE);
+			spinnerSavedMax.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+			bindingContext.bindValue(SWTObservables.observeSelection(spinnerSavedMax), modelMag.getMagMaxSavedOV(i), null, null);
 
-		magMinZSpinner = new Spinner(this, SWT.BORDER);
-		magMinZSpinner.setMaximum(Short.MAX_VALUE);
-		magMinZSpinner.setMinimum(Short.MIN_VALUE);
-		magMinZSpinner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+			final Spinner spinnerSavedMin = new Spinner(this, SWT.BORDER);
+			spinnerSavedMin.setEnabled(false);
+			spinnerSavedMin.setMaximum(Short.MAX_VALUE);
+			spinnerSavedMin.setMinimum(Short.MIN_VALUE);
+			spinnerSavedMin.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+			bindingContext.bindValue(SWTObservables.observeSelection(spinnerSavedMin), modelMag.getMagMinSavedOV(i), null, null);
 
-		if (modelMag != null) {
-			m_bindingContext = initDataBindings();
+			final Spinner spinnerCurrent = new Spinner(this, SWT.BORDER);
+			spinnerCurrent.setEnabled(false);
+			spinnerCurrent.setMaximum(Short.MAX_VALUE);
+			spinnerCurrent.setMinimum(Short.MIN_VALUE);
+			spinnerCurrent.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+			bindingContext.bindValue(SWTObservables.observeSelection(spinnerCurrent), modelMag.getMagCurrentOV(i), null, null);
+
+			final Spinner spinnerNewMax = new Spinner(this, SWT.BORDER);
+			spinnerNewMax.setMaximum(Short.MAX_VALUE);
+			spinnerNewMax.setMinimum(Short.MIN_VALUE);
+			spinnerNewMax.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+			bindingContext.bindValue(SWTObservables.observeSelection(spinnerNewMax), modelMag.getMagMaxNewOV(i), null, null);
+
+			final Spinner spinnerNewMin = new Spinner(this, SWT.BORDER);
+			spinnerNewMin.setMaximum(Short.MAX_VALUE);
+			spinnerNewMin.setMinimum(Short.MIN_VALUE);
+			spinnerNewMin.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+			bindingContext.bindValue(SWTObservables.observeSelection(spinnerNewMin), modelMag.getMagMinNewOV(i), null, null);
 		}
-	}
+		new Label(this, SWT.NONE);
 
-	@Override
-	protected void checkSubclass() {
-		// Disable the check that prevents subclassing of SWT components
-	}
+		Button button = new Button(this, SWT.NONE);
+		button.setText("reload");
 
-	public ch.sharpsoft.arducopter.client.model.prop.ModelMag getModelMag() {
-		return modelMag;
-	}
+		Button button_1 = new Button(this, SWT.NONE);
+		button_1.setText("reload");
 
-	public void setModelMag(final ch.sharpsoft.arducopter.client.model.prop.ModelMag newModelMag) {
-		setModelMag(newModelMag, true);
-	}
+		new Label(this, SWT.NONE);
 
-	public void setModelMag(final ch.sharpsoft.arducopter.client.model.prop.ModelMag newModelMag, final boolean update) {
-		modelMag = newModelMag;
-		if (update) {
-			if (m_bindingContext != null) {
-				m_bindingContext.dispose();
-				m_bindingContext = null;
-			}
-			if (modelMag != null) {
-				m_bindingContext = initDataBindings();
-			}
-		}
-	}
+		Button btnSave = new Button(this, SWT.NONE);
+		btnSave.setText("save");
 
-	protected DataBindingContext initDataBindings() {
-		DataBindingContext bindingContext = new DataBindingContext();
-		//
-		IObservableValue magMaxXObserveWidget = SWTObservables.observeSelection(magMaxXSpinner);
-		bindingContext.bindValue(magMaxXObserveWidget, modelMag.getMagMaxXOV(), null, null);
-		//
-		IObservableValue magMaxYObserveWidget = SWTObservables.observeSelection(magMaxYSpinner);
-		bindingContext.bindValue(magMaxYObserveWidget, modelMag.getMagMaxYOV(), null, null);
-		//
-		IObservableValue magMaxZObserveWidget = SWTObservables.observeSelection(magMaxZSpinner);
-		bindingContext.bindValue(magMaxZObserveWidget, modelMag.getMagMaxZOV(), null, null);
-		//
-		IObservableValue magMinXObserveWidget = SWTObservables.observeSelection(magMinXSpinner);
-		bindingContext.bindValue(magMinXObserveWidget, modelMag.getMagMinXOV(), null, null);
-		//
-		IObservableValue magMinYObserveWidget = SWTObservables.observeSelection(magMinYSpinner);
-		bindingContext.bindValue(magMinYObserveWidget, modelMag.getMagMinYOV(), null, null);
-		//
-		IObservableValue magMinZObserveWidget = SWTObservables.observeSelection(magMinZSpinner);
-		bindingContext.bindValue(magMinZObserveWidget, modelMag.getMagMinZOV(), null, null);
-		//
-		IObservableValue observeEnabledMagMaxXSpinnerObserveWidget = WidgetProperties.enabled().observe(magMaxXSpinner);
-		bindingContext.bindValue(observeEnabledMagMaxXSpinnerObserveWidget, modelMag.getEditable(), null, null);
-		//
-		IObservableValue observeEnabledMagMaxYSpinnerObserveWidget = WidgetProperties.enabled().observe(magMaxYSpinner);
-		bindingContext.bindValue(observeEnabledMagMaxYSpinnerObserveWidget, modelMag.getEditable(), null, null);
-		//
-		IObservableValue observeEnabledMagMaxZSpinnerObserveWidget = WidgetProperties.enabled().observe(magMaxZSpinner);
-		bindingContext.bindValue(observeEnabledMagMaxZSpinnerObserveWidget, modelMag.getEditable(), null, null);
-		//
-		IObservableValue observeEnabledMagMinXSpinnerObserveWidget = WidgetProperties.enabled().observe(magMinXSpinner);
-		bindingContext.bindValue(observeEnabledMagMinXSpinnerObserveWidget, modelMag.getEditable(), null, null);
-		//
-		IObservableValue observeEnabledMagMinYSpinnerObserveWidget = WidgetProperties.enabled().observe(magMinYSpinner);
-		bindingContext.bindValue(observeEnabledMagMinYSpinnerObserveWidget, modelMag.getEditable(), null, null);
-		//
-		IObservableValue observeEnabledMagMinZSpinnerObserveWidget = WidgetProperties.enabled().observe(magMinZSpinner);
-		bindingContext.bindValue(observeEnabledMagMinZSpinnerObserveWidget, modelMag.getEditable(), null, null);
-		//
-		return bindingContext;
+		Button btnSave_2 = new Button(this, SWT.NONE);
+		btnSave_2.setText("save");
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
+		new Label(this, SWT.NONE);
 	}
 }
