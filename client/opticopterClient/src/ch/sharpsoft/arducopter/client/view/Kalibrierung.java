@@ -25,38 +25,38 @@ public class Kalibrierung extends ViewPart {
 	public void createPartControl(final Composite parent) {
 		parent.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-		ScrolledComposite scrolledComposite = new ScrolledComposite(parent, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
+		final ScrolledComposite scrolledComposite = new ScrolledComposite(parent, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
 		formToolkit.adapt(scrolledComposite);
 		formToolkit.paintBordersFor(scrolledComposite);
 		scrolledComposite.setExpandHorizontal(true);
 		scrolledComposite.setExpandVertical(true);
-		Composite container = new Composite(scrolledComposite, SWT.NONE);
+		final Composite container = new Composite(scrolledComposite, SWT.NONE);
 		container.setLayout(new GridLayout(1, false));
 
-		Section sctnMag = formToolkit.createSection(container, Section.TWISTIE | Section.TITLE_BAR);
+		final Section sctnMag = formToolkit.createSection(container, Section.TWISTIE | Section.TITLE_BAR);
 		sctnMag.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		formToolkit.paintBordersFor(sctnMag);
 		sctnMag.setText("Mag");
 		sctnMag.setExpanded(true);
 
-		Composite composite = new Composite(sctnMag, SWT.NONE);
+		final Composite composite = new Composite(sctnMag, SWT.NONE);
 		formToolkit.adapt(composite);
 		formToolkit.paintBordersFor(composite);
 		sctnMag.setClient(composite);
 		composite.setLayout(new GridLayout(2, false));
 
-		CompositeMag compositeMagCurrent = new CompositeMag(composite, SWT.NONE);
+		final CompositeMag compositeMagCurrent = new CompositeMag(composite, SWT.NONE);
 		compositeMagCurrent.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1));
 		formToolkit.adapt(compositeMagCurrent);
 		formToolkit.paintBordersFor(compositeMagCurrent);
 
-		Section sectionRc = formToolkit.createSection(container, Section.TWISTIE | Section.TITLE_BAR);
+		final Section sectionRc = formToolkit.createSection(container, Section.TWISTIE | Section.TITLE_BAR);
 		sectionRc.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 		formToolkit.paintBordersFor(sectionRc);
 		sectionRc.setText("RC");
 		sectionRc.setExpanded(true);
 
-		CompositeRc compositeRc = new CompositeRc(sectionRc, SWT.NONE);
+		final CompositeRc compositeRc = new CompositeRc(sectionRc, SWT.NONE);
 		formToolkit.adapt(compositeRc);
 		formToolkit.paintBordersFor(compositeRc);
 		sectionRc.setClient(compositeRc);

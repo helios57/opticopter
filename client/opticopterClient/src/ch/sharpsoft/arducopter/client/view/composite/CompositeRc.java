@@ -1,7 +1,9 @@
 package ch.sharpsoft.arducopter.client.view.composite;
 
 import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.jface.databinding.swt.SWTObservables;
+import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -11,10 +13,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 
 import ch.sharpsoft.arducopter.client.model.prop.ModelRC;
+import ch.sharpsoft.arducopter.client.uart.DatenModel;
+import ch.sharpsoft.arducopter.client.uart.NewDataListener;
 
 public class CompositeRc extends Composite {
-
 	private final ModelRC modelRc = new ModelRC();
+	private final Button btnUpdateMax;
+	private final Button btnUpdateMin;
 
 	public CompositeRc(final Composite parent, final int style) {
 		super(parent, style);
@@ -50,10 +55,10 @@ public class CompositeRc extends Composite {
 		new Label(this, SWT.NONE);
 		new Label(this, SWT.NONE);
 
-		Button btnUpdateMax = new Button(this, SWT.CHECK);
+		btnUpdateMax = new Button(this, SWT.CHECK);
 		btnUpdateMax.setText("update");
 
-		Button btnUpdateMin = new Button(this, SWT.CHECK);
+		btnUpdateMin = new Button(this, SWT.CHECK);
 		btnUpdateMin.setText("update");
 
 		Button btnSet = new Button(this, SWT.NONE);
@@ -127,6 +132,14 @@ public class CompositeRc extends Composite {
 
 		Button btnSave_2 = new Button(this, SWT.NONE);
 		btnSave_2.setText("save");
+		DatenModel.getInstance().addEventListener(new NewDataListener() {
+
+			@Override
+			public void onNewData() {
+				modelRc.updateRc(DatenModel.getInstance().getInput());
+			}
+		});
+		initDataBindings();
 	}
 
 	public ModelRC getModelRc() {
@@ -136,5 +149,17 @@ public class CompositeRc extends Composite {
 	@Override
 	protected void checkSubclass() {
 		// Disable the check that prevents subclassing of SWT components
+	}
+
+	protected DataBindingContext initDataBindings() {
+		DataBindingContext bindingContext = new DataBindingContext();
+		//
+		IObservableValue observeSelectionBtnUpdateMaxObserveWidget = WidgetProperties.selection().observe(btnUpdateMax);
+		bindingContext.bindValue(observeSelectionBtnUpdateMaxObserveWidget, modelRc.getUpdatingMax(), null, null);
+		//
+		IObservableValue observeSelectionBtnUpdateMinObserveWidget = WidgetProperties.selection().observe(btnUpdateMin);
+		bindingContext.bindValue(observeSelectionBtnUpdateMinObserveWidget, modelRc.getUpdatingMin(), null, null);
+		//
+		return bindingContext;
 	}
 }

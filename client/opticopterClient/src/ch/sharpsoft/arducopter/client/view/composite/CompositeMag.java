@@ -1,7 +1,9 @@
 package ch.sharpsoft.arducopter.client.view.composite;
 
 import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.jface.databinding.swt.SWTObservables;
+import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -11,10 +13,13 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 
 import ch.sharpsoft.arducopter.client.model.prop.ModelMag;
+import ch.sharpsoft.arducopter.client.uart.DatenModel;
+import ch.sharpsoft.arducopter.client.uart.NewDataListener;
 
 public class CompositeMag extends Composite {
-
 	private final ModelMag modelMag = new ModelMag();
+	private final Button btnUpdateMax;
+	private final Button btnUpdateMin;
 
 	public CompositeMag(final Composite parent, final int style) {
 		super(parent, style);
@@ -43,10 +48,10 @@ public class CompositeMag extends Composite {
 		new Label(this, SWT.NONE);
 		new Label(this, SWT.NONE);
 
-		Button btnUpdateMax = new Button(this, SWT.CHECK);
+		btnUpdateMax = new Button(this, SWT.CHECK);
 		btnUpdateMax.setText("update");
 
-		Button btnUpdateMin = new Button(this, SWT.CHECK);
+		btnUpdateMin = new Button(this, SWT.CHECK);
 		btnUpdateMin.setText("update");
 
 		final String[] label = new String[] { "x", "y", "z" };
@@ -88,22 +93,44 @@ public class CompositeMag extends Composite {
 		}
 		new Label(this, SWT.NONE);
 
-		Button button = new Button(this, SWT.NONE);
-		button.setText("reload");
+		Button reloadSavedMax = new Button(this, SWT.NONE);
+		reloadSavedMax.setText("reload");
 
-		Button button_1 = new Button(this, SWT.NONE);
-		button_1.setText("reload");
+		Button reloadSavedMin = new Button(this, SWT.NONE);
+		reloadSavedMin.setText("reload");
 
 		new Label(this, SWT.NONE);
 
-		Button btnSave = new Button(this, SWT.NONE);
-		btnSave.setText("save");
+		Button saveMax = new Button(this, SWT.NONE);
+		saveMax.setText("save");
 
-		Button btnSave_2 = new Button(this, SWT.NONE);
-		btnSave_2.setText("save");
-		new Label(this, SWT.NONE);
-		new Label(this, SWT.NONE);
-		new Label(this, SWT.NONE);
-		new Label(this, SWT.NONE);
+		Button saveMin = new Button(this, SWT.NONE);
+		saveMin.setText("save");
+
+		initDataBindings();
+
+		DatenModel.getInstance().addEventListener(new NewDataListener() {
+
+			@Override
+			public void onNewData() {
+				modelMag.updateMinMax(DatenModel.getInstance().getMag());
+			}
+		});
+	}
+
+	public final ModelMag getModelMag() {
+		return modelMag;
+	}
+
+	protected DataBindingContext initDataBindings() {
+		DataBindingContext bindingContext = new DataBindingContext();
+		//
+		IObservableValue observeSelectionBtnUpdateMaxObserveWidget = WidgetProperties.selection().observe(btnUpdateMax);
+		bindingContext.bindValue(observeSelectionBtnUpdateMaxObserveWidget, modelMag.getUpdatingMax(), null, null);
+		//
+		IObservableValue observeSelectionBtnUpdateMinObserveWidget = WidgetProperties.selection().observe(btnUpdateMin);
+		bindingContext.bindValue(observeSelectionBtnUpdateMinObserveWidget, modelMag.getUpdatingMin(), null, null);
+		//
+		return bindingContext;
 	}
 }
