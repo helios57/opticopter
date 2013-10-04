@@ -15,12 +15,12 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 
-import swing2swt.layout.FlowLayout;
 import ch.sharpsoft.arducopter.client.uart.DatenModel;
 import ch.sharpsoft.arducopter.client.uart.NewDataListener;
 
@@ -38,7 +38,7 @@ public class GraphView extends ViewPart {
 		final Composite container = new Composite(parent, SWT.NONE);
 		container.setLayout(new GridLayout(1, false));
 		checkboxes = new Composite(container, SWT.NONE);
-		checkboxes.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		checkboxes.setLayout(new RowLayout());
 		GridData gd_composite = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
 		gd_composite.heightHint = 40;
 		checkboxes.setLayoutData(gd_composite);
