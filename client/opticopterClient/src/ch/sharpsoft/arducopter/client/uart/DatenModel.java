@@ -44,6 +44,7 @@ public class DatenModel {
 	private static final int ID_OUTPUT = 0x08;
 	private static final int ID_DEBUG = 0x09;
 	private static final int ID_CYCLES = 0x0A;
+	public static final int ID_PARAM = 0x0B;
 
 	private final int[] accel = new int[3];
 	private final int[] gyro = new int[3];

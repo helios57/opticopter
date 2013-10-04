@@ -5,6 +5,8 @@ import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -14,7 +16,10 @@ import org.eclipse.swt.widgets.Spinner;
 
 import ch.sharpsoft.arducopter.client.model.prop.ModelMag;
 import ch.sharpsoft.arducopter.client.uart.DatenModel;
+import ch.sharpsoft.arducopter.client.uart.IParamReciever;
 import ch.sharpsoft.arducopter.client.uart.NewDataListener;
+import ch.sharpsoft.arducopter.client.uart.Parser;
+import ch.sharpsoft.arducopter.client.uart.SerialService;
 
 public class CompositeMag extends Composite {
 	private final ModelMag modelMag = new ModelMag();
@@ -94,17 +99,83 @@ public class CompositeMag extends Composite {
 		new Label(this, SWT.NONE);
 
 		Button reloadSavedMax = new Button(this, SWT.NONE);
+		reloadSavedMax.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				SerialService.getInstance().requestParam(Parser.ID_IN_PARAM_MAG_MAX, new IParamReciever() {
+
+					@Override
+					public void recieved(final short[] data) {
+						for (int i = 0; i < 3; i++) {
+							setValueSafe(modelMag.getMagMaxSavedOV(i), data[i]);
+						}
+					}
+				});
+			}
+		});
 		reloadSavedMax.setText("reload");
 
 		Button reloadSavedMin = new Button(this, SWT.NONE);
+		reloadSavedMin.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				SerialService.getInstance().requestParam(Parser.ID_IN_PARAM_MAG_MIN, new IParamReciever() {
+
+					@Override
+					public void recieved(final short[] data) {
+						for (int i = 0; i < 3; i++) {
+							setValueSafe(modelMag.getMagMinSavedOV(i), data[i]);
+						}
+					}
+				});
+			}
+		});
 		reloadSavedMin.setText("reload");
 
 		new Label(this, SWT.NONE);
 
 		Button saveMax = new Button(this, SWT.NONE);
+		saveMax.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				short[] data = new short[3];
+				for (int i = 0; i < 3; i++) {
+					data[i] = ((Short) modelMag.getMagMaxNewOV(i).getValue()).shortValue();
+				}
+				SerialService.getInstance().writeParam(Parser.ID_IN_PARAM_MAG_MAX, data);
+				SerialService.getInstance().requestParam(Parser.ID_IN_PARAM_MAG_MAX, new IParamReciever() {
+
+					@Override
+					public void recieved(final short[] data) {
+						for (int i = 0; i < 3; i++) {
+							setValueSafe(modelMag.getMagMaxSavedOV(i), data[i]);
+						}
+					}
+				});
+			}
+		});
 		saveMax.setText("save");
 
 		Button saveMin = new Button(this, SWT.NONE);
+		saveMin.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				short[] data = new short[3];
+				for (int i = 0; i < 3; i++) {
+					data[i] = ((Short) modelMag.getMagMinNewOV(i).getValue()).shortValue();
+				}
+				SerialService.getInstance().writeParam(Parser.ID_IN_PARAM_MAG_MIN, data);
+				SerialService.getInstance().requestParam(Parser.ID_IN_PARAM_MAG_MIN, new IParamReciever() {
+
+					@Override
+					public void recieved(final short[] data) {
+						for (int i = 0; i < 3; i++) {
+							setValueSafe(modelMag.getMagMinSavedOV(i), data[i]);
+						}
+					}
+				});
+			}
+		});
 		saveMin.setText("save");
 
 		initDataBindings();
@@ -114,6 +185,16 @@ public class CompositeMag extends Composite {
 			@Override
 			public void onNewData() {
 				modelMag.updateMinMax(DatenModel.getInstance().getMag());
+			}
+		});
+	}
+
+	private void setValueSafe(final IObservableValue ov, final Object o) {
+		ov.getRealm().asyncExec(new Runnable() {
+
+			@Override
+			public void run() {
+				ov.setValue(o);
 			}
 		});
 	}

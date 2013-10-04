@@ -39,6 +39,7 @@ public:
 	static const uint8_t ID_IN_SEND_DATA = 0x01;
 	static const uint8_t ID_IN_OUTPUT = 0x02;
 	static const uint8_t ID_IN_READ_PARAM = 0x02;
+	static const uint8_t ID_IN_WRITE_PARAM = 0x03;
 
 	//PARAM SUB_PARAM
 	static const uint8_t ID_IN_PARAM_MAG_MAX = 0x01;
@@ -51,8 +52,6 @@ public:
 	static const uint8_t ID_IN_PARAM_PID = 0x08;
 	static const uint8_t ID_IN_PARAM_KALMAN = 0x09;
 
-	static const uint8_t ID_IN_READ_PARAM_ = 0x01;
-	static const uint8_t ID_IN_WRITE_PARAM = 0x03;
 
 	Serializer(Stream *serial);
 	virtual ~Serializer();

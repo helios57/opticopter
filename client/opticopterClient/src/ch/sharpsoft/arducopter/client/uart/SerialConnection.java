@@ -10,19 +10,22 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 public class SerialConnection {
-	private final DatenModel datenModel = DatenModel.getInstance();
+	private SerialConnection() {
+
+	}
+
+	private final static SerialConnection instance = new SerialConnection();
+	private final Parser parser = new Parser();
 	private CommPortIdentifier portIdentifier;
 	private CommPort commPort;
 	private SerialPort serialPort;
 	private InputStream in;
 	private OutputStream out;
 
-	private static final int PREEAMBLE_1 = 0xE5;
-	private static final int PREEAMBLE_2 = 0xE7;
+	public static final int PREEAMBLE_1 = 0xE5;
+	public static final int PREEAMBLE_2 = 0xE7;
 
 	public void connect(final String port, final String baud) {
 		try {
@@ -38,38 +41,9 @@ public class SerialConnection {
 					in = serialPort.getInputStream();
 					out = serialPort.getOutputStream();
 
-					new Thread(new Runnable() {
-
-						@Override
-						public void run() {
-							while (true) {
-								ByteBuffer bb = ByteBuffer.allocate(14);
-								bb.order(ByteOrder.LITTLE_ENDIAN);
-								bb.put((byte) PREEAMBLE_1);// 1
-								bb.put((byte) PREEAMBLE_2);// 1
-								bb.put((byte) 0x01);// 1
-								bb.put((byte) 8);// 1
-								bb.putLong(3000L);// 8
-								byte and = 0;
-								byte xor = 0;
-								for (int i = 4; i < 12; i++) {
-									and += bb.array()[i];
-									xor ^= bb.array()[i];
-								}
-								bb.put(and);
-								bb.put(xor);
-								try {
-									out.write(bb.array(), 0, 14);
-									Thread.sleep(1000);
-								} catch (IOException | InterruptedException e) {
-									e.printStackTrace();
-								}
-							}
-						}
-					}).start();
+					SerialService.getInstance().startRequestingThread();
 
 					new Thread(new Runnable() {
-
 						long good = 0;
 						long bad = 0;
 
@@ -132,7 +106,7 @@ public class SerialConnection {
 	}
 
 	private void parse(final int id, final byte[] buffer) {
-		datenModel.parse(id, buffer);
+		parser.parse(id, buffer);
 	}
 
 	public InputStream getInputStream() {
@@ -141,5 +115,13 @@ public class SerialConnection {
 
 	public OutputStream getOutputStream() {
 		return out;
+	}
+
+	public static SerialConnection getInstance() {
+		return instance;
+	}
+
+	public Parser getParser() {
+		return parser;
 	}
 }
