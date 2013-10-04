@@ -213,9 +213,13 @@ public class DatenModel {
 	private void calculateOutput() {
 		double altitudeDiff = posXYZLevel[2] - posXYZ[2];
 		long timeDiff = System.currentTimeMillis() - lastTimestamp[0];
-		double rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0], rollPitchYaw[0], timeDiff);
-		double pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1], rollPitchYaw[1], timeDiff);
-		double yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYaw[2], timeDiff);
+		/*
+		 * double rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0], rollPitchYawK[0], timeDiff); double pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1], rollPitchYaw[1], timeDiff); double yawA =
+		 * rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYaw[2], timeDiff);
+		 */
+		double rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0], rollPitchYawKalman[0], timeDiff);
+		double pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1], rollPitchYawKalman[1], timeDiff);
+		double yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYawKalman[2], timeDiff);
 
 		// double thrustInput = (input[0] - 1105.0) / (1000.0); // not 100%; leave some reserve
 		double thrustInput = 0.5;// test
@@ -231,8 +235,8 @@ public class DatenModel {
 			} else if (thrust[i] < 0) {
 				thrust[i] = 0;
 			}
-			outputK[i].update(thrust[i]);
-			thrust[i] = outputK[i].getValue();
+			// outputK[i].update(thrust[i]);
+			// thrust[i] = outputK[i].getValue();
 		}
 
 		output[0] = (short) (1105 + (900 * (thrust[0])));
@@ -307,7 +311,7 @@ public class DatenModel {
 		kalmanModel1Droll.update(rollPitchYaw[0]);
 		rollPitchYawKalman[0] = kalmanModel1Droll.getValue();
 		kalmanModel1Dpitch.update(rollPitchYaw[1]);
-		rollPitchYawKalman[1] = kalmanModel1Droll.getValue();
+		rollPitchYawKalman[1] = kalmanModel1Dpitch.getValue();
 
 		// TODO optimize, rotate accel - vetctor with rollPitchYaw instead of
 		// accelRelative
@@ -465,5 +469,13 @@ public class DatenModel {
 
 	public final short[] getOutput() {
 		return output;
+	}
+
+	public final KalmanModel1D getKalmanModel1Dpitch() {
+		return kalmanModel1Dpitch;
+	}
+
+	public final KalmanModel1D getKalmanModel1Droll() {
+		return kalmanModel1Droll;
 	}
 }

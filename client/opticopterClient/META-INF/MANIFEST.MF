@@ -21,4 +21,5 @@ Bundle-ClassPath: lib/rxtx.jar,
  .,
  lib/org.csstudio.swt.widgets_2.1.0.201209121549.jar,
  lib/org.csstudio.swt.xygraph_2.1.0.201209121540.jar,
- lib/commons-collections4-4.0-alpha1.jar
+ lib/commons-collections4-4.0-alpha1.jar,
+ swing2swt.jar

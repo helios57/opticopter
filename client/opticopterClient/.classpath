@@ -12,5 +12,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/ArducopterClient/lib/joda-time-2.3-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="swing2swt.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

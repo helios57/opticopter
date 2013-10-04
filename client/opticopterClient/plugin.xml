@@ -50,10 +50,23 @@
                relative="ArducopterClient.DebugView">
          </view>
          <view
+               id="ch.sharpsoft.arducopter.client.view.GraphView"
+               minimized="false"
+               relationship="stack"
+               relative="ch.sharpsoft.arducopter.client.view.Graph">
+         </view>
+         <view
                id="ch.sharpsoft.arducopter.client.view.Kalibrierung"
                minimized="false"
                relationship="stack"
                relative="ch.sharpsoft.arducopter.client.view.Graph">
+         </view>
+         <view
+               id="ch.sharpsoft.arducopter.client.view.ParameterTuning"
+               minimized="false"
+               moveable="false"
+               relationship="left"
+               relative="ch.sharpsoft.arducopter.client.view.GraphView">
          </view>
       </perspectiveExtension>
    </extension>
@@ -114,6 +127,17 @@
             class="ch.sharpsoft.arducopter.client.view.Kalibrierung"
             id="ch.sharpsoft.arducopter.client.view.Kalibrierung"
             name="Kalibrierung">
+      </view>
+      <view
+            class="ch.sharpsoft.arducopter.client.view.GraphView"
+            id="ch.sharpsoft.arducopter.client.view.GraphView"
+            name="GraphView"
+            restorable="true">
+      </view>
+      <view
+            class="ch.sharpsoft.arducopter.client.view.ParameterTuning"
+            id="ch.sharpsoft.arducopter.client.view.ParameterTuning"
+            name="ParameterTuning">
       </view>
    </extension>
 
