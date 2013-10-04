@@ -12,12 +12,12 @@
 static const uint16_t LOC_MAG_MAX = 0; //4
 static const uint16_t LOC_MAG_MIN = 6; //10
 static const uint16_t LOC_RC_IN_MAX = 12; //26
-static const uint16_t LOC_RC_IN_MIN = 28; //42
-static const uint16_t LOC_RC_IN_DEFAULT = 42; //58
-static const uint16_t LOC_DECLINATION_ANGLE = 58; //62
-static const uint16_t LOC_RC_IN_FUNCTION = 62; //70
-static const uint16_t LOC_PID = 70; //82
-static const uint16_t LOC_KALMAN = 82; //96
+static const uint16_t LOC_RC_IN_MIN = 28; //44
+static const uint16_t LOC_RC_IN_DEFAULT = 44; //60
+static const uint16_t LOC_DECLINATION_ANGLE = 60; //64
+static const uint16_t LOC_RC_IN_FUNCTION = 64; //72
+static const uint16_t LOC_PID = 72; //84
+static const uint16_t LOC_KALMAN = 84; //98
 
 class Persistence {
 private:

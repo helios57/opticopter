@@ -26,7 +26,6 @@ private:
 	uint16_t inputMin[8];
 	uint16_t inputDefault[8];
 	uint16_t output[8];
-	Kalman outputKalman[8];
 	double thrust[8];
 	double magScaled[3];
 	double magCompensated[3];
@@ -34,6 +33,7 @@ private:
 	int16_t magMin[3];
 	double rollPitchYawLevel[3]; //Orientation - Level
 	double rollPitchYaw[3]; //Orientation
+	Kalman rollPitchYawKalman[3];
 	PID rollPitchYawPid[3]; //PID
 	double pressure;
 	long t0;
@@ -58,10 +58,8 @@ public:
 		tActivate = 0;
 		pressure = 0;
 
-		for (int i = 0; i < 8; i++) {
-			outputKalman[i].init(0.002, 1.0, 0.00, 0.0);
-		}
 		for (int i = 0; i < 3; i++) {
+			rollPitchYawKalman[i].init(0.002, 1.0, 0.00, 0.0);
 			rollPitchYawPid[i].init(0.6, 0.05, 0.02);
 		}
 		/*magMax[0] = 773;magMax[1] = 369; magMax[2] = 565;*/
@@ -76,7 +74,8 @@ public:
 		//inputDefault[0] = 1105;inputDefault[1] = 1488;inputDefault[2] = 1470;inputDefault[3] = 1488;
 		persistence->readRcDefault(inputDefault, 4);
 		//declinationAngle = -0.02472549;
-		declinationAngle = persistence->readDeclinationAngle();
+		//declinationAngle = persistence->readDeclinationAngle();
+		declinationAngle = -0.02472549;
 		activateTop = inputMax[3] - 100;
 		activateBot = inputMin[3] + 100;
 	}

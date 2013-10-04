@@ -42,11 +42,6 @@ void DataModel::getInput() {
 
 void DataModel::getYaw() {
 	hal->getHeading(mag);
-	//TODO persisieren
-	for (int i = 0; i < 3; i++) {
-		magMax[i] = max(magMax[i], mag[i]);
-		magMin[i] = min(magMin[i], mag[i]);
-	}
 	for (int i = 0; i < 3; i++) {
 		magScaled[i] = (((double) (mag[i]) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
 	}
@@ -68,12 +63,13 @@ void DataModel::getYaw() {
 	if (rollPitchYaw[2] < -PI) {
 		rollPitchYaw[2] += 2 * PI;
 	}
+	rollPitchYaw[2] = rollPitchYawKalman[2].kalman_update(rollPitchYaw[2]);
 }
 
 void DataModel::getRollPitch() {
 	hal->getAccel(accel);
-	rollPitchYaw[0] = atan2(-accel[0], accel[2]);
-	rollPitchYaw[1] = atan2(accel[1], accel[2]);
+	rollPitchYaw[0] = rollPitchYawKalman[0].kalman_update(atan2(-accel[0], accel[2]));
+	rollPitchYaw[1] = rollPitchYawKalman[1].kalman_update(atan2(accel[1], accel[2]));
 }
 
 void DataModel::calcutateOutput() {
@@ -107,14 +103,12 @@ void DataModel::calcutateOutput() {
 		} else if (thrust[i] < 0) {
 			thrust[i] = 0;
 		}
-
-		thrust[i] = outputKalman[i].kalman_update(thrust[i]);
 	}
 	if (active && inputThrust > 0.01) {
-		hal->setPmw(hal->OUT0, 1105 + (900 * (thrust[0])));
-		hal->setPmw(hal->OUT1, 1105 + (900 * (thrust[1])));
-		hal->setPmw(hal->OUT2, 1105 + (900 * (thrust[2])));
-		hal->setPmw(hal->OUT3, 1105 + (900 * (thrust[3])));
+		hal->setPmw(hal->OUT0, inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[0])));
+		hal->setPmw(hal->OUT1, inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[1])));
+		hal->setPmw(hal->OUT2, inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[2])));
+		hal->setPmw(hal->OUT3, inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[3])));
 	} else {
 		hal->setPmw(hal->OUT0, 1105);
 		hal->setPmw(hal->OUT1, 1105);
@@ -134,9 +128,9 @@ void DataModel::calculate() {
 	if (active) {
 		calcutateOutput();
 	} else {
-		hal->setPmw(hal->OUT0, 1105);
-		hal->setPmw(hal->OUT1, 1105);
-		hal->setPmw(hal->OUT2, 1105);
-		hal->setPmw(hal->OUT3, 1105);
+		hal->setPmw(hal->OUT0, 1100);
+		hal->setPmw(hal->OUT1, 1100);
+		hal->setPmw(hal->OUT2, 1100);
+		hal->setPmw(hal->OUT3, 1100);
 	}
 }

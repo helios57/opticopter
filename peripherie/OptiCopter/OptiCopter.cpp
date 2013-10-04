@@ -136,7 +136,7 @@ namespace arducopterNg {
 	void ArducopterNg::sendInput() {
 		serializer->beginn(serializer->ID_INPUT);
 		serializer->write(hal->IN7 - hal->IN0);
-		for (uint8_t i = hal->IN0; i < hal->IN7; i++) {
+		for (uint8_t i = hal->IN0; i <= hal->IN7; i++) {
 			conv2.uint = hal->getPmw(i);
 			serializer->write(i);
 			serializer->write(conv2.byte, 2);

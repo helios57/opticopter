@@ -82,7 +82,7 @@ public class SerialService {
 	}
 
 	private ByteBuffer begin(final byte msg_id) {
-		final ByteBuffer bb = ByteBuffer.allocate(14);
+		final ByteBuffer bb = ByteBuffer.allocate(64);
 		bb.order(ByteOrder.LITTLE_ENDIAN);
 		bb.put((byte) SerialConnection.PREEAMBLE_1);// 1
 		bb.put((byte) SerialConnection.PREEAMBLE_2);// 1
