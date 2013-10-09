@@ -82,12 +82,12 @@ void DataModel::calcutateOutput() {
 	long timeDiff = t1 - t0;
 	double rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0], rollPitchYaw[0], timeDiff);
 	double pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1], rollPitchYaw[1], timeDiff);
-	double yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYaw[2], timeDiff);
+	double yawA = 0;//rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYaw[2], timeDiff);
 
-	double inputThrust = (input[0] - inputMin[0]) / (inputMax[0] - inputMin[0]);
-	double inputRoll = (input[1] - inputMin[1]) / (inputMax[1] - inputMin[1]);
-	double inputPitch = (input[2] - inputMin[2]) / (inputMax[2] - inputMin[2]);
-	double inputYaw = (input[3] - inputMin[3]) / (inputMax[3] - inputMin[3]);
+	double inputThrust = (double) (input[0] - inputDefault[0]) / (double) (inputMax[0] - inputMin[0]);
+	double inputRoll = (double) (input[1] - inputDefault[1]) / (double) (inputMax[1] - inputMin[1]);
+	double inputPitch = (double) (input[2] - inputDefault[2]) / (double) (inputMax[2] - inputMin[2]);
+	double inputYaw = (double) (input[3] - inputDefault[3]) / (double) (inputMax[3] - inputMin[3]);
 
 	rollA += inputRoll;
 	pitchA += inputPitch;
