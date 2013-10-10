@@ -5,12 +5,12 @@ import static ch.sharpsoft.arducopter.client.view.Quaternion.multiply;
 import static ch.sharpsoft.arducopter.client.view.Quaternion.multiplyVec;
 import static ch.sharpsoft.arducopter.client.view.Quaternion.normalize;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import ch.sharpsoft.arducopter.client.math.FpMath;
+import ch.sharpsoft.arducopter.client.model.Kalman;
 import ch.sharpsoft.arducopter.client.model.KalmanModel;
 import ch.sharpsoft.arducopter.client.model.KalmanModel1D;
 import ch.sharpsoft.arducopter.client.model.PID;
@@ -23,6 +23,7 @@ public class DatenModel {
 		}
 		for (int i = 0; i < 3; i++) {
 			rollPitchYawPid[i] = new PID(0.6, 0.05, 0.02);
+			rollPitchYawIntKalman[i] = new Kalman();
 		}
 	}
 
@@ -34,19 +35,12 @@ public class DatenModel {
 		events.add(eventListener);
 	}
 
-	private static final int ID_ACCEL = 0x01;
-	private static final int ID_GYRO = 0x02;
-	private static final int ID_BARO = 0x03;
-	private static final int ID_QUAT = 0x04;
-	private static final int ID_MAG = 0x05;
-	private static final int ID_GPS = 0x06;
-	private static final int ID_INPUT = 0x07;
-	private static final int ID_OUTPUT = 0x08;
-	private static final int ID_DEBUG = 0x09;
-	private static final int ID_CYCLES = 0x0A;
-	public static final int ID_PARAM = 0x0B;
-
 	private final int[] accel = new int[3];
+	private final int[] accelK = new int[3];
+	private final int[] accelLast = new int[3];
+	private final int[] accelDiff = new int[3];
+	private final int[] rollPitchYawInt = new int[3];
+	private final Kalman[] rollPitchYawIntKalman = new Kalman[3];
 	private final int[] gyro = new int[3];
 	private final double[] accelRelative = new double[3];
 	private final double[] accelInMss = new double[3];
@@ -92,69 +86,7 @@ public class DatenModel {
 	private final KalmanModel1D kalmanModel1Droll = new KalmanModel1D(0.004, 1.0, 0.46, 1);
 	private final PID[] rollPitchYawPid = new PID[3];
 
-	public void parse(final int id, final byte[] buffer) {
-		ByteBuffer bb = ByteBuffer.wrap(buffer);
-		bb.order(ByteOrder.LITTLE_ENDIAN);
-		if (id == ID_ACCEL) {
-			accel[0] = bb.getInt(0);
-			accel[1] = bb.getInt(4);
-			accel[2] = bb.getInt(8);
-			calculate();
-		} else if (id == ID_GYRO) {
-			gyro[0] = bb.getInt(0);
-			gyro[1] = bb.getInt(4);
-			gyro[2] = bb.getInt(8);
-		} else if (id == ID_BARO) {
-			baro[0] = bb.getFloat();
-		} else if (id == ID_QUAT) {
-			quat[0] = bb.getInt(0);
-			quat[1] = bb.getInt(4);
-			quat[2] = bb.getInt(8);
-			quat[3] = bb.getInt(12);
-			Quaternion.normalize(quat);
-		} else if (id == ID_MAG) {
-			mag[0] = bb.getShort(0);
-			mag[1] = bb.getShort(2);
-			mag[2] = (short) -bb.getShort(4);
-			for (int i = 0; i < 3; i++) {
-				magMax[i] = (short) Math.max(magMax[i], mag[i]);
-				magMin[i] = (short) Math.min(magMin[i], mag[i]);
-			}
-			for (int i = 0; i < 3; i++) {
-				magScaled[i] = (((double) mag[i] - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
-			}
-		} else if (id == ID_GPS) {
-			/*
-			 * int32_t latitude; int32_t longitude; int32_t altitude; int32_t ground_speed; int32_t ground_course; uint8_t satellites; uint8_t fix_type; uint32_t utc_date; uint32_t utc_time; uint16_t hdop;
-			 */
-			gps.setLatitude(bb.getInt());
-			gps.setLongitude(bb.getInt());
-			gps.setAltitude(bb.getInt());
-			gps.setGround_speed(bb.getInt());
-			gps.setGround_course(bb.getInt());
-			gps.setNum_sats(bb.get());
-			byte fixType = bb.get();
-			gps.setFix(fixType == 3 || fixType == 7);
-			gps.setDate(bb.getInt() & 0xFFFFFFFFL);
-			gps.setTime(bb.getInt() & 0xFFFFFFFFL);
-			gps.setHdop(bb.getShort());
-			gps.calc();
-		} else if (id == ID_INPUT) {
-			int lenght = bb.get(0);
-			for (int i = 0; i < lenght; i++) {
-				final byte chan = bb.get(1 + i * 3);
-				final short pmw = bb.getShort(2 + i * 3);
-				input[chan] = pmw;
-			}
-		} else if (id == ID_OUTPUT) {
-		} else if (id == ID_DEBUG) {
-			debugInfos.add(new String(bb.array()));
-		} else if (id == ID_CYCLES) {
-			cycles[0] = bb.getLong();
-		}
-	}
-
-	private void calculate() {
+	public void calculate() {
 		backupLastValues();
 		calculateAccel();
 		calculateGyro();
@@ -175,6 +107,10 @@ public class DatenModel {
 	}
 
 	private void calculateDiffs() {
+		for (int i = 0; i < 3; i++) {
+			accelDiff[i] = accel[i] - accelLast[i];
+		}
+
 		rollPitchYawDiff[0] = rollPitchYaw[0] - rollPitchYawLast[0];
 		rollPitchYawDiff[1] = rollPitchYaw[1] - rollPitchYawLast[1];
 		rollPitchYawDiff[2] = rollPitchYaw[2] - rollPitchYawLast[2];
@@ -305,6 +241,12 @@ public class DatenModel {
 	private final static double accelToMssFactor = 9.81 / 5.147638312110519E8;
 
 	private void calculateAccel() {
+		rollPitchYawInt[0] = FpMath.arctan2(-accel[0], accel[2]);
+		rollPitchYawInt[1] = FpMath.arctan2(accel[1], accel[2]);
+
+		rollPitchYawKalman[0] = rollPitchYawIntKalman[0].getNext(rollPitchYawInt[0], gyro[0]);
+		rollPitchYawKalman[1] = rollPitchYawIntKalman[1].getNext(rollPitchYawInt[1], gyro[1]);
+
 		Quaternion.normalizeVec(accel, accelRelative);
 		rollPitchYaw[0] = Math.atan2(-accel[0], accel[2]);
 		rollPitchYaw[1] = Math.atan2(accel[1], accel[2]);
@@ -356,6 +298,10 @@ public class DatenModel {
 
 	public int[] getAccel() {
 		return accel;
+	}
+
+	public int[] getAccelDiff() {
+		return accelDiff;
 	}
 
 	public int[] getGyro() {
@@ -478,5 +424,13 @@ public class DatenModel {
 
 	public final KalmanModel1D getKalmanModel1Droll() {
 		return kalmanModel1Droll;
+	}
+
+	public int[] getAccelK() {
+		return accelK;
+	}
+
+	public int[] getRollPitchYawInt() {
+		return rollPitchYawInt;
 	}
 }

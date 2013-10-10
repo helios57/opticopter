@@ -9,6 +9,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.ViewPart;
 
+import ch.sharpsoft.arducopter.client.model.Kalman;
 import ch.sharpsoft.arducopter.client.uart.DatenModel;
 
 public class ParameterTuning extends ViewPart {
@@ -96,6 +97,60 @@ public class ParameterTuning extends ViewPart {
 					DatenModel.getInstance().getKalmanModel1Dpitch().setK(value.doubleValue());
 				} catch (Exception ex) {
 
+				}
+			}
+		});
+
+		lblQ = new Label(container, SWT.NONE);
+		lblQ.setText("Q_angle");
+		final Text q_angle = new Text(container, SWT.NONE);
+		q_angle.setText(Integer.toString(Kalman.Q_angle));
+		q_angle.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(final ModifyEvent e) {
+				try {
+					Integer value = Integer.valueOf(q_angle.getText());
+					Kalman.Q_angle = value;
+					System.err.println(Kalman.Q_angle);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+
+		lblQ = new Label(container, SWT.NONE);
+		lblQ.setText("Q_bias");
+		final Text Q_bias = new Text(container, SWT.NONE);
+		Q_bias.setText(Integer.toString(Kalman.Q_bias));
+		Q_bias.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(final ModifyEvent e) {
+				try {
+					Integer value = Integer.valueOf(Q_bias.getText());
+					Kalman.Q_bias = value;
+					System.err.println(Kalman.Q_bias);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+
+		lblQ = new Label(container, SWT.NONE);
+		lblQ.setText("R_measure");
+		final Text R_measure = new Text(container, SWT.NONE);
+		R_measure.setText(Integer.toString(Kalman.R_measure));
+		R_measure.addModifyListener(new ModifyListener() {
+
+			@Override
+			public void modifyText(final ModifyEvent e) {
+				try {
+					Integer value = Integer.valueOf(R_measure.getText());
+					Kalman.R_measure = value;
+					System.err.println(Kalman.R_measure);
+				} catch (Exception ex) {
+					ex.printStackTrace();
 				}
 			}
 		});
