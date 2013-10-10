@@ -5,8 +5,6 @@ import static ch.sharpsoft.arducopter.client.view.Quaternion.multiply;
 import static ch.sharpsoft.arducopter.client.view.Quaternion.multiplyVec;
 import static ch.sharpsoft.arducopter.client.view.Quaternion.normalize;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -33,18 +31,6 @@ public class DatenModel {
 	public void addEventListener(final NewDataListener eventListener) {
 		events.add(eventListener);
 	}
-
-	private static final int ID_ACCEL = 0x01;
-	private static final int ID_GYRO = 0x02;
-	private static final int ID_BARO = 0x03;
-	private static final int ID_QUAT = 0x04;
-	private static final int ID_MAG = 0x05;
-	private static final int ID_GPS = 0x06;
-	private static final int ID_INPUT = 0x07;
-	private static final int ID_OUTPUT = 0x08;
-	private static final int ID_DEBUG = 0x09;
-	private static final int ID_CYCLES = 0x0A;
-	public static final int ID_PARAM = 0x0B;
 
 	private final int[] accel = new int[3];
 	private final int[] gyro = new int[3];
@@ -92,69 +78,7 @@ public class DatenModel {
 	private final KalmanModel1D kalmanModel1Droll = new KalmanModel1D(0.004, 1.0, 0.46, 1);
 	private final PID[] rollPitchYawPid = new PID[3];
 
-	public void parse(final int id, final byte[] buffer) {
-		ByteBuffer bb = ByteBuffer.wrap(buffer);
-		bb.order(ByteOrder.LITTLE_ENDIAN);
-		if (id == ID_ACCEL) {
-			accel[0] = bb.getInt(0);
-			accel[1] = bb.getInt(4);
-			accel[2] = bb.getInt(8);
-			calculate();
-		} else if (id == ID_GYRO) {
-			gyro[0] = bb.getInt(0);
-			gyro[1] = bb.getInt(4);
-			gyro[2] = bb.getInt(8);
-		} else if (id == ID_BARO) {
-			baro[0] = bb.getFloat();
-		} else if (id == ID_QUAT) {
-			quat[0] = bb.getInt(0);
-			quat[1] = bb.getInt(4);
-			quat[2] = bb.getInt(8);
-			quat[3] = bb.getInt(12);
-			Quaternion.normalize(quat);
-		} else if (id == ID_MAG) {
-			mag[0] = bb.getShort(0);
-			mag[1] = bb.getShort(2);
-			mag[2] = (short) -bb.getShort(4);
-			for (int i = 0; i < 3; i++) {
-				magMax[i] = (short) Math.max(magMax[i], mag[i]);
-				magMin[i] = (short) Math.min(magMin[i], mag[i]);
-			}
-			for (int i = 0; i < 3; i++) {
-				magScaled[i] = (((double) mag[i] - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
-			}
-		} else if (id == ID_GPS) {
-			/*
-			 * int32_t latitude; int32_t longitude; int32_t altitude; int32_t ground_speed; int32_t ground_course; uint8_t satellites; uint8_t fix_type; uint32_t utc_date; uint32_t utc_time; uint16_t hdop;
-			 */
-			gps.setLatitude(bb.getInt());
-			gps.setLongitude(bb.getInt());
-			gps.setAltitude(bb.getInt());
-			gps.setGround_speed(bb.getInt());
-			gps.setGround_course(bb.getInt());
-			gps.setNum_sats(bb.get());
-			byte fixType = bb.get();
-			gps.setFix(fixType == 3 || fixType == 7);
-			gps.setDate(bb.getInt() & 0xFFFFFFFFL);
-			gps.setTime(bb.getInt() & 0xFFFFFFFFL);
-			gps.setHdop(bb.getShort());
-			gps.calc();
-		} else if (id == ID_INPUT) {
-			int lenght = bb.get(0);
-			for (int i = 0; i < lenght; i++) {
-				final byte chan = bb.get(1 + i * 3);
-				final short pmw = bb.getShort(2 + i * 3);
-				input[chan] = pmw;
-			}
-		} else if (id == ID_OUTPUT) {
-		} else if (id == ID_DEBUG) {
-			debugInfos.add(new String(bb.array()));
-		} else if (id == ID_CYCLES) {
-			cycles[0] = bb.getLong();
-		}
-	}
-
-	private void calculate() {
+	public void calculate() {
 		backupLastValues();
 		calculateAccel();
 		calculateGyro();

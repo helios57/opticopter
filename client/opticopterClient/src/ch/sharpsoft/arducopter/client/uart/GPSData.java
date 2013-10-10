@@ -147,4 +147,17 @@ public class GPSData {
 		return "GPSData [fix=" + fix + ", time=" + time + ", date=" + date + ", latitude=" + latitude + ", longitude=" + longitude + ", altitude=" + altitude + ", ground_speed=" + ground_speed + ", ground_course=" + ground_course + ", hdop=" + hdop
 				+ ", num_sats=" + num_sats + ", millis=" + millis + " (" + (new DateTime(millis)).toString() + "), lat=" + lat + ", lon=" + lon + ", alt=" + alt + ", gs=" + gs + ", gc=" + gc + "]";
 	}
+
+	public void setInput(final GPSData gps) {
+		setLatitude(gps.getLatitude());
+		setLongitude(gps.getLongitude());
+		setAltitude(gps.getAltitude());
+		setGround_speed(gps.getGround_speed());
+		setGround_course(gps.getGround_course());
+		setNum_sats(gps.getNum_sats());
+		setFix(gps.isFix());
+		setDate(gps.getDate());
+		setTime(gps.getTime());
+		setHdop(gps.getHdop());
+	}
 }
