@@ -7,9 +7,14 @@ import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Paths;
+import java.util.zip.GZIPInputStream;
 
 public class SerialConnection {
 	private SerialConnection() {
@@ -44,54 +49,10 @@ public class SerialConnection {
 					SerialService.getInstance().startRequestingThread();
 
 					new Thread(new Runnable() {
-						long good = 0;
-						long bad = 0;
 
 						@Override
 						public void run() {
-							while (true) {
-								try {
-									final int read = in.read();
-									if (PREEAMBLE_1 == read) {
-										final int read2 = in.read();
-										if (PREEAMBLE_2 == read2) {
-											final int id = in.read();
-											if (id == 0) {
-												bad++;
-												System.err.println("good=" + good + " bad=" + bad + " id=" + id);
-												continue;
-											}
-											final int length = in.read();
-											final byte[] buffer = new byte[length + 2];
-											int i = 0;
-											for (; i < buffer.length; i++) {
-												buffer[i] = (byte) in.read();
-											}
-											// int readbytes = in.read(buffer);
-											if (i < (length + 2)) {
-												bad++;
-												System.err.println("good=" + good + " bad=" + bad + " buffer=" + buffer + " expected=" + (length + 2));
-												continue;
-											}
-											byte and = 0;
-											byte xor = 0;
-											for (i = 0; i < length; i++) {
-												and += buffer[i];
-												xor ^= buffer[i];
-											}
-											if (and == buffer[length] && xor == buffer[length + 1]) {
-												parse(id, buffer);
-												good++;
-											} else {
-												bad++;
-												System.err.println("id=" + id + " len=" + length + " and=" + and + " should=" + buffer[length] + " xor=" + xor + " should=" + buffer[length + 1]);
-											}
-										}
-									}
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-							}
+							readFromInputStream();
 
 						}
 
@@ -102,6 +63,65 @@ public class SerialConnection {
 			}
 		} catch (NoSuchPortException | IOException | PortInUseException | UnsupportedCommOperationException e1) {
 			e1.printStackTrace();
+		}
+	}
+
+	public static void main(final String[] args) throws FileNotFoundException, IOException {
+		final File file = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/steady.bin").toFile();
+		SerialConnection sc = new SerialConnection();
+		sc.in = new GZIPInputStream(new FileInputStream(file));
+		sc.readFromInputStream();
+	}
+
+	private void readFromInputStream() {
+
+		long good = 0;
+		long bad = 0;
+		while (true) {
+			try {
+				final int read = in.read();
+				if (read == -1) {
+					break;
+				}
+				if (PREEAMBLE_1 == read) {
+					final int read2 = in.read();
+					if (PREEAMBLE_2 == read2) {
+						final int id = in.read();
+						if (id == 0) {
+							bad++;
+							System.err.println("good=" + good + " bad=" + bad + " id=" + id);
+							continue;
+						}
+						final int length = in.read();
+						final byte[] buffer = new byte[length + 2];
+						int i = 0;
+						for (; i < buffer.length; i++) {
+							buffer[i] = (byte) in.read();
+						}
+						// int readbytes = in.read(buffer);
+						if (i < (length + 2)) {
+							bad++;
+							System.err.println("good=" + good + " bad=" + bad + " buffer=" + buffer + " expected=" + (length + 2));
+							continue;
+						}
+						byte and = 0;
+						byte xor = 0;
+						for (i = 0; i < length; i++) {
+							and += buffer[i];
+							xor ^= buffer[i];
+						}
+						if (and == buffer[length] && xor == buffer[length + 1]) {
+							parse(id, buffer);
+							good++;
+						} else {
+							bad++;
+							System.err.println("id=" + id + " len=" + length + " and=" + and + " should=" + buffer[length] + " xor=" + xor + " should=" + buffer[length + 1]);
+						}
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
