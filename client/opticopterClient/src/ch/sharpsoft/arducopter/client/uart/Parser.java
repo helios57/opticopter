@@ -5,7 +5,7 @@ import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 
-import ch.sharpsoft.arducopter.client.model.RawData;
+import ch.sharpsoft.arducopter.client.model.DataRaw;
 
 public class Parser {
 	private static final int ID_ACCEL = 0x01;
@@ -31,7 +31,7 @@ public class Parser {
 	public static final byte ID_IN_PARAM_KALMAN = 0x09;
 
 	private final DatenModel dm = DatenModel.getInstance();
-	private final RawData rd = RawData.getInstance();
+	private final DataRaw rd = DataRaw.getInstance();
 
 	private final Map<Byte, IParamReciever> paramReciever = new HashMap<>();
 

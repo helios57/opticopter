@@ -2,9 +2,9 @@ package ch.sharpsoft.arducopter.client.model;
 
 import ch.sharpsoft.arducopter.client.uart.GPSData;
 
-public class RawData {
+public class DataRaw {
 
-	private final static RawData instance = new RawData();
+	private final static DataRaw instance = new DataRaw();
 
 	private final int[] accel = new int[3];
 	private final int[] gyro = new int[3];
@@ -14,7 +14,7 @@ public class RawData {
 	private final short[] rcIn = new short[8];
 	private final short[] out = new short[8];
 
-	public static RawData getInstance() {
+	public static DataRaw getInstance() {
 		return instance;
 	}
 
