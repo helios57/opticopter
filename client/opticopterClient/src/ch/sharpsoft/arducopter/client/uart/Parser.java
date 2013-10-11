@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ch.sharpsoft.arducopter.client.model.DataRaw;
+import ch.sharpsoft.arducopter.client.model.Manager;
 
 public class Parser {
 	private static final int ID_ACCEL = 0x01;
@@ -32,6 +33,7 @@ public class Parser {
 
 	private final DatenModel dm = DatenModel.getInstance();
 	private final DataRaw rd = DataRaw.getInstance();
+	private final Manager m = Manager.getInstance();
 
 	private final Map<Byte, IParamReciever> paramReciever = new HashMap<>();
 
@@ -52,6 +54,7 @@ public class Parser {
 			input[2] = bb.getInt(8);
 			System.arraycopy(input, 0, rd.getGyro(), 0, 3);
 			System.arraycopy(input, 0, dm.getGyro(), 0, 3);
+			m.triggerAccelGyroRecieved5ms();
 		} else if (id == ID_BARO) {
 			float baro = bb.getFloat();
 			rd.getBaro()[0] = baro;

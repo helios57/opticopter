@@ -5,7 +5,9 @@ import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
 public class Calculator {
-	private final static double GYRO_TO_RPS_FACTOR = 16.4 * (1L << 16) * 0.0174532925;
+	// private final static double GYRO_TO_RPS_FACTOR = 16.4 * (1L << 16) * 0.0174532925;
+	// private final static double GYRO_TO_RAD_PER_100MS_FACTOR = -24910118.9227323;// magical factor
+	private final static double GYRO_TO_RAD_PER_5MS_FACTOR = 498202378.5;// magical factor
 
 	public static void calc(final DataRaw dr, final DataCalculated dc) {
 		calcRollPitchYaw(dr, dc);
@@ -14,8 +16,9 @@ public class Calculator {
 
 	private static void calcGyroRps(final DataRaw dr, final DataCalculated dc) {
 		for (int i = 0; i < 3; i++) {
-			dc.getGyroRps()[i] = dr.getGyro()[i] * GYRO_TO_RPS_FACTOR;
+			dc.getGyroRps()[i] = dr.getGyro()[i] / GYRO_TO_RAD_PER_5MS_FACTOR;
 		}
+		dc.saveGyroRps();
 	}
 
 	private static void calcRollPitchYaw(final DataRaw dr, final DataCalculated dc) {
@@ -47,14 +50,18 @@ public class Calculator {
 		return getVariance(dc.getRollPitchYawFilteredHistory());
 	}
 
+	public static double[] getGyroRpsVariance(final DataCalculated dc) {
+		return getVariance(dc.getGyroRpsHistory());
+	}
+
 	private static double[] getVariance(final double[][] input) {
 		double sum[] = new double[3];
 		double sum2[] = new double[3];
 		double variance[] = new double[3];
-		for (double[] rollPitchYaw : input) {
+		for (double[] sample : input) {
 			for (int i = 0; i < 3; i++) {
-				sum[i] += rollPitchYaw[i];
-				sum2[i] += rollPitchYaw[i] * rollPitchYaw[i];
+				sum[i] += sample[i];
+				sum2[i] += sample[i] * sample[i];
 			}
 		}
 		int length = input.length;
