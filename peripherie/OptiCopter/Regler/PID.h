@@ -12,27 +12,23 @@
 
 class PID {
 private:
-	double pgain, igain, dgain, imax;
-	double pTerm, iTerm, dTerm;
-	double iState;
-	double last;
-	double diff;
+	double errSum;
+	double errSumMax;
+	double lastInput;
+	double kp;
+	double ki;
+	double kd;
 public:
 	PID() {
-		pgain = 0;
-		igain = 0;
-		dgain = 0;
-		imax = 0;
-		pTerm = iTerm = dTerm = iState = last = diff = 0;
-	}
-	void init(double p, double i, double d) {
-		pgain = p;
-		igain = i;
-		dgain = d;
-		imax = PI / i;
+		lastInput = 0;
+		errSum = 0;
+		kp = 0.6;
+		ki = 0.5 * 0.02;
+		kd = 0.02 / 0.02;
+		errSumMax = (PI / ki) / 16;
 	}
 	void resetI();
-	double updatePID(double target, double cur, long deltaTime);
+	double updatePID(double target, double cur);
 	virtual ~PID() {
 	}
 };

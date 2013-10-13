@@ -14,6 +14,7 @@ private:
 public:
 	DebugStream(Serializer *serializer);
 	void println(const String &str);
+	void println(const double &fl);
 	virtual ~DebugStream();
 };
 

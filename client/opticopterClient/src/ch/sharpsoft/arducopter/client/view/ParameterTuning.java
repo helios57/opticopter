@@ -1,9 +1,14 @@
 package ch.sharpsoft.arducopter.client.view;
 
+import java.io.IOException;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -11,6 +16,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import ch.sharpsoft.arducopter.client.model.Kalman;
 import ch.sharpsoft.arducopter.client.uart.DatenModel;
+import ch.sharpsoft.arducopter.client.uart.SerialConnection;
 
 public class ParameterTuning extends ViewPart {
 
@@ -103,58 +109,62 @@ public class ParameterTuning extends ViewPart {
 
 		lblQ = new Label(container, SWT.NONE);
 		lblQ.setText("Q_angle");
-		final Text q_angle = new Text(container, SWT.NONE);
-		q_angle.setText(Integer.toString(Kalman.Q_angle));
-		q_angle.addModifyListener(new ModifyListener() {
+		final Text Q_angle = new Text(container, SWT.NONE);
+		Q_angle.setText(Double.toString(Kalman.Q_angle));
+		Q_angle.addModifyListener(new ModifyListener() {
 
 			@Override
 			public void modifyText(final ModifyEvent e) {
 				try {
-					Integer value = Integer.valueOf(q_angle.getText());
-					Kalman.Q_angle = value;
-					System.err.println(Kalman.Q_angle);
+					Double value = Double.valueOf(Q_angle.getText());
+					Kalman.Q_angle = value.doubleValue();
 				} catch (Exception ex) {
-					ex.printStackTrace();
 				}
 			}
 		});
-
 		lblQ = new Label(container, SWT.NONE);
 		lblQ.setText("Q_bias");
 		final Text Q_bias = new Text(container, SWT.NONE);
-		Q_bias.setText(Integer.toString(Kalman.Q_bias));
+		Q_bias.setText(Double.toString(Kalman.Q_bias));
 		Q_bias.addModifyListener(new ModifyListener() {
 
 			@Override
 			public void modifyText(final ModifyEvent e) {
 				try {
-					Integer value = Integer.valueOf(Q_bias.getText());
-					Kalman.Q_bias = value;
-					System.err.println(Kalman.Q_bias);
+					Double value = Double.valueOf(Q_bias.getText());
+					Kalman.Q_bias = value.doubleValue();
 				} catch (Exception ex) {
-					ex.printStackTrace();
 				}
 			}
 		});
-
 		lblQ = new Label(container, SWT.NONE);
 		lblQ.setText("R_measure");
 		final Text R_measure = new Text(container, SWT.NONE);
-		R_measure.setText(Integer.toString(Kalman.R_measure));
+		R_measure.setText(Double.toString(Kalman.R_measure));
 		R_measure.addModifyListener(new ModifyListener() {
 
 			@Override
 			public void modifyText(final ModifyEvent e) {
 				try {
-					Integer value = Integer.valueOf(R_measure.getText());
-					Kalman.R_measure = value;
-					System.err.println(Kalman.R_measure);
+					Double value = Double.valueOf(R_measure.getText());
+					Kalman.R_measure = value.doubleValue();
 				} catch (Exception ex) {
-					ex.printStackTrace();
 				}
 			}
 		});
+		Button start = new Button(container, SWT.PUSH);
+		start.setText("Start");
+		start.addSelectionListener(new SelectionAdapter() {
 
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				try {
+					SerialConnection.main("");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
 	}
 
 	@Override

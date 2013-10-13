@@ -56,10 +56,11 @@ public class Console extends ViewPart implements Runnable {
 		}
 		styledText.getDisplay().timerExec(1000, this);
 		ConcurrentLinkedQueue<String> debugInfos = DatenModel.getInstance().getDebugInfos();
-		StringBuffer sb = new StringBuffer(styledText.getText());
+		StringBuffer sb = new StringBuffer();
 		while (!debugInfos.isEmpty()) {
 			sb.append("\n").append(debugInfos.poll());
 		}
+		sb.append(styledText.getText());
 		styledText.setText(sb.toString());
 	}
 }

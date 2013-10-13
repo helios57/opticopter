@@ -55,6 +55,7 @@ public class Parser {
 			System.arraycopy(input, 0, rd.getGyro(), 0, 3);
 			System.arraycopy(input, 0, dm.getGyro(), 0, 3);
 			m.triggerAccelGyroRecieved5ms();
+			dm.triggerEvents();
 		} else if (id == ID_BARO) {
 			float baro = bb.getFloat();
 			rd.getBaro()[0] = baro;

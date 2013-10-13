@@ -20,6 +20,7 @@ private:
 	HalApm *hal;
 	Persistence *persistence;
 	int32_t accel[3];
+	int32_t gyro[3];
 	int16_t mag[3];
 	uint16_t input[8];
 	uint16_t inputMax[8];
@@ -33,11 +34,11 @@ private:
 	int16_t magMin[3];
 	double rollPitchYawLevel[3]; //Orientation - Level
 	double rollPitchYaw[3]; //Orientation
+	double rollPitchYawFiltered[3]; //Orientation
 	Kalman rollPitchYawKalman[3];
 	PID rollPitchYawPid[3]; //PID
+	const static double GYRO_TO_RAD_PER_S_FACTOR = -2491011.89227323; // magical factor
 	double pressure;
-	long t0;
-	long t1;
 	bool active;
 	unsigned long tActivate;
 	uint16_t activateTop;
@@ -52,33 +53,27 @@ private:
 public:
 	DataModel(HalApm *hal, Persistence *persistence) :
 			hal(hal), persistence(persistence) {
-		t0 = 0;
-		t1 = 0;
 		active = false;
 		tActivate = 0;
 		pressure = 0;
 
-		for (int i = 0; i < 3; i++) {
-			rollPitchYawKalman[i].init(0.002, 1.0, 0.00, 0.0);
-			rollPitchYawPid[i].init(0.6, 0.05, 0.02);
-		}
-		/*magMax[0] = 773;magMax[1] = 369; magMax[2] = 565;*/
 		persistence->readMagMax(magMax);
-		//magMin[0] = -451;magMin[1] = -828;magMin[2] = -468;
 		persistence->readMagMin(magMin);
 
-		//inputMin[0] = 1105;inputMin[1] = 1105;inputMin[2] = 1105;inputMin[3] = 1105;
 		persistence->readRcMin(inputMin, 4);
-		//inputMax[0] = 1879;inputMax[1] = 1870;inputMax[2] = 1870;inputMax[3] = 1870;
 		persistence->readRcMax(inputMax, 4);
-		//inputDefault[0] = 1105;inputDefault[1] = 1488;inputDefault[2] = 1470;inputDefault[3] = 1488;
 		persistence->readRcDefault(inputDefault, 4);
-		//declinationAngle = -0.02472549;
 		//declinationAngle = persistence->readDeclinationAngle();
 		declinationAngle = -0.02472549;
 		activateTop = inputMax[3] - 100;
 		activateBot = inputMin[3] + 100;
 	}
+	void putAccel5ms(int32_t* accel);
+	void putGyro5ms(int32_t* gyro);
+	void putBaro10ms(float altitude);
+	void putMag10ms(int16_t* mag);
+	void putInput50ms(uint8_t ch, uint16_t pwm);
+
 	virtual ~DataModel() {
 	}
 	void calculate();

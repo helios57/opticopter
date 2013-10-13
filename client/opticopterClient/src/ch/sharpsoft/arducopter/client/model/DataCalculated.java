@@ -15,9 +15,23 @@ public class DataCalculated {
 	private int gyroRpsHistoryIndex = 0;
 
 	private final double[] rollPitchYaw = new double[3];
-	private final double[] rollPitchYawFiltered = new double[3];
-
 	private final double[] gyroRps = new double[3];
+
+	private final double[] rollPitchYawFiltered = new double[3];
+	private final Kalman[] rollPitchYawKalman = new Kalman[3];
+
+	private final double[] rollPitchYawOutput = new double[3];
+	private final double[] rollPitchYawLevel = new double[3];
+
+	private final PID2[] pid = new PID2[3];
+
+	public DataCalculated() {
+		for (int i = 0; i < 3; i++) {
+			rollPitchYawKalman[i] = new Kalman();
+			pid[i] = new PID2();
+			pid[i].setParams(0.6, 0.5, 0.02);
+		}
+	}
 
 	public static DataCalculated getInstance() {
 		return instance;
@@ -30,7 +44,7 @@ public class DataCalculated {
 		}
 	}
 
-	public void putRollPitchYawFiltered(final double[] rollPitchYawFiltered) {
+	public void saveRollPitchYawFiltered() {
 		System.arraycopy(rollPitchYawFiltered, 0, rollPitchYawFilteredHistory[rollPitchYawFilteredHistoryIndex++], 0, 3);
 		if (rollPitchYawFilteredHistoryIndex >= rollPitchYawFilteredHistory.length) {
 			rollPitchYawFilteredHistoryIndex = 0;
@@ -50,6 +64,10 @@ public class DataCalculated {
 
 	public double[] getRollPitchYawFiltered() {
 		return rollPitchYawFiltered;
+	}
+
+	public Kalman[] getRollPitchYawKalman() {
+		return rollPitchYawKalman;
 	}
 
 	public double[][] getRollPitchYawHistory() {
@@ -82,5 +100,17 @@ public class DataCalculated {
 
 	public double[] getGyroRps() {
 		return gyroRps;
+	}
+
+	public PID2[] getPid() {
+		return pid;
+	}
+
+	public double[] getRollPitchYawLevel() {
+		return rollPitchYawLevel;
+	}
+
+	public double[] getRollPitchYawOutput() {
+		return rollPitchYawOutput;
 	}
 }

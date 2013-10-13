@@ -6,6 +6,7 @@
  */
 
 #include "DebugStream.h"
+#include <stdlib.h>
 
 void DebugStream::println(const String &str) {
 	serializer->beginn(Serializer::ID_DEBUG);
@@ -13,6 +14,11 @@ void DebugStream::println(const String &str) {
 		serializer->write(str[i]);
 	}
 	serializer->end();
+}
+void DebugStream::println(const double &fl) {
+	char ascii[10];
+	dtostrf(fl, 7, 2, ascii);
+	println(ascii);
 }
 
 DebugStream::DebugStream(Serializer *serializer) :

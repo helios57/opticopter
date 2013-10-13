@@ -132,6 +132,10 @@ namespace arducopterNg {
 		 * 10 hz
 		 */
 		bool pollGPS();
+
+		DebugStream* getDebugStream() {
+			return debug;
+		}
 	};
 
 } /* namespace arducopterNg */

@@ -66,9 +66,9 @@ public class SerialConnection {
 		}
 	}
 
-	public static void main(final String[] args) throws FileNotFoundException, IOException {
-		// final File file = Paths.get("C:/Users/Helios/git/opticopter/client/opticopterClient/log/steady.bin").toFile();
-		final File file = Paths.get("C:/Users/Helios/git/opticopter/client/opticopterClient/log/roll.bin").toFile();
+	public static void main(final String... args) throws FileNotFoundException, IOException {
+		// final File file = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/steady.bin").toFile();
+		final File file = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/roll.bin").toFile();
 		SerialConnection sc = new SerialConnection();
 		sc.in = new GZIPInputStream(new FileInputStream(file));
 		sc.readFromInputStream();

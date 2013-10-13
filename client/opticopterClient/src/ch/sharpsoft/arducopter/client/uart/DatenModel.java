@@ -244,8 +244,8 @@ public class DatenModel {
 		rollPitchYawInt[0] = FpMath.arctan2(-accel[0], accel[2]);
 		rollPitchYawInt[1] = FpMath.arctan2(accel[1], accel[2]);
 
-		rollPitchYawKalman[0] = rollPitchYawIntKalman[0].getNext(rollPitchYawInt[0], gyro[0]);
-		rollPitchYawKalman[1] = rollPitchYawIntKalman[1].getNext(rollPitchYawInt[1], gyro[1]);
+		// rollPitchYawKalman[0] = rollPitchYawIntKalman[0].getNext(rollPitchYawInt[0], gyro[0]);
+		// rollPitchYawKalman[1] = rollPitchYawIntKalman[1].getNext(rollPitchYawInt[1], gyro[1]);
 
 		Quaternion.normalizeVec(accel, accelRelative);
 		rollPitchYaw[0] = Math.atan2(-accel[0], accel[2]);
@@ -432,5 +432,9 @@ public class DatenModel {
 
 	public int[] getRollPitchYawInt() {
 		return rollPitchYawInt;
+	}
+
+	public void triggerEvents() {
+		calculate();
 	}
 }

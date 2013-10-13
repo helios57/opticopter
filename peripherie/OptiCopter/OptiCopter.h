@@ -24,13 +24,12 @@ namespace arducopterNg {
 		DataModel *dm;
 		Persistence *persistence;
 		bool sendData;
-		bool newData;
 		unsigned long emptyCycles;
-		unsigned long t_1000ms;
 		unsigned long t_sendData;
 		unsigned long t_5ms;
 		unsigned long t_10ms;
 		unsigned long t_20ms;
+		unsigned long t_50ms;
 		union {
 			uint64_t ulong;
 			uint8_t byte[8];

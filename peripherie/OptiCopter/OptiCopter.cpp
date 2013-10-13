@@ -18,13 +18,12 @@ namespace arducopterNg {
 		serializer = 0;
 		debug = 0;
 		dm = 0;
-		t_1000ms = 0;
 		t_5ms = 0;
 		t_10ms = 0;
 		t_20ms = 0;
+		t_50ms = 0;
 		t_sendData = 0;
 		sendData = false;
-		newData = false;
 	}
 
 	ArducopterNg::~ArducopterNg() {
@@ -55,7 +54,7 @@ namespace arducopterNg {
 		debug = new DebugStream(serializer);
 		hal = new HalApm(&Serial, debug);
 		dm = new DataModel(hal, persistence);
-		t_1000ms = millis();
+		t_50ms = millis();
 		t_5ms = millis();
 		t_10ms = millis();
 		t_20ms = millis();
@@ -81,20 +80,6 @@ namespace arducopterNg {
 		conv4.sint = buffer[1];
 		serializer->write(conv4.byte, 4);
 		conv4.sint = buffer[2];
-		serializer->write(conv4.byte, 4);
-		serializer->end();
-	}
-
-	void ArducopterNg::sendQuat() {
-		hal->getQuat(buffer);
-		serializer->beginn(Serializer::ID_QUAT);
-		conv4.sint = buffer[0];
-		serializer->write(conv4.byte, 4);
-		conv4.sint = buffer[1];
-		serializer->write(conv4.byte, 4);
-		conv4.sint = buffer[2];
-		serializer->write(conv4.byte, 4);
-		conv4.sint = buffer[3];
 		serializer->write(conv4.byte, 4);
 		serializer->end();
 	}
@@ -321,49 +306,48 @@ namespace arducopterNg {
 		if ((millis() - t_5ms) >= 5) {
 			t_5ms = millis();
 			resetEmptyCycles();
-			if (hal->pollAccel()) {
-				newData = true;
-				if (sendData) {
-					sendAccel();
-					sendGyro();
-					//sendQuat();
-				}
+			if (hal->pollAccel() && sendData) {
+				sendAccel();
+				sendGyro();
 			}
+			hal->getAccel(buffer);
+			dm->putAccel5ms(buffer);
+			hal->getGyro(buffer);
+			dm->putGyro5ms(buffer);
 		}
 
 		if ((millis() - t_10ms) >= 10) {
 			t_10ms = millis();
-			if (hal->pollBaro()) {
-				newData = true;
-				if (sendData) {
-					sendBaro();
-				}
+			if (hal->pollBaro() && sendData) {
+				sendBaro();
 			}
-			if (hal->pollMag()) {
-				newData = true;
-				if (sendData) {
-					sendMag();
-				}
+			dm->putBaro10ms(hal->getBarometerAltitude());
+			if (hal->pollMag() && sendData) {
+				sendMag();
 			}
+			int16_t buffer[3];
+			hal->getHeading(buffer);
+			dm->putMag10ms(buffer);
 		}
+
 		if ((millis() - t_20ms) >= 20) {
 			t_20ms = millis();
 			if (hal->pollGPS()) {
-				newData = true;
 				if (sendData) {
 					sendGPS();
 				}
 			}
-		}
-
-		if (newData && !sendData) {
+			//dm->putGPS()...
 			dm->calculate();
 		}
 
-		if ((millis() - t_1000ms) >= 50) {
-			t_1000ms = millis();
+		if ((millis() - t_50ms) >= 50) {
+			t_50ms = millis();
 			if (sendData) {
 				sendInput();
+			}
+			for (uint8_t i = hal->IN0; i <= hal->IN7; i++) {
+				dm->putInput50ms(i, hal->getPmw(i));
 			}
 		}
 	}
