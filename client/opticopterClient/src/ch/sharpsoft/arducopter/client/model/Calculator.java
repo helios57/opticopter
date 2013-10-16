@@ -24,7 +24,7 @@ public class Calculator {
 	}
 
 	private static void calcOutput(final DataRaw dr, final DataCalculated dc) {
-		for (int i = 0; i < 2; i++) {
+		for (int i = 0; i < 3; i++) {
 			dc.getRollPitchYawOutput()[i] = dc.getPid()[i].update(dc.getRollPitchYawLevel()[i], dc.getRollPitchYawFiltered()[i]);
 		}
 	}

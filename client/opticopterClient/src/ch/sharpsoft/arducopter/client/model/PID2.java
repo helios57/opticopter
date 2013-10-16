@@ -31,8 +31,8 @@ public class PID2 {
 	void setParams(final double p, final double i, final double d) {
 		double sampleTimeInSec = sampleTime / 1000;
 		kp = p;
-		ki = i * sampleTimeInSec;
-		kd = d / sampleTimeInSec;
+		ki = i / sampleTimeInSec;
+		kd = d * sampleTimeInSec;
 		errSumMax = (PI / ki) / 16;
 	}
 }

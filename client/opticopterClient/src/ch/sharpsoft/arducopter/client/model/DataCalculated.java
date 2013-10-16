@@ -29,7 +29,7 @@ public class DataCalculated {
 		for (int i = 0; i < 3; i++) {
 			rollPitchYawKalman[i] = new Kalman();
 			pid[i] = new PID2();
-			pid[i].setParams(0.6, 0.5, 0.02);
+			pid[i].setParams(0.4, 0.1, 0.5);
 		}
 	}
 
