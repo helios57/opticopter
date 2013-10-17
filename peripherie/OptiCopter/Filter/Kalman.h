@@ -10,18 +10,18 @@
 
 class Kalman {
 private:
-	double Q_angle; // Process noise variance for the accelerometer
-	double Q_bias; // Process noise variance for the gyro bias
-	double R_measure; // Measurement noise variance - this is actually the variance of the measurement noise
+	float Q_angle; // Process noise variance for the accelerometer
+	float Q_bias; // Process noise variance for the gyro bias
+	float R_measure; // Measurement noise variance - this is actually the variance of the measurement noise
 
-	double angle; // The angle calculated by the Kalman filter - part of the 2x1 state matrix
-	double bias; // The gyro bias calculated by the Kalman filter - part of the 2x1 state matrix
-	double rate; // Unbiased rate calculated from the rate and the calculated bias - you have to call getAngle to update the rate
+	float angle; // The angle calculated by the Kalman filter - part of the 2x1 state matrix
+	float bias; // The gyro bias calculated by the Kalman filter - part of the 2x1 state matrix
+	float rate; // Unbiased rate calculated from the rate and the calculated bias - you have to call getAngle to update the rate
 
-	double P[2][2]; // Error covariance matrix - This is a 2x2 matrix
-	double K[2]; // Kalman gain - This is a 2x1 matrix
-	double y; // Angle difference - 1x1 matrix
-	double S; // Estimate error - 1x1 matrix
+	float P[2][2]; // Error covariance matrix - This is a 2x2 matrix
+	float K[2]; // Kalman gain - This is a 2x1 matrix
+	float y; // Angle difference - 1x1 matrix
+	float S; // Estimate error - 1x1 matrix
 public:
 	Kalman() {
 		Q_angle = 0.001; // Process noise variance for the accelerometer
@@ -32,8 +32,14 @@ public:
 		rate = 0;
 		y = 0;
 		S = 0;
+		P[0][0] = 0;
+		P[0][1] = 0;
+		P[1][0] = 0;
+		P[1][1] = 0;
+		K[0] = 0;
+		K[1] = 0;
 	}
-	double getAngle(double newAngle, double newRate, double dt);
+	float getAngle(float newAngle, float newRate, float dt);
 }
 ;
 

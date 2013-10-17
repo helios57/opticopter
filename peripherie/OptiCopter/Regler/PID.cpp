@@ -9,8 +9,8 @@
 void PID::resetI() {
 	errSum = 0;
 }
-double PID::updatePID(double setpoint, double current) {
-	double error = setpoint - current;
+float PID::updatePID(float setpoint, float current) {
+	float error = setpoint - current;
 	errSum += error;
 	if (errSum > errSumMax) {
 		errSum = errSumMax;
@@ -18,7 +18,7 @@ double PID::updatePID(double setpoint, double current) {
 	if (errSum < -errSumMax) {
 		errSum = -errSumMax;
 	}
-	double dInput = (current - lastInput);
+	float dInput = (current - lastInput);
 	lastInput = current;
 	return kp * error + ki * errSum - kd * dInput;
 }

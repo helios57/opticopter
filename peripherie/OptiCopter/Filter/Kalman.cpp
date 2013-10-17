@@ -7,7 +7,7 @@
 
 #include "Kalman.h"
 
-double Kalman::getAngle(double newAngle, double newRate, double dt) {
+float Kalman::getAngle(float newAngle, float newRate, float dt) {
 	// KasBot V2 - Kalman filter module - http://www.x-firm.com/?page_id=145
 	// Modified by Kristian Lauszus
 	// See my blog post for more information: http://blog.tkjelectronics.dk/2012/09/a-practical-approach-to-kalman-filter-and-how-to-implement-it

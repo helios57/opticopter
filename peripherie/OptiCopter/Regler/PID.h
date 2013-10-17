@@ -12,23 +12,23 @@
 
 class PID {
 private:
-	double errSum;
-	double errSumMax;
-	double lastInput;
-	double kp;
-	double ki;
-	double kd;
+	float errSum;
+	float errSumMax;
+	float lastInput;
+	float kp;
+	float ki;
+	float kd;
 public:
 	PID() {
 		lastInput = 0;
 		errSum = 0;
-		kp = 0.6;
-		ki = 0.5 * 0.02;
-		kd = 0.02 / 0.02;
+		kp = 0.4;
+		ki = 0.1 / 0.01;
+		kd = 0.5 * 0.01;
 		errSumMax = (PI / ki) / 16;
 	}
 	void resetI();
-	double updatePID(double target, double cur);
+	float updatePID(float target, float cur);
 	virtual ~PID() {
 	}
 };

@@ -12,14 +12,14 @@ class Math {
 public:
 	Math() {
 	}
-	static double norm(int32_t *xyz);
-	static double norm(double *wxyz);
-	static void normalizeVec(int32_t *xyz, double out[]);
-	static void normalize(double *quat);
-	static void conjugate(const double *i_wxyz, double *o_wxyz);
-	static void multiply(const double *a_wxyz, const double *b_wxyz, double *o_wxyz);
-	static void multiplyVec(const double *a_xyz, const double *b_wxyz, double *o_xyz);
-	static void fromEuler(const double pitch, const double yaw, const double roll, double *quat);
+	static float norm(int32_t *xyz);
+	static float norm(float *wxyz);
+	static void normalizeVec(int32_t *xyz, float out[]);
+	static void normalize(float *quat);
+	static void conjugate(const float *i_wxyz, float *o_wxyz);
+	static void multiply(const float *a_wxyz, const float *b_wxyz, float *o_wxyz);
+	static void multiplyVec(const float *a_xyz, const float *b_wxyz, float *o_xyz);
+	static void fromEuler(const float pitch, const float yaw, const float roll, float *quat);
 	virtual ~Math() {
 	}
 }

@@ -38,18 +38,19 @@ void DataModel::calcutateOutput() {
 	 * -x---a---0---b--+x<br/ >
 	 * -y-------d->-|-----<br/ >
 	 */
-	double rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0], rollPitchYawFiltered[0]);
-	double pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1], rollPitchYawFiltered[1]);
-	double yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYawFiltered[2]);
+	float rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0], rollPitchYawFiltered[0]);
+	float pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1], rollPitchYawFiltered[1]);
+	float yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2], rollPitchYawFiltered[2]);
 
-	double inputThrust = (double) (input[0] - inputDefault[0]) / (double) (inputMax[0] - inputMin[0]);
-	double inputRoll = (double) (input[1] - inputDefault[1]) / (double) (inputMax[1] - inputMin[1]);
-	double inputPitch = (double) (input[2] - inputDefault[2]) / (double) (inputMax[2] - inputMin[2]);
-	double inputYaw = (double) (input[3] - inputDefault[3]) / (double) (inputMax[3] - inputMin[3]);
+	float inputThrust = ((float) input[0] - inputDefault[0]) / (float) (inputMax[0] - inputMin[0]);
+	float inputRoll = ((float) input[1] - inputDefault[1]) / (float) (inputMax[1] - inputMin[1]);
+	float inputPitch = ((float) input[2] - inputDefault[2]) / (float) (inputMax[2] - inputMin[2]);
+	float inputYaw = ((float) input[3] - inputDefault[3]) / (float) (inputMax[3] - inputMin[3]);
 
 	rollA += inputRoll;
 	pitchA += inputPitch;
 	yawA += inputYaw;
+	yawA *= 0.1;
 
 	thrust[0] = rollA + yawA + inputThrust;
 	thrust[1] = -rollA + yawA + inputThrust;
@@ -62,22 +63,20 @@ void DataModel::calcutateOutput() {
 		} else if (thrust[i] < 0) {
 			thrust[i] = 0;
 		}
+		if (active && inputThrust > 0.01) {
+			output[i] = (inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[i])));
+		} else {
+			output[i] = inputMin[0];
+		}
 	}
 
-	if (active && inputThrust > 0.01) {
-		hal->setPmw(hal->OUT0, (uint16_t) (inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[0]))));
-		hal->setPmw(hal->OUT1, (uint16_t) (inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[1]))));
-		hal->setPmw(hal->OUT2, (uint16_t) (inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[2]))));
-		hal->setPmw(hal->OUT3, (uint16_t) (inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[3]))));
-	} else {
-		hal->setPmw(hal->OUT0, 1105);
-		hal->setPmw(hal->OUT1, 1105);
-		hal->setPmw(hal->OUT2, 1105);
-		hal->setPmw(hal->OUT3, 1105);
-	}
+	hal->setPmw(hal->OUT0, output[0]);
+	hal->setPmw(hal->OUT1, output[1]);
+	hal->setPmw(hal->OUT2, output[2]);
+	hal->setPmw(hal->OUT3, output[3]);
 }
 
-void DataModel::calculate() {
+void DataModel::calculate10ms() {
 	calculateActivation();
 	calcutateOutput();
 }
@@ -93,18 +92,17 @@ void DataModel::putGyro5ms(int32_t* igyro) {
 	gyro[2] = igyro[2];
 }
 
-void DataModel::putBaro10ms(float altitude) {
+void DataModel::putBaro50ms(float altitude) {
 }
 
 void DataModel::putMag10ms(int16_t* mag) {
-	hal->getHeading(mag);
 	for (int i = 0; i < 3; i++) {
-		magScaled[i] = (((double) (mag[i]) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
+		magScaled[i] = (((float) (mag[i]) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
 	}
-	double rollSin = sin(rollPitchYawFiltered[0]);
-	double rollCos = cos(rollPitchYawFiltered[0]);
-	double pitchSin = sin(rollPitchYawFiltered[1]);
-	double pitchCos = cos(rollPitchYawFiltered[1]);
+	float rollSin = sin(rollPitchYawFiltered[0]);
+	float rollCos = cos(rollPitchYawFiltered[0]);
+	float pitchSin = sin(rollPitchYawFiltered[1]);
+	float pitchCos = cos(rollPitchYawFiltered[1]);
 	if (rollCos < 0) {
 		rollCos = -rollCos;
 	}

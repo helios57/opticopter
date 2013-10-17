@@ -54,10 +54,10 @@ namespace arducopterNg {
 		debug = new DebugStream(serializer);
 		hal = new HalApm(&Serial, debug);
 		dm = new DataModel(hal, persistence);
-		t_50ms = millis();
 		t_5ms = millis();
 		t_10ms = millis();
 		t_20ms = millis();
+		t_50ms = millis();
 	}
 
 	void ArducopterNg::sendAccel() {
@@ -305,10 +305,14 @@ namespace arducopterNg {
 
 		if ((millis() - t_5ms) >= 5) {
 			t_5ms = millis();
-			resetEmptyCycles();
-			if (hal->pollAccel() && sendData) {
-				sendAccel();
-				sendGyro();
+			if (sendData) {
+				resetEmptyCycles();
+			}
+			if (hal->pollAccel()) {
+				if (sendData) {
+					sendAccel();
+					sendGyro();
+				}
 			}
 			hal->getAccel(buffer);
 			dm->putAccel5ms(buffer);
@@ -318,16 +322,21 @@ namespace arducopterNg {
 
 		if ((millis() - t_10ms) >= 10) {
 			t_10ms = millis();
-			if (hal->pollBaro() && sendData) {
-				sendBaro();
+			if (hal->pollBaro()) {
+				if (sendData) {
+					sendBaro();
+				}
 			}
-			dm->putBaro10ms(hal->getBarometerAltitude());
-			if (hal->pollMag() && sendData) {
-				sendMag();
+			if (hal->pollMag()) {
+				if (sendData) {
+					sendMag();
+				}
 			}
+			//dm->putBaro50ms(hal->getBarometerAltitude());
 			int16_t buffer[3];
 			hal->getHeading(buffer);
 			dm->putMag10ms(buffer);
+			dm->calculate10ms();
 		}
 
 		if ((millis() - t_20ms) >= 20) {
@@ -336,9 +345,7 @@ namespace arducopterNg {
 				if (sendData) {
 					sendGPS();
 				}
-			}
-			//dm->putGPS()...
-			dm->calculate();
+			} //dm->putGPS()...
 		}
 
 		if ((millis() - t_50ms) >= 50) {
