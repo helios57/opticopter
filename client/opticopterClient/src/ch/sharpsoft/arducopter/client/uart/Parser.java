@@ -9,10 +9,8 @@ import ch.sharpsoft.arducopter.client.model.DataRaw;
 import ch.sharpsoft.arducopter.client.model.Manager;
 
 public class Parser {
-	private static final int ID_ACCEL = 0x01;
-	private static final int ID_GYRO = 0x02;
+	private static final int ID_MOTION6 = 0x01;
 	private static final int ID_BARO = 0x03;
-	private static final int ID_QUAT = 0x04;
 	private static final int ID_MAG = 0x05;
 	private static final int ID_GPS = 0x06;
 	private static final int ID_INPUT = 0x07;
@@ -40,37 +38,31 @@ public class Parser {
 	public void parse(final int id, final byte[] buffer) {
 		ByteBuffer bb = ByteBuffer.wrap(buffer);
 		bb.order(ByteOrder.LITTLE_ENDIAN);
-		if (id == ID_ACCEL) {
-			int[] input = new int[3];
-			input[0] = bb.getInt(0);
-			input[1] = bb.getInt(4);
-			input[2] = bb.getInt(8);
-			System.arraycopy(input, 0, rd.getAccel(), 0, 3);
-			System.arraycopy(input, 0, dm.getAccel(), 0, 3);
-		} else if (id == ID_GYRO) {
-			int[] input = new int[3];
-			input[0] = bb.getInt(0);
-			input[1] = bb.getInt(4);
-			input[2] = bb.getInt(8);
-			System.arraycopy(input, 0, rd.getGyro(), 0, 3);
-			System.arraycopy(input, 0, dm.getGyro(), 0, 3);
+		if (id == ID_MOTION6) {
+			short[] input = new short[6];
+			for (int i = 0; i < 6; i++) {
+				input[i] = bb.getShort(i * 2);
+			}
+			System.arraycopy(input, 0, rd.getMotion6(), 0, 6);
+			dm.getAccel()[0] = input[0];
+			dm.getAccel()[1] = input[1];
+			dm.getAccel()[2] = input[2];
+			dm.getGyro()[0] = input[3];
+			dm.getGyro()[1] = input[4];
+			dm.getGyro()[2] = input[5];
 			m.triggerAccelGyroRecieved5ms();
 			dm.triggerEvents();
 		} else if (id == ID_BARO) {
 			float baro = bb.getFloat();
 			rd.getBaro()[0] = baro;
 			dm.getBaro()[0] = baro;
-		} else if (id == ID_QUAT) {
-			// quat[0] = bb.getInt(0);
-			// quat[1] = bb.getInt(4);
-			// quat[2] = bb.getInt(8);
-			// quat[3] = bb.getInt(12);
 		} else if (id == ID_MAG) {
 			short[] input = new short[3];
 			input[0] = bb.getShort(0);
 			input[1] = bb.getShort(2);
 			input[2] = bb.getShort(4);
 			System.arraycopy(input, 0, dm.getMag(), 0, 3);
+			System.arraycopy(input, 0, rd.getMag(), 0, 3);
 		} else if (id == ID_GPS) {
 			GPSData gps = new GPSData();
 			gps.setLatitude(bb.getInt());

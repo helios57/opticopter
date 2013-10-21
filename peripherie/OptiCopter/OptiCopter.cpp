@@ -60,27 +60,12 @@ namespace arducopterNg {
 		t_50ms = millis();
 	}
 
-	void ArducopterNg::sendAccel() {
-		hal->getAccel(buffer);
-		serializer->beginn(Serializer::ID_ACCEL);
-		conv4.sint = buffer[0];
-		serializer->write(conv4.byte, 4);
-		conv4.sint = buffer[1];
-		serializer->write(conv4.byte, 4);
-		conv4.sint = buffer[2];
-		serializer->write(conv4.byte, 4);
-		serializer->end();
-	}
-
-	void ArducopterNg::sendGyro() {
-		hal->getGyro(buffer);
-		serializer->beginn(Serializer::ID_GYRO);
-		conv4.sint = buffer[0];
-		serializer->write(conv4.byte, 4);
-		conv4.sint = buffer[1];
-		serializer->write(conv4.byte, 4);
-		conv4.sint = buffer[2];
-		serializer->write(conv4.byte, 4);
+	void ArducopterNg::sendMotion6() {
+		serializer->beginn(Serializer::ID_MOTION6);
+		for (uint8_t i = 0; i < 6; i++) {
+			conv2.sint = axyzgxyz[i];
+			serializer->write(conv2.byte, 2);
+		}
 		serializer->end();
 	}
 
@@ -308,16 +293,11 @@ namespace arducopterNg {
 			if (sendData) {
 				resetEmptyCycles();
 			}
-			if (hal->pollAccel()) {
-				if (sendData) {
-					sendAccel();
-					sendGyro();
-				}
+			hal->getMotion6(axyzgxyz);
+			dm->putMotion6_5ms(axyzgxyz);
+			if (sendData) {
+				sendMotion6();
 			}
-			hal->getAccel(buffer);
-			dm->putAccel5ms(buffer);
-			hal->getGyro(buffer);
-			dm->putGyro5ms(buffer);
 		}
 
 		if ((millis() - t_10ms) >= 10) {

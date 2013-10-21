@@ -19,8 +19,7 @@ class DataModel {
 private:
 	HalApm *hal;
 	Persistence *persistence;
-	int32_t accel[3];
-	int32_t gyro[3];
+	int16_t gyro[3];
 	int16_t mag[3];
 	uint16_t input[8];
 	uint16_t inputMax[8];
@@ -37,7 +36,7 @@ private:
 	float rollPitchYawFiltered[3]; //Orientation
 	Kalman rollPitchYawKalman[3];
 	PID rollPitchYawPid[3]; //PID
-	const static float GYRO_TO_RAD_PER_S_FACTOR = -2491011.89227323; // magical factor
+	const static float GYRO_TO_RAD_PER_S_FACTOR = 0.00106413;
 	float pressure;
 	bool active;
 	unsigned long tActivate;
@@ -73,8 +72,7 @@ public:
 			rollPitchYawFiltered[i] = 0;
 		}
 	}
-	void putAccel5ms(int32_t* accel);
-	void putGyro5ms(int32_t* gyro);
+	void putMotion6_5ms(int16_t *axyzgxyz);
 	void putBaro50ms(float altitude);
 	void putMag10ms(int16_t* mag);
 	void putInput50ms(uint8_t ch, uint16_t pwm);

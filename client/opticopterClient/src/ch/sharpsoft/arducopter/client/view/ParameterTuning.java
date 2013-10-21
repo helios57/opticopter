@@ -152,6 +152,15 @@ public class ParameterTuning extends ViewPart {
 				}
 			}
 		});
+		Button record = new Button(container, SWT.PUSH);
+		record.setText("Record");
+		record.addSelectionListener(new SelectionAdapter() {
+
+			@Override
+			public void widgetSelected(final SelectionEvent e) {
+				SerialConnection.record();
+			}
+		});
 		Button start = new Button(container, SWT.PUSH);
 		start.setText("Start");
 		start.addSelectionListener(new SelectionAdapter() {

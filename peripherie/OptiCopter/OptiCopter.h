@@ -45,14 +45,14 @@ namespace arducopterNg {
 			int16_t sint;
 			uint8_t byte[2];
 		} conv2;
-		int32_t buffer[4];
 		int16_t buffer_16t[3];
 		uint16_t buffer_u16t[8];
 		uint8_t buffer_u8t[8];
 		float buffer_float[3];
 		uint8_t commandBuffer[64];
+		int16_t axyzgxyz[6];
 
-		void sendAccel();
+		void sendMotion6();
 		void sendGyro();
 		void sendQuat();
 		void sendBaro();

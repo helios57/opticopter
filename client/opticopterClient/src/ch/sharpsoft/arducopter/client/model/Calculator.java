@@ -38,18 +38,19 @@ public class Calculator {
 
 	private static void calcGyroRps(final DataRaw dr, final DataCalculated dc) {
 		for (int i = 0; i < 3; i++) {
-			dc.getGyroRps()[i] = dr.getGyro()[i] / GYRO_TO_RAD_PER_S_FACTOR;
+			dc.getGyroRps()[i] = dr.getMotion6()[3 + i] / GYRO_TO_RAD_PER_S_FACTOR;
 		}
 		dc.saveGyroRps();
 	}
 
 	private static void calcRollPitchYaw(final DataRaw dr, final DataCalculated dc) {
-		dc.getRollPitchYaw()[0] = atan2(-dr.getAccel()[0], dr.getAccel()[2]);
-		dc.getRollPitchYaw()[1] = atan2(dr.getAccel()[1], dr.getAccel()[2]);
+		dc.getRollPitchYaw()[0] = atan2(-dr.getMotion6()[0], dr.getMotion6()[2]);
+		dc.getRollPitchYaw()[1] = atan2(dr.getMotion6()[1], dr.getMotion6()[2]);
 		// Scale Mag to [-1;1]
 		for (int i = 0; i < 3; i++) {
 			dc.getMagScaled()[i] = (((double) (dr.getMag()[i]) - dc.getMagMin()[i]) / (dc.getMagMax()[i] - dc.getMagMin()[i])) * 2 - 1.0;
 		}
+		dc.getMagScaled()[2] = -dc.getMagScaled()[2];
 		double rollSin = sin(dc.getRollPitchYaw()[0]);
 		double rollCos = cos(dc.getRollPitchYaw()[0]);
 		double pitchSin = sin(dc.getRollPitchYaw()[1]);

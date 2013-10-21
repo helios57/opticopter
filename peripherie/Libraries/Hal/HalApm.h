@@ -53,32 +53,20 @@ namespace arducopterNg {
 		virtual ~HalApm();
 		uint16_t getPmw(const uint8_t channel) const;
 		void setPmw(const uint8_t channel, const uint16_t pmw);
-		void getQuat(int32_t *quat);
-		/*
-		 * <pre>
-		 * FS_SEL | Full Scale Range   | LSB Sensitivity
-		 * -------+--------------------+----------------
-		 * 0      | +/- 250 degrees/s  | 131 LSB/deg/s
-		 * 1      | +/- 500 degrees/s  | 65.5 LSB/deg/s
-		 * 2      | +/- 1000 degrees/s | 32.8 LSB/deg/s
-		 * 3      | +/- 2000 degrees/s | 16.4 LSB/deg/s
-		 * </pre>
-		 * use: (float) gyro[0] / 16.4 / (1L << 16) to get deg/s
-		 * use: (float) (gyro[0] / 16.4) / (1L << 16) * 0.0174532925 to get rad/s
-		 * */
-		void getGyro(int32_t *gyro);
 
-		/* <pre>
-		 * AFS_SEL | Full Scale Range | LSB Sensitivity
-		 * --------+------------------+----------------
-		 * 0 | +/- 2g | 8192 LSB/mg
-		 * 1 | +/- 4g | 4096 LSB/mg
-		 * 2 | +/- 8g | 2048 LSB/mg
-		 * 3 | +/- 16g | 1024 LSB/mg
-		 * </pre>
-		 * use (float) accel[0] / 1024 * 9.81 / (1L << 16) to get g1 / float
-		 * */
-		void getAccel(int32_t *accel);
+		/** Get raw 6-axis motion sensor readings (accel/gyro).
+		 * Retrieves all currently available motion sensor values.
+		 * | +/- 16g          | 1024 LSB/mg
+		 * @param ax 16-bit signed integer container for accelerometer X-axis value
+		 * @param ay 16-bit signed integer container for accelerometer Y-axis value
+		 * @param az 16-bit signed integer container for accelerometer Z-axis value
+		 * +/- 2000 degrees/s | 16.4 LSB/deg/s
+		 * @param gx 16-bit signed integer container for gyroscope X-axis value
+		 * @param gy 16-bit signed integer container for gyroscope Y-axis value
+		 * @param gz 16-bit signed integer container for gyroscope Z-axis value
+		 * @see MPU6050_RA_ACCEL_XOUT_H
+		 */
+		void getMotion6(int16_t *axyzgxyz);
 
 		//Temperature compensated pressure (10…1200mbar with 0.01mbar resolution)
 		//bsp:1000.09 mbar
@@ -116,10 +104,6 @@ namespace arducopterNg {
 
 		uint8_t* getGPSDataBuffer();
 
-		/*
-		 * 200 hz
-		 */
-		bool pollAccel();
 		/*
 		 * max 100 hz
 		 */

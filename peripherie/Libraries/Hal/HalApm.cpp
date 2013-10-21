@@ -81,9 +81,6 @@ namespace arducopterNg {
 		}
 	}
 
-	bool HalApm::pollAccel() {
-		return mpu6k->poll();
-	}
 	bool HalApm::pollBaro() {
 		return ms5611->poll();
 	}
@@ -93,17 +90,9 @@ namespace arducopterNg {
 	bool HalApm::pollGPS() {
 		return gps->poll();
 	}
-
-	void HalApm::getQuat(int32_t *quat) {
-		mpu6k->getQuat(quat);
+	void HalApm::getMotion6(int16_t *axyzgxyz) {
+		mpu6k->getMotion6(axyzgxyz);
 	}
-	void HalApm::getGyro(int32_t *gyro) {
-		mpu6k->getGyro(gyro);
-	}
-	void HalApm::getAccel(int32_t *accel) {
-		mpu6k->getAccel(accel);
-	}
-
 	float HalApm::getPressure() {
 		return ms5611->getPressure();
 	}
@@ -116,7 +105,7 @@ namespace arducopterNg {
 	void HalApm::getHeading(int16_t xyz[]) {
 		hmc5883l->getHeading(xyz);
 	}
-	uint8_t* HalApm::getGPSDataBuffer() {
+	uint8_t * HalApm::getGPSDataBuffer() {
 		return gps->getDataBuffer();
 	}
 } /* namespace arducopterNg */

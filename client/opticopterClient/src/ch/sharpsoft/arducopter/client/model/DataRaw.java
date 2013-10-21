@@ -6,8 +6,7 @@ public class DataRaw {
 
 	private final static DataRaw instance = new DataRaw();
 
-	private final int[] accel = new int[3];
-	private final int[] gyro = new int[3];
+	private final short[] axyzgxyz = new short[3];
 	private final short[] mag = new short[3];
 	private final float[] baro = new float[1];
 	private final GPSData gps = new GPSData();
@@ -16,14 +15,6 @@ public class DataRaw {
 
 	public static DataRaw getInstance() {
 		return instance;
-	}
-
-	public final int[] getAccel() {
-		return accel;
-	}
-
-	public final int[] getGyro() {
-		return gyro;
 	}
 
 	public final short[] getMag() {
@@ -44,5 +35,9 @@ public class DataRaw {
 
 	public final short[] getOut() {
 		return out;
+	}
+
+	public short[] getMotion6() {
+		return axyzgxyz;
 	}
 }

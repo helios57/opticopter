@@ -10,11 +10,13 @@ import gnu.io.UnsupportedCommOperationException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class SerialConnection {
 	private SerialConnection() {
@@ -72,6 +74,43 @@ public class SerialConnection {
 		SerialConnection sc = new SerialConnection();
 		sc.in = new GZIPInputStream(new FileInputStream(file));
 		sc.readFromInputStream();
+	}
+
+	public static void record() {
+		try {
+			final CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier("/dev/ttyACM0");
+			if (portIdentifier.isCurrentlyOwned()) {
+				System.out.println("Error: Port is currently in use");
+			} else {
+				CommPort port;
+				port = portIdentifier.open("Blubber", 2000);
+
+				if (port instanceof SerialPort) {
+					final SerialPort serialPort = (SerialPort) port;
+					serialPort.setSerialPortParams(Integer.valueOf("115200"), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+					SerialService.getInstance().startRequestingThread();
+					final File file = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/roll.bin").toFile();
+					final FileOutputStream fos = new FileOutputStream(file);
+					final GZIPOutputStream gso = new GZIPOutputStream(fos);
+					new Thread(new Runnable() {
+
+						@Override
+						public void run() {
+							try {
+								gso.write(serialPort.getInputStream().read());
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+
+					}).start();
+				} else {
+					System.out.println("Error: Only serial ports are handled by this example.");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void readFromInputStream() {

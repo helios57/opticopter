@@ -23,8 +23,7 @@ public:
 
 	//TODO add Out Prefix
 	//OUT-ID's
-	static const uint8_t ID_ACCEL = 0x01;
-	static const uint8_t ID_GYRO = 0x02;
+	static const uint8_t ID_MOTION6 = 0x01;
 	static const uint8_t ID_BARO = 0x03;
 	static const uint8_t ID_QUAT = 0x04;
 	static const uint8_t ID_MAG = 0x05;
