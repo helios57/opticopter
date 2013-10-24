@@ -287,6 +287,7 @@ namespace arducopterNg {
 		if (sendData && millis() > t_sendData) {
 			sendData = false;
 		}
+		hal->pollMotion();
 
 		if ((millis() - t_5ms) >= 5) {
 			t_5ms = millis();

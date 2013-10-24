@@ -3,8 +3,8 @@ package ch.sharpsoft.arducopter.client.model;
 public class Kalman {
 	/* Kalman filter variables */
 	public static double Q_angle = 0.001;// Process noise variance for the accelerometer
-	public static double Q_bias = 0.003; // Process noise variance for the gyro bias
-	public static double R_measure = 0.0005; // Measurement noise variance - this is actually the variance of the measurement noise
+	public static double Q_bias = 0.0001; // Process noise variance for the gyro bias
+	public static double R_measure = 0.00001; // Measurement noise variance - this is actually the variance of the measurement noise
 
 	double angle; // The angle calculated by the Kalman filter - part of the 2x1 state matrix
 	double bias; // The gyro bias calculated by the Kalman filter - part of the 2x1 state matrix

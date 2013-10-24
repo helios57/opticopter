@@ -81,6 +81,9 @@ namespace arducopterNg {
 		}
 	}
 
+	bool HalApm::pollMotion() {
+		return mpu6k->poll();
+	}
 	bool HalApm::pollBaro() {
 		return ms5611->poll();
 	}

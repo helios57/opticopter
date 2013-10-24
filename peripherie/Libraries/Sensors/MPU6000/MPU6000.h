@@ -20,18 +20,40 @@ class MPU6000 {
 private:
 	SPIDeviceDriver *spi;
 	Stream *console;
-	uint8_t regBuffer[14];
+	const static uint8_t fifoBufferLength = 12;
+	uint8_t fifoBuffer[fifoBufferLength];
+	int16_t motionRing[6][10];
+	uint8_t motionRingIndex;
 	bool initialised;
 	void delay(unsigned long ms);
 	uint8_t register_read(uint8_t reg);
 	void register_write(uint8_t reg, uint8_t val);
-	uint8_t initialize();
+	bool initialize();
+
+	// BANK_SEL register
+	void setMemoryBank(uint8_t bank, bool prefetchEnabled = false, bool userBank = false);
+
+	// MEM_START_ADDR register
+	void setMemoryStartAddress(uint8_t address);
+
+	bool writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank = 0, uint8_t address = 0, bool verify = true);
+	void readMemoryBlock(uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address);
+	bool writeDMPConfigurationSet(const uint8_t *data, uint16_t dataSize);
+	uint16_t getFIFOCount();
+	void resetFIFO();
+	void readFIFOBytes(uint16_t fifoCount, uint8_t fifoBuffer[128]);
+	void enableDMP();
+	void enableFIFO();
+	void resetDMP();
 	uint8_t getIntStatus();
+	void disableDMP();
+	void printHWRevisionInfos();
 
 public:
 	MPU6000(SPIDeviceDriver *spi, Stream *console) :
 			spi(spi), console(console) {
 		initialised = false;
+		motionRingIndex = 0;
 	}
 	~MPU6000() {
 	}
@@ -49,6 +71,7 @@ public:
 	 * @see MPU6050_RA_ACCEL_XOUT_H
 	 */
 	void getMotion6(int16_t *axyzgxyz);
+	bool poll();
 }
 ;
 
@@ -90,5 +113,16 @@ static const uint8_t MPU6050_USERCTRL_DMP_EN_BIT = 7;
 static const uint8_t MPU6050_USERCTRL_FIFO_EN_BIT = 6;
 static const uint8_t MPU6050_USERCTRL_DMP_RESET_BIT = 3;
 static const uint8_t MPU6050_USERCTRL_FIFO_RESET_BIT = 2;
+
+static const uint8_t MPU6050_RA_FIFO_EN = 0x23;
+
+/**
+ * #define MPU6050_XG_FIFO_EN_BIT      6
+ * #define MPU6050_YG_FIFO_EN_BIT      5
+ * #define MPU6050_ZG_FIFO_EN_BIT      4
+ * #define MPU6050_ACCEL_FIFO_EN_BIT   3
+ */
+static const uint8_t MPU6050_RA_FIFO_EN_VALUE = 0x78;
+//static const uint8_t MPU6050_RA_FIFO_EN_VALUE = 0xF8;
 
 #endif /* MPU6000_H_ */

@@ -104,6 +104,7 @@ namespace arducopterNg {
 
 		uint8_t* getGPSDataBuffer();
 
+		bool pollMotion();
 		/*
 		 * max 100 hz
 		 */

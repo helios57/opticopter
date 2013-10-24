@@ -19,7 +19,7 @@ class DataModel {
 private:
 	HalApm *hal;
 	Persistence *persistence;
-	int16_t gyro[3];
+	int16_t motion[6];
 	int16_t mag[3];
 	uint16_t input[8];
 	uint16_t inputMax[8];
@@ -55,7 +55,6 @@ public:
 		active = false;
 		tActivate = 0;
 		pressure = 0;
-
 		persistence->readMagMax(magMax);
 		persistence->readMagMin(magMin);
 

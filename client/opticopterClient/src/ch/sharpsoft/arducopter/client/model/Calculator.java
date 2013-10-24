@@ -7,7 +7,7 @@ import static java.lang.Math.sin;
 public class Calculator {
 	// private final static double GYRO_TO_RPS_FACTOR = 16.4 * (1L << 16) * 0.0174532925;
 	// private final static double GYRO_TO_RAD_PER_5MS_FACTOR = 498202378.5;// magical factor
-	private final static double GYRO_TO_RAD_PER_S_FACTOR = -2491011.89227323;// magical factor
+	private final static double GYRO_TO_RAD_PER_S_FACTOR = 0.00106413;// magical factor
 
 	/**
 	 * accel input
@@ -30,15 +30,15 @@ public class Calculator {
 	}
 
 	private static void calcKalman(final DataRaw dr, final DataCalculated dc) {
-		for (int i = 0; i < 3; i++) {
-			dc.getRollPitchYawFiltered()[i] = dc.getRollPitchYawKalman()[i].getAngle(dc.getRollPitchYaw()[i], dc.getGyroRps()[i], 0.005);
-		}
+		dc.getRollPitchYawFiltered()[0] = dc.getRollPitchYawKalman()[0].getAngle(dc.getRollPitchYaw()[0], dc.getGyroRps()[1], 0.005);
+		dc.getRollPitchYawFiltered()[1] = dc.getRollPitchYawKalman()[1].getAngle(dc.getRollPitchYaw()[1], dc.getGyroRps()[0], 0.005);
+		dc.getRollPitchYawFiltered()[2] = dc.getRollPitchYawKalman()[2].getAngle(dc.getRollPitchYaw()[2], dc.getGyroRps()[2], 0.005);
 		dc.saveRollPitchYawFiltered();
 	}
 
 	private static void calcGyroRps(final DataRaw dr, final DataCalculated dc) {
 		for (int i = 0; i < 3; i++) {
-			dc.getGyroRps()[i] = dr.getMotion6()[3 + i] / GYRO_TO_RAD_PER_S_FACTOR;
+			dc.getGyroRps()[i] = dr.getMotion6()[3 + i] * GYRO_TO_RAD_PER_S_FACTOR;
 		}
 		dc.saveGyroRps();
 	}

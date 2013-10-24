@@ -7,7 +7,7 @@
 
 #include "MPU6000.h"
 #include <avr/pgmspace.h>
-#include <string.h>
+#include "Util/WrithSint16.h"
 
 void MPU6000::delay(unsigned long ms) {
 	unsigned long start = millis();
@@ -22,22 +22,34 @@ void MPU6000::init() {
 	initialised = initialize();
 }
 
-void MPU6000::getMotion6(int16_t *axyzgxyz) {
-	spi->begin();
-	spi->transfer(MPU6050_RA_ACCEL_XOUT_H | 0x80);
-	for (unsigned short i = 0; i < 14; i++) {
-		regBuffer[i] = spi->transfer(0);
+bool MPU6000::poll() {
+	uint16_t fIfoCount = getFIFOCount();
+	if (fIfoCount > 1020) {
+		console->println("Fifo count too high");
+		resetFIFO();
+		return false;
 	}
-	spi->end();
-	axyzgxyz[0] = (((int16_t) regBuffer[0]) << 8) | regBuffer[1];
-	axyzgxyz[1] = (((int16_t) regBuffer[2]) << 8) | regBuffer[3];
-	axyzgxyz[2] = (((int16_t) regBuffer[4]) << 8) | regBuffer[5];
-	axyzgxyz[3] = (((int16_t) regBuffer[8]) << 8) | regBuffer[9];
-	axyzgxyz[4] = (((int16_t) regBuffer[10]) << 8) | regBuffer[11];
-	axyzgxyz[5] = (((int16_t) regBuffer[12]) << 8) | regBuffer[13];
+	if (fIfoCount >= fifoBufferLength) {
+		readFIFOBytes(fifoBufferLength, fifoBuffer);
+		for (uint8_t i = 0; i < 6; i++) {
+			motionRing[i][motionRingIndex] = (((int16_t) fifoBuffer[i * 2]) << 8) | fifoBuffer[i * 2 + 1];
+		}
+		if (++motionRingIndex >= 10) {
+			motionRingIndex = 0;
+		}
+		return true;
+	} else {
+		return false;
+	}
 }
 
-uint8_t MPU6000::initialize() {
+void MPU6000::getMotion6(int16_t *axyzgxyz) {
+	for (uint8_t i = 0; i < 6; i++) {
+		axyzgxyz[i] = medians(motionRing[i],10);
+	}
+}
+
+bool MPU6000::initialize() {
 	// reset device
 	//console->println("Resetting MPU6050...");
 	//reset
@@ -49,15 +61,9 @@ uint8_t MPU6000::initialize() {
 	register_write(MPUREG_PWR_MGMT_1, BIT_PWR_MGMT_1_CLK_XGYRO);
 	delay(5);
 
-	// get MPU hardware revision
-	//printHWRevisionInfos();
-
-	//console->println("Setting clock source to X Gyro...");
-	register_write(MPUREG_PWR_MGMT_1, BIT_PWR_MGMT_1_CLK_XGYRO);
-	delay(5);
-
 	//console->println("Setting sample rate to 200Hz...");
-	register_write(MPU6050_RA_SMPLRT_DIV, 4); // 1khz / (1 + 4) = 200 Hz
+//	register_write(MPU6050_RA_SMPLRT_DIV, 4); // 1khz / (1 + 4) = 200 Hz
+	register_write(MPU6050_RA_SMPLRT_DIV, 0); // 1khz
 
 	//console->println("Setting DLPF bandwidth to 42Hz...");
 
@@ -73,8 +79,11 @@ uint8_t MPU6000::initialize() {
 
 	// Disable I2C bus (recommended on datasheet)
 	register_write(MPU6050_RA_USER_CTRL, BIT_USER_CTRL_I2C_IF_DIS);
-
-	return 0; // success
+	resetFIFO();
+	register_write(MPU6050_RA_FIFO_EN, MPU6050_RA_FIFO_EN_VALUE);
+	enableFIFO();
+	resetFIFO();
+	return true; // success
 }
 
 uint8_t MPU6000::register_read(uint8_t reg) {
@@ -90,6 +99,30 @@ void MPU6000::register_write(uint8_t reg, uint8_t val) {
 	spi->transfer(reg);
 	spi->transfer(val);
 	spi->end();
+}
+
+uint16_t MPU6000::getFIFOCount() {
+	uint8_t fifoCountH = register_read(MPU6050_RA_FIFO_COUNTH);
+	uint8_t fifoCountL = register_read(MPU6050_RA_FIFO_COUNTL);
+	uint16_t fifoCount = (((uint16_t) (fifoCountH)) << 8) | fifoCountL;
+	return fifoCount;
+}
+
+void MPU6000::resetFIFO() {
+	register_write(MPU6050_RA_USER_CTRL, register_read(MPU6050_RA_USER_CTRL) | _BV(MPU6050_USERCTRL_FIFO_RESET_BIT));
+}
+
+void MPU6000::readFIFOBytes(uint16_t fifoCount, uint8_t *fifoBuffer) {
+	spi->begin();
+	spi->transfer(MPU6050_RA_FIFO_R_W | 0x80);
+	for (unsigned short i = 0; i < fifoCount; i++) {
+		fifoBuffer[i] = spi->transfer(0);
+	}
+	spi->end();
+}
+
+void MPU6000::enableFIFO() {
+	register_write(MPU6050_RA_USER_CTRL, register_read(MPU6050_RA_USER_CTRL) | _BV(MPU6050_USERCTRL_FIFO_EN_BIT));
 }
 
 uint8_t MPU6000::getIntStatus() {

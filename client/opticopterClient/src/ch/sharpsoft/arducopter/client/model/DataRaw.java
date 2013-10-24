@@ -6,7 +6,7 @@ public class DataRaw {
 
 	private final static DataRaw instance = new DataRaw();
 
-	private final short[] axyzgxyz = new short[3];
+	private final short[] axyzgxyz = new short[6];
 	private final short[] mag = new short[3];
 	private final float[] baro = new float[1];
 	private final GPSData gps = new GPSData();
