@@ -30,7 +30,7 @@ void DataModel::calculateActivation() {
 		tActivate = 0;
 	}
 }
-static long count = 0;
+//static long count = 0;
 void DataModel::calcutateOutput() {
 	/**
 	 * <br />
@@ -39,15 +39,38 @@ void DataModel::calcutateOutput() {
 	 * -y-------d->-|-----<br/ >
 	 */
 
-	float inputThrust = ((float) input[0] - inputDefault[0]) / (float) (inputMax[0] - inputMin[0]);
-	float inputRoll = ((float) input[1] - inputDefault[1]) / (float) (inputMax[1] - inputMin[1]);
-	float inputPitch = ((float) input[2] - inputDefault[2]) / (float) (inputMax[2] - inputMin[2]);
+	/* old
+	 float inputThrust = ((float) input[0] - inputDefault[0]) / (float) (inputMax[0] - inputMin[0]);
+	 float inputRoll = ((float) input[1] - inputDefault[1]) / (float) (inputMax[1] - inputMin[1]);
+	 float inputPitch = ((float) input[2] - inputDefault[2]) / (float) (inputMax[2] - inputMin[2]);
+	 float inputYaw = ((float) input[3] - inputDefault[3]) / (float) (inputMax[3] - inputMin[3]);
+	 */
+	float inputRoll = ((float) input[0] - inputDefault[0]) / (float) (inputMax[0] - inputMin[0]);
+	float inputPitch = ((float) input[1] - inputDefault[1]) / (float) (inputMax[1] - inputMin[1]);
+	float inputThrust = ((float) input[2] - inputDefault[2]) / (float) (inputMax[2] - inputMin[2]);
 	float inputYaw = ((float) input[3] - inputDefault[3]) / (float) (inputMax[3] - inputMin[3]);
 
-	float rollA = rollPitchYawPid[0].updatePID(rollPitchYawLevel[0] + inputRoll * 0.5, rollPitchYawFiltered[0]);
+	float rollA = -rollPitchYawPid[0].updatePID(rollPitchYawLevel[0] + inputRoll * 0.5, rollPitchYawFiltered[0]);
 	float pitchA = rollPitchYawPid[1].updatePID(rollPitchYawLevel[1] + inputPitch * 0.5, rollPitchYawFiltered[1]);
-	float yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2] + inputYaw * 0.5, rollPitchYawFiltered[2]);
-	yawA = 0; //*= 0.5;
+
+	float yawLevel = rollPitchYawLevel[2] + inputYaw * 0.5;
+	float yawCurrent = rollPitchYawFiltered[2];
+
+	while (yawLevel > PI) {
+		yawLevel -= PI * 2;
+	}
+	while (yawLevel < -PI) {
+		yawLevel += PI * 2;
+	}
+	double diff = yawLevel - yawCurrent;
+	if (diff < -PI) {
+		yawLevel += 2 * PI;
+	}
+	if (diff > PI) {
+		yawLevel -= 2 * PI;
+	}
+	float yawA = rollPitchYawPid[2].updatePID(yawLevel, yawCurrent);
+	yawA = yawA * -0.5;
 
 	/**
 	 //quad X
@@ -57,44 +80,55 @@ void DataModel::calcutateOutput() {
 	 thrust[3] = pitchA - yawA + inputThrust;
 	 */
 
+	float factor = 5.0;
 	//hexa X
-	thrust[0] = inputThrust * (1 + (rollA + yawA));
-	thrust[1] = inputThrust * (1 + (-rollA - yawA));
-	thrust[2] = inputThrust * (1 + (-rollA * SIN_60_COS_30 + pitchA * SIN_60_COS_30 + yawA));
-	thrust[3] = inputThrust * (1 + (+rollA * SIN_60_COS_30 - pitchA * SIN_60_COS_30 - yawA));
-	thrust[4] = inputThrust * (1 + (-rollA * SIN_60_COS_30 + pitchA * SIN_60_COS_30 + yawA));
-	thrust[5] = inputThrust * (1 + (+rollA * SIN_60_COS_30 - pitchA * SIN_60_COS_30 - yawA));
+	thrust[0] = inputThrust * (1.0 + factor * (rollA + yawA));
+	thrust[1] = inputThrust * (1.0 + factor * (-rollA - yawA));
+	thrust[2] = inputThrust * (1.0 + factor * (-rollA * SIN_60_COS_30 + pitchA * SIN_60_COS_30 + yawA));
+	thrust[3] = inputThrust * (1.0 + factor * (+rollA * SIN_60_COS_30 - pitchA * SIN_60_COS_30 - yawA));
+	thrust[4] = inputThrust * (1.0 + factor * (+rollA * SIN_60_COS_30 + pitchA * SIN_60_COS_30 - yawA));
+	thrust[5] = inputThrust * (1.0 + factor * (-rollA * SIN_60_COS_30 - pitchA * SIN_60_COS_30 + yawA));
 
-	if (false && count++ > 0) {
-		count = 0;
-		for (uint8_t i = 0; i < 6; i++) {
-			Serial.print(motion[i]);
-			Serial.print(",");
-		}
-		Serial.print(rollPitchYaw[0]);
-		Serial.print(",");
-		Serial.print(rollPitchYaw[1]);
-		Serial.print(",");
-		Serial.print(rollPitchYawFiltered[0]);
-		Serial.print(",");
-		Serial.print(rollPitchYawFiltered[1]);
-		Serial.print(",");
-		Serial.print(rollA);
-		Serial.print(",");
-		Serial.print(pitchA);
-		Serial.print(",");
-		Serial.print(thrust[0]);
-		Serial.print(",");
-		Serial.print(thrust[1]);
-		Serial.print(",");
-		Serial.print(thrust[2]);
-		Serial.print(",");
-		Serial.print(thrust[3]);
-		Serial.print(",");
-		Serial.print(thrust[4]);
-		Serial.print(",");
-		Serial.println(thrust[5]);
-	}
+	/*if (count++ > 0) {
+	 count = 0;
+	 for (uint8_t i = 0; i < 6; i++) {
+	 Serial.print(motion[i]);
+	 Serial.print(",");
+	 }
+	 Serial.print(rollPitchYaw[0]);
+	 Serial.print(",");
+	 Serial.print(rollPitchYaw[1]);
+	 Serial.print(",");
+	 Serial.print(rollPitchYawFiltered[0]);
+	 Serial.print(",");
+	 Serial.print(rollPitchYawFiltered[1]);
+	 Serial.print(",");
+	 Serial.print(rollA);
+	 Serial.print(",");
+	 Serial.print(pitchA);
+	 Serial.print(",");
+	 Serial.print(yawA);
+	 Serial.print(",");
+	 Serial.print(inputThrust);
+	 Serial.print(",");
+	 Serial.print(inputRoll);
+	 Serial.print(",");
+	 Serial.print(inputPitch);
+	 Serial.print(",");
+	 Serial.print(inputYaw);
+	 Serial.print(",");
+	 Serial.print(thrust[0]);
+	 Serial.print(",");
+	 Serial.print(thrust[1]);
+	 Serial.print(",");
+	 Serial.print(thrust[2]);
+	 Serial.print(",");
+	 Serial.print(thrust[3]);
+	 Serial.print(",");
+	 Serial.print(thrust[4]);
+	 Serial.print(",");
+	 Serial.println(thrust[5]);
+	 }*/
 	for (int i = 0; i < 6; i++) {
 		if (thrust[i] > 1) {
 			thrust[i] = 1;
