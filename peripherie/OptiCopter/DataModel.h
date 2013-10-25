@@ -37,6 +37,7 @@ private:
 	Kalman rollPitchYawKalman[3];
 	PID rollPitchYawPid[3]; //PID
 	const static float GYRO_TO_RAD_PER_S_FACTOR = 0.00106413;
+	const static float SIN_60_COS_30 = 0.866025403784439;
 	float pressure;
 	bool active;
 	unsigned long tActivate;

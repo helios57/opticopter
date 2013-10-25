@@ -49,10 +49,21 @@ void DataModel::calcutateOutput() {
 	float yawA = rollPitchYawPid[2].updatePID(rollPitchYawLevel[2] + inputYaw * 0.5, rollPitchYawFiltered[2]);
 	yawA = 0; //*= 0.5;
 
-	thrust[0] = rollA - yawA + inputThrust;
-	thrust[1] = -rollA - yawA + inputThrust;
-	thrust[2] = -pitchA + yawA + inputThrust;
-	thrust[3] = pitchA + yawA + inputThrust;
+	/**
+	 //quad X
+	 thrust[0] = rollA + yawA + inputThrust;
+	 thrust[1] = -rollA + yawA + inputThrust;
+	 thrust[2] = -pitchA - yawA + inputThrust;
+	 thrust[3] = pitchA - yawA + inputThrust;
+	 */
+
+	//hexa X
+	thrust[0] = inputThrust * (1 + (rollA + yawA));
+	thrust[1] = inputThrust * (1 + (-rollA - yawA));
+	thrust[2] = inputThrust * (1 + (-rollA * SIN_60_COS_30 + pitchA * SIN_60_COS_30 + yawA));
+	thrust[3] = inputThrust * (1 + (+rollA * SIN_60_COS_30 - pitchA * SIN_60_COS_30 - yawA));
+	thrust[4] = inputThrust * (1 + (-rollA * SIN_60_COS_30 + pitchA * SIN_60_COS_30 + yawA));
+	thrust[5] = inputThrust * (1 + (+rollA * SIN_60_COS_30 - pitchA * SIN_60_COS_30 - yawA));
 
 	if (false && count++ > 0) {
 		count = 0;
@@ -78,9 +89,13 @@ void DataModel::calcutateOutput() {
 		Serial.print(",");
 		Serial.print(thrust[2]);
 		Serial.print(",");
-		Serial.println(thrust[3]);
+		Serial.print(thrust[3]);
+		Serial.print(",");
+		Serial.print(thrust[4]);
+		Serial.print(",");
+		Serial.println(thrust[5]);
 	}
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 6; i++) {
 		if (thrust[i] > 1) {
 			thrust[i] = 1;
 		} else if (thrust[i] < 0) {
@@ -97,6 +112,8 @@ void DataModel::calcutateOutput() {
 	hal->setPmw(hal->OUT1, output[1]);
 	hal->setPmw(hal->OUT2, output[2]);
 	hal->setPmw(hal->OUT3, output[3]);
+	hal->setPmw(hal->OUT4, output[4]);
+	hal->setPmw(hal->OUT5, output[5]);
 }
 
 void DataModel::calculate10ms() {
