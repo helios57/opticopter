@@ -22,7 +22,7 @@ private:
 	Stream *console;
 	const static uint8_t fifoBufferLength = 12;
 	uint8_t fifoBuffer[fifoBufferLength];
-	int16_t motionRing[6][10];
+	int16_t motionRing[6][5];
 	uint8_t motionRingIndex;
 	bool initialised;
 	void delay(unsigned long ms);
@@ -89,7 +89,14 @@ static const uint8_t MPU6050_RA_YG_OFFS_TC = 0x01; //[7] PWR_MODE, [6:1] YG_OFFS
 static const uint8_t MPU6050_RA_ZG_OFFS_TC = 0x02; //[7] PWR_MODE, [6:1] ZG_OFFS_TC, [0] OTP_BNK_VLD
 static const uint8_t MPU6050_RA_INT_ENABLE = 0x38;
 static const uint8_t MPU6050_RA_SMPLRT_DIV = 0x19;
+static const uint8_t MPU6050_DLPF_BW_256 = 0x00;
+static const uint8_t MPU6050_DLPF_BW_188 = 0x01;
+static const uint8_t MPU6050_DLPF_BW_98 = 0x02;
 static const uint8_t MPU6050_DLPF_BW_42 = 0x03;
+static const uint8_t MPU6050_DLPF_BW_20 = 0x04;
+static const uint8_t MPU6050_DLPF_BW_10 = 0x05;
+static const uint8_t MPU6050_DLPF_BW_5 = 0x06;
+
 static const uint8_t MPU6050_RA_CONFIG = 0x1A;
 static const uint8_t MPU6050_RA_DMP_CFG_1 = 0x70;
 static const uint8_t MPU6050_RA_DMP_CFG_2 = 0x71;

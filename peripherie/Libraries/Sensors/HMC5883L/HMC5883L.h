@@ -126,26 +126,16 @@ public:
 
 	// DATA* registers
 	void getHeading(int16_t xyz[]);
-	int16_t getHeadingX();
-	int16_t getHeadingY();
-	int16_t getHeadingZ();
 
 	// STATUS register
-	bool getLockStatus();
 	bool getReadyStatus();
-
-	// ID_* registers
-	uint8_t getIDA();
-	uint8_t getIDB();
-	uint8_t getIDC();
 
 private:
 	uint8_t devAddr;
+	int16_t magRing[3][10];
+	uint8_t magRingIndex;
 	uint8_t buffer[6];
 	uint8_t mode;
-	int16_t x;
-	int16_t y;
-	int16_t z;
 	Stream *console;
 };
 

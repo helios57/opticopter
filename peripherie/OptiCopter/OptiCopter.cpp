@@ -287,9 +287,9 @@ namespace arducopterNg {
 		if (sendData && millis() > t_sendData) {
 			sendData = false;
 		}
-		hal->pollMotion();
 
 		if ((millis() - t_5ms) >= 5) {
+			hal->pollMotion();
 			t_5ms = millis();
 			if (sendData) {
 				resetEmptyCycles();

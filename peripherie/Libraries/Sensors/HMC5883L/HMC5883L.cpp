@@ -33,6 +33,7 @@
  */
 
 #include "HMC5883L.h"
+#include "Util/WirthMedianSInt16.h"
 
 /** Default constructor, uses default I2C address.
  * @see HMC5883L_DEFAULT_ADDRESS
@@ -41,7 +42,7 @@ HMC5883L::HMC5883L(Stream *console) :
 		console(console) {
 	devAddr = HMC5883L_DEFAULT_ADDRESS;
 	mode = HMC5883L_MODE_CONTINUOUS;
-	x = y = z = 0;
+	magRingIndex = 0;
 }
 
 /** Power on and prepare for general usage.
@@ -74,10 +75,19 @@ bool HMC5883L::poll() {
 		return false;
 	}
 	I2Cdev::readBytes(devAddr, HMC5883L_RA_DATAX_H, 6, buffer);
-	x = (((int16_t) buffer[0]) << 8) | buffer[1];
-	y = (((int16_t) buffer[4]) << 8) | buffer[5];
-	z = (((int16_t) buffer[2]) << 8) | buffer[3];
+	magRing[0][magRingIndex] = (((int16_t) buffer[0]) << 8) | buffer[1];
+	magRing[1][magRingIndex] = (((int16_t) buffer[4]) << 8) | buffer[5];
+	magRing[2][magRingIndex] = (((int16_t) buffer[2]) << 8) | buffer[3];
+	if (++magRingIndex >= 10) {
+		magRingIndex = 0;
+	}
 	return true;
+}
+
+void HMC5883L::getHeading(int16_t xyz[]) {
+	for (uint8_t i = 0; i < 3; i++) {
+		xyz[i] = WirthMedianSInt16::kth_smallest(magRing[i], 10, 5);
+	}
 }
 
 /** Verify the I2C connection.
@@ -262,78 +272,6 @@ void HMC5883L::setMode(uint8_t newMode) {
 	mode = newMode; // track to tell if we have to clear bit 7 after a read
 }
 
-// DATA* registers
-
-/** Get 3-axis heading measurements.
- * In the event the ADC reading overflows or underflows for the given channel,
- * or if there is a math overflow during the bias measurement, this data
- * register will contain the value -4096. This register value will clear when
- * after the next valid measurement is made. Note that this method automatically
- * clears the appropriate bit in the MODE register if Single mode is active.
- * @param x 16-bit signed integer container for X-axis heading
- * @param y 16-bit signed integer container for Y-axis heading
- * @param z 16-bit signed integer container for Z-axis heading
- * @see HMC5883L_RA_DATAX_H
- */
-void HMC5883L::getHeading(int16_t xyz[]) {
-	xyz[0] = x;
-	xyz[1] = y;
-	xyz[2] = z;
-}
-/** Get X-axis heading measurement.
- * @return 16-bit signed integer with X-axis heading
- * @see HMC5883L_RA_DATAX_H
- */
-int16_t HMC5883L::getHeadingX() {
-	// each axis read requires that ALL axis registers be read, even if only
-	// one is used; this was not done ineffiently in the code by accident
-	I2Cdev::readBytes(devAddr, HMC5883L_RA_DATAX_H, 6, buffer);
-	if (mode == HMC5883L_MODE_SINGLE)
-		I2Cdev::writeByte(devAddr, HMC5883L_RA_MODE, HMC5883L_MODE_SINGLE << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
-	return (((int16_t) buffer[0]) << 8) | buffer[1];
-}
-/** Get Y-axis heading measurement.
- * @return 16-bit signed integer with Y-axis heading
- * @see HMC5883L_RA_DATAY_H
- */
-int16_t HMC5883L::getHeadingY() {
-	// each axis read requires that ALL axis registers be read, even if only
-	// one is used; this was not done ineffiently in the code by accident
-	I2Cdev::readBytes(devAddr, HMC5883L_RA_DATAX_H, 6, buffer);
-	if (mode == HMC5883L_MODE_SINGLE)
-		I2Cdev::writeByte(devAddr, HMC5883L_RA_MODE, HMC5883L_MODE_SINGLE << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
-	return (((int16_t) buffer[4]) << 8) | buffer[5];
-}
-/** Get Z-axis heading measurement.
- * @return 16-bit signed integer with Z-axis heading
- * @see HMC5883L_RA_DATAZ_H
- */
-int16_t HMC5883L::getHeadingZ() {
-	// each axis read requires that ALL axis registers be read, even if only
-	// one is used; this was not done ineffiently in the code by accident
-	I2Cdev::readBytes(devAddr, HMC5883L_RA_DATAX_H, 6, buffer);
-	if (mode == HMC5883L_MODE_SINGLE)
-		I2Cdev::writeByte(devAddr, HMC5883L_RA_MODE, HMC5883L_MODE_SINGLE << (HMC5883L_MODEREG_BIT - HMC5883L_MODEREG_LENGTH + 1));
-	return (((int16_t) buffer[2]) << 8) | buffer[3];
-}
-
-// STATUS register
-
-/** Get data output register lock status.
- * This bit is set when this some but not all for of the six data output
- * registers have been read. When this bit is set, the six data output registers
- * are locked and any new data will not be placed in these register until one of
- * three conditions are met: one, all six bytes have been read or the mode
- * changed, two, the mode is changed, or three, the measurement configuration is
- * changed.
- * @return Data output register lock status
- * @see HMC5883L_RA_STATUS
- * @see HMC5883L_STATUS_LOCK_BIT
- */
-bool HMC5883L::getLockStatus() {
-	I2Cdev::readBit(devAddr, HMC5883L_RA_STATUS, HMC5883L_STATUS_LOCK_BIT, buffer);
-	return buffer[0];
-}
 /** Get data ready status.
  * This bit is set when data is written to all six data registers, and cleared
  * when the device initiates a write to the data output registers and after one
@@ -346,29 +284,5 @@ bool HMC5883L::getLockStatus() {
  */
 bool HMC5883L::getReadyStatus() {
 	I2Cdev::readBit(devAddr, HMC5883L_RA_STATUS, HMC5883L_STATUS_READY_BIT, buffer);
-	return buffer[0];
-}
-
-// ID_* registers
-
-/** Get identification byte A
- * @return ID_A byte (should be 01001000, ASCII value 'H')
- */
-uint8_t HMC5883L::getIDA() {
-	I2Cdev::readByte(devAddr, HMC5883L_RA_ID_A, buffer);
-	return buffer[0];
-}
-/** Get identification byte B
- * @return ID_A byte (should be 00110100, ASCII value '4')
- */
-uint8_t HMC5883L::getIDB() {
-	I2Cdev::readByte(devAddr, HMC5883L_RA_ID_B, buffer);
-	return buffer[0];
-}
-/** Get identification byte C
- * @return ID_A byte (should be 00110011, ASCII value '3')
- */
-uint8_t HMC5883L::getIDC() {
-	I2Cdev::readByte(devAddr, HMC5883L_RA_ID_C, buffer);
 	return buffer[0];
 }

@@ -7,7 +7,7 @@
 
 #include "MPU6000.h"
 #include <avr/pgmspace.h>
-#include "Util/WrithSint16.h"
+#include "Util/WirthMedianSInt16.h"
 
 void MPU6000::delay(unsigned long ms) {
 	unsigned long start = millis();
@@ -30,12 +30,15 @@ bool MPU6000::poll() {
 		return false;
 	}
 	if (fIfoCount >= fifoBufferLength) {
-		readFIFOBytes(fifoBufferLength, fifoBuffer);
-		for (uint8_t i = 0; i < 6; i++) {
-			motionRing[i][motionRingIndex] = (((int16_t) fifoBuffer[i * 2]) << 8) | fifoBuffer[i * 2 + 1];
-		}
-		if (++motionRingIndex >= 10) {
-			motionRingIndex = 0;
+		while (fIfoCount >= fifoBufferLength) {
+			readFIFOBytes(fifoBufferLength, fifoBuffer);
+			for (uint8_t i = 0; i < 6; i++) {
+				motionRing[i][motionRingIndex] = (((int16_t) fifoBuffer[i * 2]) << 8) | fifoBuffer[i * 2 + 1];
+			}
+			if (++motionRingIndex >= 5) {
+				motionRingIndex = 0;
+			}
+			fIfoCount = getFIFOCount();
 		}
 		return true;
 	} else {
@@ -45,7 +48,7 @@ bool MPU6000::poll() {
 
 void MPU6000::getMotion6(int16_t *axyzgxyz) {
 	for (uint8_t i = 0; i < 6; i++) {
-		axyzgxyz[i] = medians(motionRing[i],10);
+		axyzgxyz[i] = WirthMedianSInt16::kth_smallest(motionRing[i], 5, 3);
 	}
 }
 
@@ -62,13 +65,12 @@ bool MPU6000::initialize() {
 	delay(5);
 
 	//console->println("Setting sample rate to 200Hz...");
-//	register_write(MPU6050_RA_SMPLRT_DIV, 4); // 1khz / (1 + 4) = 200 Hz
-	register_write(MPU6050_RA_SMPLRT_DIV, 0); // 1khz
+	register_write(MPU6050_RA_SMPLRT_DIV, 4); // 1khz / (1 + 4) = 200 Hz
+	//register_write(MPU6050_RA_SMPLRT_DIV, 0); // 1khz
 
 	//console->println("Setting DLPF bandwidth to 42Hz...");
-
 	uint8_t oldConfig = register_read(MPU6050_RA_CONFIG);
-	oldConfig = (oldConfig & ~0x07) | MPU6050_DLPF_BW_42;
+	oldConfig = (oldConfig & ~0x07) | MPU6050_DLPF_BW_98;
 	register_write(MPU6050_RA_CONFIG, oldConfig);
 
 	//Gyro to (+/- 2000 degrees/sec)

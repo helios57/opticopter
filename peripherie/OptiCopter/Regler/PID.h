@@ -22,7 +22,7 @@ public:
 	PID() {
 		lastInput = 0;
 		errSum = 0;
-		kp = 0.1;
+		kp = 0.5;
 		ki = 0.01;
 		kd = 0.05;
 		errSumMax = (PI / ki) / 16;
