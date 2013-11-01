@@ -18,9 +18,9 @@ void DataModel::calculateActivation() {
 		rollPitchYawPid[0].resetI();
 		rollPitchYawPid[1].resetI();
 		rollPitchYawPid[2].resetI();
-		rollPitchYawLevel[0] = rollPitchYaw[0];
-		rollPitchYawLevel[1] = rollPitchYaw[1];
-		rollPitchYawLevel[2] = rollPitchYaw[2];
+		rollPitchYawLevel[0] = rollPitchYawFiltered[0];
+		rollPitchYawLevel[1] = rollPitchYawFiltered[1];
+		rollPitchYawLevel[2] = rollPitchYawFiltered[2];
 	}
 
 	if (active && input[3] < activateBot && tActivate == 0) {
