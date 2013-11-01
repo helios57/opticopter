@@ -7,6 +7,7 @@ import gnu.io.PortInUseException;
 import gnu.io.SerialPort;
 import gnu.io.UnsupportedCommOperationException;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -14,7 +15,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Iterator;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -70,15 +76,42 @@ public class SerialConnection {
 
 	public static void main(final String... args) throws FileNotFoundException, IOException {
 		// final File file = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/steady.bin").toFile();
-		final File file = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/roll.bin").toFile();
+		final File file = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/flight_text.bin").toFile();
+		final File out = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/flight_text.txt").toFile();
 		SerialConnection sc = new SerialConnection();
 		sc.in = new GZIPInputStream(new FileInputStream(file));
-		sc.readFromInputStream();
+		FileOutputStream fos = new FileOutputStream(out);
+		int i = sc.in.read();
+		int j = 0;
+		try {
+			while (sc.in.available() > 0) {
+				if (j++ > 100) {
+					fos.write(i);
+				}
+				i = sc.in.read();
+			}
+		} catch (Exception e) {
+
+		}
+		fos.close();
+		final List<String> lines = Files.readAllLines(out.toPath(), Charset.defaultCharset());
+		final Iterator<String> iterator = lines.iterator();
+		while (iterator.hasNext()) {
+			final int length = iterator.next().split(",").length;
+			System.err.println(length);
+			if (!(length == 16)) {
+				iterator.remove();
+			}
+		}
+		Files.write(out.toPath(), lines, Charset.defaultCharset(), StandardOpenOption.TRUNCATE_EXISTING);
+
+		// sc.readFromInputStream();
 	}
 
 	public static void record() {
 		try {
-			final CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier("/dev/ttyACM0");
+			final CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier("/dev/ttyUSB0");
+			// final CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier("/dev/ttyACM0");
 			if (portIdentifier.isCurrentlyOwned()) {
 				System.out.println("Error: Port is currently in use");
 			} else {
@@ -88,18 +121,23 @@ public class SerialConnection {
 				if (port instanceof SerialPort) {
 					final SerialPort serialPort = (SerialPort) port;
 					serialPort.setSerialPortParams(Integer.valueOf("115200"), SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-					SerialService.getInstance().startRequestingThread();
-					final File file = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/roll.bin").toFile();
+					final File file = Paths.get("/home/helios/git/opticopter/client/opticopterClient/log/flight_text.bin").toFile();
 					final FileOutputStream fos = new FileOutputStream(file);
-					final GZIPOutputStream gso = new GZIPOutputStream(fos);
+					final GZIPOutputStream gso = new GZIPOutputStream(fos, true);
+					SerialConnection.getInstance().in = serialPort.getInputStream();
+					SerialConnection.getInstance().out = serialPort.getOutputStream();
+					// SerialService.getInstance().startRequestingThread();
 					new Thread(new Runnable() {
 
 						@Override
 						public void run() {
-							try {
-								gso.write(serialPort.getInputStream().read());
-							} catch (IOException e) {
-								e.printStackTrace();
+							while (true) {
+								try {
+									gso.write(serialPort.getInputStream().read());
+									gso.flush();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
 							}
 						}
 
@@ -160,6 +198,9 @@ public class SerialConnection {
 					}
 				}
 			} catch (IOException e) {
+				if (e instanceof EOFException) {
+					break;
+				}
 				e.printStackTrace();
 			}
 		}

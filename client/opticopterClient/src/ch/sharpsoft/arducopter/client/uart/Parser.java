@@ -36,94 +36,98 @@ public class Parser {
 	private final Map<Byte, IParamReciever> paramReciever = new HashMap<>();
 
 	public void parse(final int id, final byte[] buffer) {
-		ByteBuffer bb = ByteBuffer.wrap(buffer);
-		bb.order(ByteOrder.LITTLE_ENDIAN);
-		if (id == ID_MOTION6) {
-			short[] input = new short[6];
-			for (int i = 0; i < 6; i++) {
-				input[i] = bb.getShort(i * 2);
-			}
-			System.arraycopy(input, 0, rd.getMotion6(), 0, 6);
-			dm.getAccel()[0] = input[0];
-			dm.getAccel()[1] = input[1];
-			dm.getAccel()[2] = input[2];
-			dm.getGyro()[0] = input[3];
-			dm.getGyro()[1] = input[4];
-			dm.getGyro()[2] = input[5];
-			m.triggerAccelGyroRecieved5ms();
-			dm.triggerEvents();
-		} else if (id == ID_BARO) {
-			float baro = bb.getFloat();
-			rd.getBaro()[0] = baro;
-			dm.getBaro()[0] = baro;
-		} else if (id == ID_MAG) {
-			short[] input = new short[3];
-			input[0] = bb.getShort(0);
-			input[1] = bb.getShort(2);
-			input[2] = bb.getShort(4);
-			System.arraycopy(input, 0, dm.getMag(), 0, 3);
-			System.arraycopy(input, 0, rd.getMag(), 0, 3);
-		} else if (id == ID_GPS) {
-			GPSData gps = new GPSData();
-			gps.setLatitude(bb.getInt());
-			gps.setLongitude(bb.getInt());
-			gps.setAltitude(bb.getInt());
-			gps.setGround_speed(bb.getInt());
-			gps.setGround_course(bb.getInt());
-			gps.setNum_sats(bb.get());
-			byte fixType = bb.get();
-			gps.setFix(fixType == 3 || fixType == 7);
-			gps.setDate(bb.getInt() & 0xFFFFFFFFL);
-			gps.setTime(bb.getInt() & 0xFFFFFFFFL);
-			gps.setHdop(bb.getShort());
-			dm.getGps().setInput(gps);
-			rd.getGps().setInput(gps);
-		} else if (id == ID_INPUT) {
-			int lenght = bb.get(0);
-			for (int i = 0; i < lenght; i++) {
-				final byte chan = bb.get(1 + i * 3);
-				final short pmw = bb.getShort(2 + i * 3);
-				dm.getInput()[chan] = pmw;
-				rd.getRcIn()[chan] = pmw;
-			}
-		} else if (id == ID_OUTPUT) {
-			int lenght = bb.get(0);
-			for (int i = 0; i < lenght; i++) {
-				final byte chan = bb.get(1 + i * 3);
-				final short pmw = bb.getShort(2 + i * 3);
-				dm.getOutput()[chan] = pmw;
-				rd.getOut()[chan] = pmw;
-			}
-		} else if (id == ID_DEBUG) {
-			dm.getDebugInfos().add(new String(bb.array()));
-		} else if (id == ID_CYCLES) {
-			dm.getCycles()[0] = bb.getLong();
-		} else if (id == ID_PARAM) {
-			byte paramID = bb.get();
-			IParamReciever reciever = paramReciever.get(Byte.valueOf(paramID));
-			if (reciever == null) {
-				return;
-			}
-			paramReciever.remove(Byte.valueOf(paramID));
-			switch (paramID) {
-			case ID_IN_PARAM_MAG_MAX:
-			case ID_IN_PARAM_MAG_MIN:
-				short[] mag = new short[3];
-				mag[0] = bb.getShort();
-				mag[1] = bb.getShort();
-				mag[2] = bb.getShort();
-				reciever.recieved(mag);
-				break;
-			case ID_IN_PARAM_RC_IN_MAX:
-			case ID_IN_PARAM_RC_IN_MIN:
-			case ID_IN_PARAM_RC_IN_DEFAULT:
-				short[] rc = new short[8];
-				for (int i = 0; i < 8; i++) {
-					rc[i] = bb.getShort();
+		try {
+			ByteBuffer bb = ByteBuffer.wrap(buffer);
+			bb.order(ByteOrder.LITTLE_ENDIAN);
+			if (id == ID_MOTION6) {
+				short[] input = new short[6];
+				for (int i = 0; i < 6; i++) {
+					input[i] = bb.getShort(i * 2);
 				}
-				reciever.recieved(rc);
-				break;
+				System.arraycopy(input, 0, rd.getMotion6(), 0, 6);
+				dm.getAccel()[0] = input[0];
+				dm.getAccel()[1] = input[1];
+				dm.getAccel()[2] = input[2];
+				dm.getGyro()[0] = input[3];
+				dm.getGyro()[1] = input[4];
+				dm.getGyro()[2] = input[5];
+				m.triggerAccelGyroRecieved5ms();
+				dm.triggerEvents();
+			} else if (id == ID_BARO) {
+				float baro = bb.getFloat();
+				rd.getBaro()[0] = baro;
+				dm.getBaro()[0] = baro;
+			} else if (id == ID_MAG) {
+				short[] input = new short[3];
+				input[0] = bb.getShort(0);
+				input[1] = bb.getShort(2);
+				input[2] = bb.getShort(4);
+				System.arraycopy(input, 0, dm.getMag(), 0, 3);
+				System.arraycopy(input, 0, rd.getMag(), 0, 3);
+			} else if (id == ID_GPS) {
+				GPSData gps = new GPSData();
+				gps.setLatitude(bb.getInt());
+				gps.setLongitude(bb.getInt());
+				gps.setAltitude(bb.getInt());
+				gps.setGround_speed(bb.getInt());
+				gps.setGround_course(bb.getInt());
+				gps.setNum_sats(bb.get());
+				byte fixType = bb.get();
+				gps.setFix(fixType == 3 || fixType == 7);
+				gps.setDate(bb.getInt() & 0xFFFFFFFFL);
+				gps.setTime(bb.getInt() & 0xFFFFFFFFL);
+				gps.setHdop(bb.getShort());
+				dm.getGps().setInput(gps);
+				rd.getGps().setInput(gps);
+			} else if (id == ID_INPUT) {
+				int lenght = bb.get(0);
+				for (int i = 0; i < lenght; i++) {
+					final byte chan = bb.get(1 + i * 3);
+					final short pmw = bb.getShort(2 + i * 3);
+					dm.getInput()[chan] = pmw;
+					rd.getRcIn()[chan] = pmw;
+				}
+			} else if (id == ID_OUTPUT) {
+				int lenght = bb.get(0);
+				for (int i = 0; i < lenght; i++) {
+					final byte chan = bb.get(1 + i * 3);
+					final short pmw = bb.getShort(2 + i * 3);
+					dm.getOutput()[chan] = pmw;
+					rd.getOut()[chan] = pmw;
+				}
+			} else if (id == ID_DEBUG) {
+				dm.getDebugInfos().add(new String(bb.array()));
+			} else if (id == ID_CYCLES) {
+				dm.getCycles()[0] = bb.getLong();
+			} else if (id == ID_PARAM) {
+				byte paramID = bb.get();
+				IParamReciever reciever = paramReciever.get(Byte.valueOf(paramID));
+				if (reciever == null) {
+					return;
+				}
+				paramReciever.remove(Byte.valueOf(paramID));
+				switch (paramID) {
+				case ID_IN_PARAM_MAG_MAX:
+				case ID_IN_PARAM_MAG_MIN:
+					short[] mag = new short[3];
+					mag[0] = bb.getShort();
+					mag[1] = bb.getShort();
+					mag[2] = bb.getShort();
+					reciever.recieved(mag);
+					break;
+				case ID_IN_PARAM_RC_IN_MAX:
+				case ID_IN_PARAM_RC_IN_MIN:
+				case ID_IN_PARAM_RC_IN_DEFAULT:
+					short[] rc = new short[8];
+					for (int i = 0; i < 8; i++) {
+						rc[i] = bb.getShort();
+					}
+					reciever.recieved(rc);
+					break;
+				}
 			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
 

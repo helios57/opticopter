@@ -81,6 +81,9 @@ public class Graph extends ViewPart {
 			final CircularBufferDataProvider pitchData = createTrace("Pitch");
 			final CircularBufferDataProvider pitchDataGyro = createTrace("PitchGyro");
 			final CircularBufferDataProvider pitchDataKalman = createTrace("PitchKalman");
+			final CircularBufferDataProvider yawData = createTrace("Yaw");
+			final CircularBufferDataProvider yawDataGyro = createTrace("YawGyro");
+			final CircularBufferDataProvider yawDataKalman = createTrace("YawKalman");
 
 			toolbarArmedXYGraph = new ToolbarArmedXYGraph(xyGraph);
 			add(toolbarArmedXYGraph);
@@ -101,12 +104,15 @@ public class Graph extends ViewPart {
 
 					final Sample roll = new Sample(timestamp, rollPitchYaw[0]);
 					final Sample pitch = new Sample(timestamp, rollPitchYaw[1]);
+					final Sample yaw = new Sample(timestamp, rollPitchYaw[2]);
 
 					final Sample rollG = new Sample(timestamp, rollPitchYawGyro[0]);
 					final Sample pitchG = new Sample(timestamp, rollPitchYawGyro[1]);
+					final Sample yawG = new Sample(timestamp, rollPitchYawGyro[2]);
 
 					final Sample rollK = new Sample(timestamp, rollPitchYawKalman[0]);
 					final Sample pitchK = new Sample(timestamp, rollPitchYawKalman[1]);
+					final Sample yawK = new Sample(timestamp, rollPitchYawKalman[2]);
 
 					final Shell shell = Graph.this.getSite().getShell();
 					if (shell == null || shell.isDisposed()) {
@@ -116,12 +122,15 @@ public class Graph extends ViewPart {
 
 						@Override
 						public void run() {
-							rollData.addSample(roll);
+							// rollData.addSample(roll);
 							// rollDataGyro.addSample(rollG);
 							rollDataKalman.addSample(rollK);
 							// pitchData.addSample(pitch);
 							// pitchDataGyro.addSample(pitchG);
-							// pitchDataKalman.addSample(pitchK);
+							pitchDataKalman.addSample(pitchK);
+							// yawData.addSample(yaw);
+							// yawDataGyro.addSample(yawG);
+							yawDataKalman.addSample(yawK);
 						}
 					});
 				}
