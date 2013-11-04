@@ -22,7 +22,9 @@ private:
 	Stream *console;
 	const static uint8_t fifoBufferLength = 12;
 	uint8_t fifoBuffer[fifoBufferLength];
-	int16_t motionRing[6][5];
+	static const uint8_t motionRingIndexMax = 5;
+	int16_t motionRing[6][motionRingIndexMax];
+	int16_t motionRingMedian[6][motionRingIndexMax];
 	uint8_t motionRingIndex;
 	bool initialised;
 	void delay(unsigned long ms);

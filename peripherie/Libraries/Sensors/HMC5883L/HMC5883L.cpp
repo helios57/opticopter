@@ -78,7 +78,7 @@ bool HMC5883L::poll() {
 	magRing[0][magRingIndex] = (((int16_t) buffer[0]) << 8) | buffer[1];
 	magRing[1][magRingIndex] = (((int16_t) buffer[4]) << 8) | buffer[5];
 	magRing[2][magRingIndex] = (((int16_t) buffer[2]) << 8) | buffer[3];
-	if (++magRingIndex >= 10) {
+	if (++magRingIndex >= magRingIndexMax) {
 		magRingIndex = 0;
 	}
 	return true;
@@ -86,7 +86,12 @@ bool HMC5883L::poll() {
 
 void HMC5883L::getHeading(int16_t xyz[]) {
 	for (uint8_t i = 0; i < 3; i++) {
-		xyz[i] = WirthMedianSInt16::kth_smallest(magRing[i], 10, 5);
+		for (uint8_t j = 0; j < magRingIndexMax; j++) {
+			magRingMedian[i][j] = magRing[i][j];
+		}
+	}
+	for (uint8_t i = 0; i < 3; i++) {
+		xyz[i] = WirthMedianSInt16::kth_smallest(magRingMedian[i], magRingIndexMax, (magRingIndexMax / 2) - 1);
 	}
 }
 

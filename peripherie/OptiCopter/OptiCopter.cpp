@@ -18,6 +18,7 @@ namespace arducopterNg {
 		serializer = 0;
 		debug = 0;
 		dm = 0;
+		t_2ms = 0;
 		t_5ms = 0;
 		t_10ms = 0;
 		t_20ms = 0;
@@ -288,17 +289,24 @@ namespace arducopterNg {
 			sendData = false;
 		}
 
+		if ((millis() - t_2ms) >= 2) {
+			t_2ms = millis();
+			if (hal->pollMotion()) {
+				hal->getMotion6(axyzgxyz);
+				dm->putMotion6(axyzgxyz);
+			}
+			dm->calc2ms();
+		}
+
 		if ((millis() - t_5ms) >= 5) {
-			hal->pollMotion();
 			t_5ms = millis();
 			if (sendData) {
 				resetEmptyCycles();
 			}
-			hal->getMotion6(axyzgxyz);
-			dm->putMotion6_5ms(axyzgxyz);
 			if (sendData) {
 				sendMotion6();
 			}
+			//dm->calc5ms();
 		}
 
 		if ((millis() - t_10ms) >= 10) {
@@ -316,8 +324,8 @@ namespace arducopterNg {
 			//dm->putBaro50ms(hal->getBarometerAltitude());
 			int16_t buffer[3];
 			hal->getHeading(buffer);
-			dm->putMag10ms(buffer);
-			dm->calculate10ms();
+			dm->putMag(buffer);
+			dm->calc10ms();
 		}
 
 		if ((millis() - t_20ms) >= 20) {

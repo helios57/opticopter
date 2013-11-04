@@ -35,7 +35,7 @@ bool MPU6000::poll() {
 			for (uint8_t i = 0; i < 6; i++) {
 				motionRing[i][motionRingIndex] = (((int16_t) fifoBuffer[i * 2]) << 8) | fifoBuffer[i * 2 + 1];
 			}
-			if (++motionRingIndex >= 5) {
+			if (++motionRingIndex >= motionRingIndexMax) {
 				motionRingIndex = 0;
 			}
 			fIfoCount = getFIFOCount();
@@ -48,7 +48,12 @@ bool MPU6000::poll() {
 
 void MPU6000::getMotion6(int16_t *axyzgxyz) {
 	for (uint8_t i = 0; i < 6; i++) {
-		axyzgxyz[i] = WirthMedianSInt16::kth_smallest(motionRing[i], 5, 3);
+		for (uint8_t j = 0; j < motionRingIndexMax; j++) {
+			motionRingMedian[i][j] = motionRing[i][j];
+		}
+	}
+	for (uint8_t i = 0; i < 6; i++) {
+		axyzgxyz[i] = WirthMedianSInt16::kth_smallest(motionRingMedian[i], motionRingIndexMax, (motionRingIndexMax / 2) - 1);
 	}
 }
 
@@ -65,7 +70,7 @@ bool MPU6000::initialize() {
 	delay(5);
 
 	//console->println("Setting sample rate to 200Hz...");
-	register_write(MPU6050_RA_SMPLRT_DIV, 4); // 1khz / (1 + 4) = 200 Hz
+	register_write(MPU6050_RA_SMPLRT_DIV, 3); // 1khz / (1 + 4) = 200 Hz
 	//register_write(MPU6050_RA_SMPLRT_DIV, 0); // 1khz
 
 	//console->println("Setting DLPF bandwidth to 42Hz...");

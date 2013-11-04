@@ -6,6 +6,7 @@
  */
 
 #include "Kalman.h"
+#include "Arduino.h"
 
 float Kalman::getAngle(float newAngle, float newRate, float dt) {
 	// KasBot V2 - Kalman filter module - http://www.x-firm.com/?page_id=145
@@ -17,6 +18,13 @@ float Kalman::getAngle(float newAngle, float newRate, float dt) {
 	/* Step 1 */
 	rate = newRate - bias;
 	angle += dt * rate;
+
+	while (angle > PI) {
+		angle -= PI * 2;
+	}
+	while (angle < -PI) {
+		angle += PI * 2;
+	}
 
 	// Update estimation error covariance - Project the error covariance ahead
 	/* Step 2 */
@@ -47,4 +55,8 @@ float Kalman::getAngle(float newAngle, float newRate, float dt) {
 	P[1][0] -= K[1] * P[0][0];
 	P[1][1] -= K[1] * P[0][1];
 	return angle;
+}
+
+float Kalman::getLastRate() {
+	return rate;
 }

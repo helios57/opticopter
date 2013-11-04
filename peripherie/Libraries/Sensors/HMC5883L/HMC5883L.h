@@ -132,7 +132,9 @@ public:
 
 private:
 	uint8_t devAddr;
-	int16_t magRing[3][10];
+	static const uint8_t magRingIndexMax = 10;
+	int16_t magRing[3][magRingIndexMax];
+	int16_t magRingMedian[3][magRingIndexMax];
 	uint8_t magRingIndex;
 	uint8_t buffer[6];
 	uint8_t mode;
