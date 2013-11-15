@@ -49,7 +49,7 @@ namespace arducopterNg {
 		int16_t buffer_16t[3];
 		uint16_t buffer_u16t[8];
 		uint8_t buffer_u8t[8];
-		float buffer_float[3];
+		float buffer_float[9];
 		uint8_t commandBuffer[64];
 		int16_t axyzgxyz[6];
 

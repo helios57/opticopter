@@ -17,7 +17,7 @@ using namespace arducopterNg;
 
 class DataModel {
 private:
-	const static uint8_t motionRingIndexMax = 3;
+	const static uint8_t motionRingIndexMax = 5;
 	const static uint8_t magRingIndexMax = 10;
 	HalApm *hal;
 	Persistence *persistence;
@@ -33,18 +33,25 @@ private:
 	uint16_t inputMax[8];
 	uint16_t inputMin[8];
 	uint16_t inputDefault[8];
+	float inputRoll;
+	float inputPitch;
+	float inputThrust;
+	float inputYaw;
+	bool leveling;
 	uint16_t output[8];
 	float thrust[8];
 	float magScaled[3];
 	float magCompensated[3];
 	int16_t magMax[3];
 	int16_t magMin[3];
+	int16_t gyroBias[3];
 	float rollPitchYawLevel[3]; //Orientation - Level
 	float rollPitchYaw[3]; //Orientation
 	float rollPitchYawFiltered[3]; //Orientation
 	Kalman rollPitchYawKalman[3];
 	Kalman magCompensatedKalman[3];
 	PID rollPitchYawPid[3]; //PID
+	float rollPitchYawPidParams[9];
 	const static float GYRO_TO_RAD_PER_S_FACTOR = 0.00106413;
 	const static float SIN_60_COS_30 = 0.866025403784439;
 	float pressure;
@@ -74,6 +81,11 @@ public:
 		persistence->readRcMin(inputMin, 4);
 		persistence->readRcMax(inputMax, 4);
 		persistence->readRcDefault(inputDefault, 4);
+		inputRoll = 0;
+		inputPitch = 0;
+		inputThrust = 0;
+		inputYaw = 0;
+		leveling = false;
 		//declinationAngle = persistence->readDeclinationAngle();
 		declinationAngle = -0.02472549;
 		activateTop = inputMax[3] - 100;
@@ -82,11 +94,10 @@ public:
 			rollPitchYawLevel[i] = 0;
 			rollPitchYaw[i] = 0;
 			rollPitchYawFiltered[i] = 0;
+			gyroBias[i] = 0;
 		}
-		rollPitchYawKalman[2].Q_angle = 1;
-		rollPitchYawKalman[2].Q_bias = 1;
-		rollPitchYawKalman[2].R_measure = 1;
-
+		persistence->readPID(rollPitchYawPidParams);
+		initPID(rollPitchYawPidParams);
 	}
 	void putMotion6(int16_t *axyzgxyz);
 	void calc2ms();
@@ -95,7 +106,8 @@ public:
 	void putMag(int16_t* mag);
 	void calc10ms();
 	void putInput50ms(uint8_t ch, uint16_t pwm);
-
+	void calc50ms();
+	void initPID(float *rollPitchYawPidParams);
 	virtual ~DataModel() {
 	}
 };

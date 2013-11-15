@@ -33,11 +33,9 @@ bool MPU6000::poll() {
 		while (fIfoCount >= fifoBufferLength) {
 			readFIFOBytes(fifoBufferLength, fifoBuffer);
 			for (uint8_t i = 0; i < 6; i++) {
-				motionRing[i][motionRingIndex] = (((int16_t) fifoBuffer[i * 2]) << 8) | fifoBuffer[i * 2 + 1];
+				motionSum[i] += (((int16_t) fifoBuffer[i * 2]) << 8) | fifoBuffer[i * 2 + 1];
 			}
-			if (++motionRingIndex >= motionRingIndexMax) {
-				motionRingIndex = 0;
-			}
+			motionCount++;
 			fIfoCount = getFIFOCount();
 		}
 		return true;
@@ -48,13 +46,10 @@ bool MPU6000::poll() {
 
 void MPU6000::getMotion6(int16_t *axyzgxyz) {
 	for (uint8_t i = 0; i < 6; i++) {
-		for (uint8_t j = 0; j < motionRingIndexMax; j++) {
-			motionRingMedian[i][j] = motionRing[i][j];
-		}
+		axyzgxyz[i] = motionSum[i] / motionCount;
+		motionSum[i] = 0;
 	}
-	for (uint8_t i = 0; i < 6; i++) {
-		axyzgxyz[i] = WirthMedianSInt16::kth_smallest(motionRingMedian[i], motionRingIndexMax, (motionRingIndexMax / 2) - 1);
-	}
+	motionCount = 0;
 }
 
 bool MPU6000::initialize() {
@@ -75,7 +70,7 @@ bool MPU6000::initialize() {
 
 	//console->println("Setting DLPF bandwidth to 42Hz...");
 	uint8_t oldConfig = register_read(MPU6050_RA_CONFIG);
-	oldConfig = (oldConfig & ~0x07) | MPU6050_DLPF_BW_98;
+	oldConfig = (oldConfig & ~0x07) | MPU6050_DLPF_BW_256;
 	register_write(MPU6050_RA_CONFIG, oldConfig);
 
 	//Gyro to (+/- 2000 degrees/sec)

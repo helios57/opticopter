@@ -22,10 +22,8 @@ private:
 	Stream *console;
 	const static uint8_t fifoBufferLength = 12;
 	uint8_t fifoBuffer[fifoBufferLength];
-	static const uint8_t motionRingIndexMax = 5;
-	int16_t motionRing[6][motionRingIndexMax];
-	int16_t motionRingMedian[6][motionRingIndexMax];
-	uint8_t motionRingIndex;
+	int32_t motionSum[6];
+	int32_t motionCount;
 	bool initialised;
 	void delay(unsigned long ms);
 	uint8_t register_read(uint8_t reg);
@@ -55,7 +53,7 @@ public:
 	MPU6000(SPIDeviceDriver *spi, Stream *console) :
 			spi(spi), console(console) {
 		initialised = false;
-		motionRingIndex = 0;
+		motionCount = 0;
 	}
 	~MPU6000() {
 	}

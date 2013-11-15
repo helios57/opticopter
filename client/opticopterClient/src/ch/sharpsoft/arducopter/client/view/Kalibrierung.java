@@ -12,6 +12,7 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.part.ViewPart;
 
 import ch.sharpsoft.arducopter.client.view.composite.CompositeMag;
+import ch.sharpsoft.arducopter.client.view.composite.CompositePID;
 import ch.sharpsoft.arducopter.client.view.composite.CompositeRc;
 
 public class Kalibrierung extends ViewPart {
@@ -60,6 +61,19 @@ public class Kalibrierung extends ViewPart {
 		formToolkit.adapt(compositeRc);
 		formToolkit.paintBordersFor(compositeRc);
 		sectionRc.setClient(compositeRc);
+		scrolledComposite.setContent(container);
+		scrolledComposite.setMinSize(container.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+
+		final Section sectionPid = formToolkit.createSection(container, Section.TWISTIE | Section.TITLE_BAR);
+		sectionPid.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+		formToolkit.paintBordersFor(sectionPid);
+		sectionPid.setText("PID");
+		sectionPid.setExpanded(true);
+
+		final CompositePID compositePID = new CompositePID(sectionPid, SWT.NONE);
+		formToolkit.adapt(compositePID);
+		formToolkit.paintBordersFor(compositePID);
+		sectionPid.setClient(compositePID);
 		scrolledComposite.setContent(container);
 		scrolledComposite.setMinSize(container.computeSize(SWT.DEFAULT, SWT.DEFAULT));
 	}

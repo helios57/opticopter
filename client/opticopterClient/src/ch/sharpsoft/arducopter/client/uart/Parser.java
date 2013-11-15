@@ -124,6 +124,13 @@ public class Parser {
 					}
 					reciever.recieved(rc);
 					break;
+				case ID_IN_PARAM_PID:
+					float[] pid = new float[9];
+					for (int i = 0; i < 9; i++) {
+						pid[i] = bb.getFloat();
+					}
+					reciever.recieved(pid);
+					break;
 				}
 			}
 		} catch (Exception ex) {

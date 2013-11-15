@@ -16,6 +16,17 @@ public class SerialService {
 		return instance;
 	}
 
+	public void writeParam(final byte paramId, final float[] data) {
+		final ByteBuffer bb = begin(ID_IN_WRITE_PARAM);
+		final byte len = (byte) (1 + data.length * 4);
+		bb.put(len);// 1
+		bb.put(paramId);// 1
+		for (float s : data) {
+			bb.putFloat(s);
+		}
+		end(bb, len);
+	}
+
 	public void writeParam(final byte paramId, final short[] data) {
 		final ByteBuffer bb = begin(ID_IN_WRITE_PARAM);
 		final byte len = (byte) (1 + data.length * 2);

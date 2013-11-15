@@ -54,7 +54,7 @@ public class SerialConnection {
 					in = serialPort.getInputStream();
 					out = serialPort.getOutputStream();
 
-					SerialService.getInstance().startRequestingThread();
+					// TODO SerialService.getInstance().startRequestingThread();
 
 					new Thread(new Runnable() {
 

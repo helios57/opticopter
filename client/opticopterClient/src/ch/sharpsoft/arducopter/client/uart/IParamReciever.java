@@ -1,7 +1,9 @@
 package ch.sharpsoft.arducopter.client.uart;
 
-public interface IParamReciever {
+public class IParamReciever {
+	public void recieved(final short[] data) {
+	}
 
-	void recieved(short[] data);
-
+	public void recieved(final float[] data) {
+	}
 }

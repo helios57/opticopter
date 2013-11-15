@@ -110,16 +110,14 @@ void Persistence::saveRcInputFunction(uint8_t* function, uint8_t count) {
 void Persistence::readRcInputFunction(uint8_t* function, uint8_t count) {
 	readUInt(function, LOC_RC_IN_FUNCTION, min(count, 8));
 }
-
 void Persistence::savePID(float* rollPitchYaw) {
-	for (uint8_t i = 0; i < 3; i++) {
+	for (uint8_t i = 0; i < 9; i++) {
 		conv4.floating = rollPitchYaw[i];
 		writeUInt(conv4.byte, LOC_PID + i * 4, 4);
 	}
 }
-
 void Persistence::readPID(float* rollPitchYaw) {
-	for (uint8_t i = 0; i < 3; i++) {
+	for (uint8_t i = 0; i < 9; i++) {
 		readUInt(conv4.byte, LOC_PID + i * 4, 4);
 		rollPitchYaw[i] = conv4.floating;
 	}

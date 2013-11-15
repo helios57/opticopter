@@ -252,7 +252,12 @@ public class CompositeRc extends Composite {
 				modelRc.updateRc(DatenModel.getInstance().getInput());
 			}
 		});
-		initDataBindings();
+		//
+		IObservableValue observeSelectionBtnUpdateMaxObserveWidget = WidgetProperties.selection().observe(btnUpdateMax);
+		bindingContext.bindValue(observeSelectionBtnUpdateMaxObserveWidget, modelRc.getUpdatingMax(), null, null);
+		//
+		IObservableValue observeSelectionBtnUpdateMinObserveWidget = WidgetProperties.selection().observe(btnUpdateMin);
+		bindingContext.bindValue(observeSelectionBtnUpdateMinObserveWidget, modelRc.getUpdatingMin(), null, null);
 	}
 
 	public ModelRC getModelRc() {
@@ -272,17 +277,5 @@ public class CompositeRc extends Composite {
 	@Override
 	protected void checkSubclass() {
 		// Disable the check that prevents subclassing of SWT components
-	}
-
-	protected DataBindingContext initDataBindings() {
-		DataBindingContext bindingContext = new DataBindingContext();
-		//
-		IObservableValue observeSelectionBtnUpdateMaxObserveWidget = WidgetProperties.selection().observe(btnUpdateMax);
-		bindingContext.bindValue(observeSelectionBtnUpdateMaxObserveWidget, modelRc.getUpdatingMax(), null, null);
-		//
-		IObservableValue observeSelectionBtnUpdateMinObserveWidget = WidgetProperties.selection().observe(btnUpdateMin);
-		bindingContext.bindValue(observeSelectionBtnUpdateMinObserveWidget, modelRc.getUpdatingMin(), null, null);
-		//
-		return bindingContext;
 	}
 }

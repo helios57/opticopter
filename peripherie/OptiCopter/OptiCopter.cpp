@@ -177,7 +177,7 @@ namespace arducopterNg {
 			break;
 		case Serializer::ID_IN_PARAM_PID:
 			persistence->readPID(buffer_float);
-			for (uint8_t i = 0; i < 3; i++) {
+			for (uint8_t i = 0; i < 9; i++) {
 				conv4.floating = buffer_float[i];
 				serializer->write(conv4.byte, 4);
 			}
@@ -245,13 +245,14 @@ namespace arducopterNg {
 			persistence->saveDeclinationAngle(conv4.floating);
 			break;
 		case Serializer::ID_IN_PARAM_PID:
-			for (uint8_t i = 0; i < 3; i++) {
+			for (uint8_t i = 0; i < 9; i++) {
 				for (uint8_t j = 0; j < 4; j++) {
 					conv4.byte[j] = commandBuffer[1 + i * 4 + j];
 				}
 				buffer_float[i] = conv4.floating;
 			}
 			persistence->savePID(buffer_float);
+			dm->initPID(buffer_float);
 			break;
 		case Serializer::ID_IN_PARAM_KALMAN:
 			break;
@@ -291,11 +292,8 @@ namespace arducopterNg {
 
 		if ((millis() - t_2ms) >= 2) {
 			t_2ms = millis();
-			if (hal->pollMotion()) {
-				hal->getMotion6(axyzgxyz);
-				dm->putMotion6(axyzgxyz);
-			}
-			dm->calc2ms();
+			hal->pollMotion();
+			//dm->calc2ms();
 		}
 
 		if ((millis() - t_5ms) >= 5) {
@@ -303,10 +301,12 @@ namespace arducopterNg {
 			if (sendData) {
 				resetEmptyCycles();
 			}
+			hal->getMotion6(axyzgxyz);
+			dm->putMotion6(axyzgxyz);
+			dm->calc5ms();
 			if (sendData) {
 				sendMotion6();
 			}
-			//dm->calc5ms();
 		}
 
 		if ((millis() - t_10ms) >= 10) {
@@ -345,6 +345,7 @@ namespace arducopterNg {
 			for (uint8_t i = hal->IN0; i <= hal->IN7; i++) {
 				dm->putInput50ms(i, hal->getPmw(i));
 			}
+			dm->calc50ms();
 		}
 	}
 } /* namespace arducopterNg */

@@ -16,8 +16,7 @@ static const uint16_t LOC_RC_IN_MIN = 28; //44
 static const uint16_t LOC_RC_IN_DEFAULT = 44; //60
 static const uint16_t LOC_DECLINATION_ANGLE = 60; //64
 static const uint16_t LOC_RC_IN_FUNCTION = 64; //72
-static const uint16_t LOC_PID = 72; //84
-static const uint16_t LOC_KALMAN = 84; //98
+static const uint16_t LOC_PID = 72; //72+9*3 = 99
 
 class Persistence {
 private:
