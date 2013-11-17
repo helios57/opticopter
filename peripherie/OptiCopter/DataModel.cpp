@@ -36,16 +36,14 @@ static long count = 0;
 
 void DataModel::calc10ms() {
 	calculateActivation();
-	calcMag();
+	calcMag10ms();
+	calcOutput10ms();
 }
 
 void DataModel::putMotion6(int16_t *axyzgxyz) {
 	for (uint8_t i = 0; i < 6; i++) {
 		motion[i] = axyzgxyz[i];
 	}
-}
-
-void DataModel::calc2ms() {
 }
 
 void DataModel::putMag(int16_t* mag) {
@@ -57,37 +55,31 @@ void DataModel::putMag(int16_t* mag) {
 	}
 }
 
-void DataModel::calc5ms() {
-
+void DataModel::calcOutput10ms() {
 	if (leveling && (inputRoll > 0.1 || inputRoll < 0.1)) {
-		rollPitchYawLevel[0] += inputRoll * 0.005;
+		rollPitchYawLevel[0] += inputRoll * 0.01;
 	}
 	if (leveling && (inputPitch > 0.1 || inputPitch < 0.1)) {
-		rollPitchYawLevel[1] += inputPitch * 0.005;
+		rollPitchYawLevel[1] += inputPitch * 0.01;
 	}
-
 	if (active) {
 		for (uint8_t i = 3; i < 6; i++) {
 			motion[i] -= gyroBias[i - 3];
 		}
 	}
-
 	rollPitchYaw[0] = atan2(-motion[0], motion[2]);
 	rollPitchYaw[1] = atan2(motion[1], motion[2]);
-	rollPitchYawFiltered[0] = rollPitchYawKalman[0].getAngle(rollPitchYaw[0], motion[4] * GYRO_TO_RAD_PER_S_FACTOR, 0.005);
-	rollPitchYawFiltered[1] = rollPitchYawKalman[1].getAngle(rollPitchYaw[1], motion[3] * GYRO_TO_RAD_PER_S_FACTOR, 0.005);
-
+	rollPitchYawFiltered[0] = rollPitchYawKalman[0].getAngle(rollPitchYaw[0], motion[4] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
+	rollPitchYawFiltered[1] = rollPitchYawKalman[1].getAngle(rollPitchYaw[1], motion[3] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
 	float rollLevel = rollPitchYawLevel[0];
 	float pitchLevel = rollPitchYawLevel[1];
 	float yawLevel = rollPitchYawLevel[2];
-
 	if (!leveling) {
 		//float yawA = 0;
 		rollLevel += inputRoll;
 		pitchLevel += inputPitch;
 		yawLevel += inputYaw;
 	}
-
 	float yawCurrent = rollPitchYawFiltered[2];
 	while (yawLevel > PI) {
 		yawLevel -= PI * 2;
@@ -103,9 +95,9 @@ void DataModel::calc5ms() {
 		yawLevel -= 2 * PI;
 	}
 
-	float rollA = rollPitchYawPid[0].updatePID(rollLevel, rollPitchYawFiltered[0], motion[4] * GYRO_TO_RAD_PER_S_FACTOR, 0.005);
-	float pitchA = 0; //rollPitchYawPid[1].updatePID(pitchLevel, rollPitchYawFiltered[1], motion[3] * GYRO_TO_RAD_PER_S_FACTOR, 0.005);
-	float yawA = 0; //rollPitchYawPid[2].updatePID(yawLevel, rollPitchYawFiltered[2], 0.0/* -motion[5] * GYRO_TO_RAD_PER_S_FACTOR*/, 0.005);
+	float rollA = rollPitchYawPid[0].updatePID(rollLevel, rollPitchYawFiltered[0], motion[4] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
+	float pitchA = rollPitchYawPid[1].updatePID(pitchLevel, rollPitchYawFiltered[1], motion[3] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
+	float yawA = rollPitchYawPid[2].updatePID(yawLevel, rollPitchYawFiltered[2], 0.0/* -motion[5] * GYRO_TO_RAD_PER_S_FACTOR*/, 0.01);
 
 	thrust[0] = inputThrust + rollA + yawA;
 	thrust[1] = inputThrust - rollA + yawA;
@@ -203,7 +195,7 @@ void DataModel::calc5ms() {
 void DataModel::putBaro50ms(float altitude) {
 }
 
-void DataModel::calcMag() {
+void DataModel::calcMag10ms() {
 	for (uint8_t i = 0; i < magRingIndexMax; i++) {
 		for (uint8_t j = 0; j < 3; j++) {
 			magSummed[j] += magRing[j][i];

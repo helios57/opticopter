@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/jFuzzyLogic.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-collections4-4.0-alpha1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/org.csstudio.swt.xygraph_2.1.0.201209121540.jar" sourcepath="lib/org.csstudio.swt.xygraph.source_2.1.0.201209121540.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/org.csstudio.swt.widgets_2.1.0.201209121549.jar" sourcepath="lib/org.csstudio.swt.widgets.source_2.1.0.201209121549.jar"/>

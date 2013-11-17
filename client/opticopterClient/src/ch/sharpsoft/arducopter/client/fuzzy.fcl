@@ -1,0 +1,87 @@
+FUNCTION_BLOCK controller
+
+VAR_INPUT				
+	diff : REAL;
+	rate : REAL;
+	integradedDiff : REAL;
+END_VAR
+
+VAR_OUTPUT				
+	thrust : REAL;
+END_VAR
+
+FUZZIFY diff			
+	TERM big := (0.4,0) (1.8,1); 
+	TERM medium := GAUSS 0.4 0.1;
+	TERM small := GAUSS 0.1 0.05;
+	TERM bigN := (-1.8,1) (-0.4,0); 
+	TERM mediumN :=GAUSS -0.4 0.1;
+	TERM smallN := GAUSS -0.1 0.05;
+END_FUZZIFY
+
+FUZZIFY rate	
+	TERM big := (10,0) (100,1); 
+	TERM medium := GAUSS 5 1;
+	TERM small := GAUSS 1 0.1;
+	TERM bigN := (-100,1) (-10,0); 
+	TERM mediumN :=GAUSS -15 1;
+	TERM smallN := GAUSS -7 0.1;
+			
+	TERM big := (10, 0) (100, 1) ; 
+	TERM medium := GAUSS 10 5;
+	TERM small := GAUSS 1 0.1;
+	TERM bigN := (-100, 1) (-10, 0); 
+	TERM mediumN :=  GAUSS -10 5;
+	TERM smallN := GAUSS -1 0.1;
+END_FUZZIFY
+
+FUZZIFY integradedDiff			
+	TERM big := (0.4,0) (1.8,1); 
+	TERM medium := GAUSS 0.4 0.1;
+	TERM small := GAUSS 0.1 0.05;
+	TERM bigN := (-1.8,1) (-0.4,0); 
+	TERM mediumN :=GAUSS -0.4 0.1;
+	TERM smallN := GAUSS -0.1 0.05;
+END_FUZZIFY
+
+DEFUZZIFY thrust			
+	TERM big := GAUSS 0.5 0.1;
+	TERM medium := GAUSS 0.3 0.1;
+	TERM small := GAUSS 0.1 0.1;
+	TERM bigN := GAUSS -0.5 0.1; 
+	TERM mediumN := GAUSS -0.3 0.1;
+	TERM smallN := GAUSS -0.1 0.1;
+	METHOD : COG;		// Use 'Center Of Gravity' defuzzification method
+	DEFAULT := 0;		// Default value is 0 (if no rule activates defuzzifier)
+END_DEFUZZIFY
+
+// Inference rules
+RULEBLOCK No1
+	AND : MIN;	// Use 'min' for 'and'
+	ACT : MIN;	// Use 'min' activation method
+	ACCU : MAX;	// Use 'max' accumulation method
+
+	RULE 1 : IF diff IS big THEN thrust IS bigN;
+	RULE 2 : IF diff IS medium THEN thrust IS mediumN;
+	RULE 3 : IF diff IS small THEN thrust IS smallN;
+	RULE 4 : IF diff IS bigN THEN thrust IS big;
+	RULE 5 : IF diff IS mediumN THEN thrust IS medium;
+	RULE 6 : IF diff IS smallN THEN thrust IS small;
+	
+	RULE 7 : IF rate IS big THEN thrust IS bigN;
+	RULE 8 : IF rate IS medium THEN thrust IS mediumN;
+	RULE 9 : IF rate IS small THEN thrust IS smallN;
+	RULE 10 : IF rate IS bigN THEN thrust IS big;
+	RULE 11 : IF rate IS mediumN THEN thrust IS medium;
+	RULE 12 : IF rate IS smallN THEN thrust IS small;
+	
+	RULE 13 : IF integradedDiff IS big THEN thrust IS bigN;
+	RULE 14 : IF integradedDiff IS medium THEN thrust IS mediumN;
+	RULE 15 : IF integradedDiff IS small THEN thrust IS smallN;
+	RULE 16 : IF integradedDiff IS bigN THEN thrust IS big;
+	RULE 17 : IF integradedDiff IS mediumN THEN thrust IS medium;
+	RULE 18 : IF integradedDiff IS smallN THEN thrust IS small;
+	
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK

@@ -65,7 +65,7 @@ private:
 	void getYaw();
 	void getRollPitch();
 	void calcutateOutput();
-	void calcMag();
+	void calcMag10ms();
 
 public:
 	DataModel(HalApm *hal, Persistence *persistence) :
@@ -101,7 +101,7 @@ public:
 	}
 	void putMotion6(int16_t *axyzgxyz);
 	void calc2ms();
-	void calc5ms();
+	void calcOutput10ms();
 	void putBaro50ms(float altitude);
 	void putMag(int16_t* mag);
 	void calc10ms();

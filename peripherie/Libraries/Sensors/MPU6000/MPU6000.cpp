@@ -65,7 +65,7 @@ bool MPU6000::initialize() {
 	delay(5);
 
 	//console->println("Setting sample rate to 200Hz...");
-	register_write(MPU6050_RA_SMPLRT_DIV, 3); // 1khz / (1 + 4) = 200 Hz
+	register_write(MPU6050_RA_SMPLRT_DIV, 2); // 1khz / (1 + 4) = 200 Hz
 	//register_write(MPU6050_RA_SMPLRT_DIV, 0); // 1khz
 
 	//console->println("Setting DLPF bandwidth to 42Hz...");
