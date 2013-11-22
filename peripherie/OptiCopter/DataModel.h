@@ -9,25 +9,17 @@
 #define DATAMODEL_H_
 
 #include "../Libraries/Hal/HalApm.h"
-#include "Filter/Kalman.h"
-#include "Regler/PID.h"
 #include "Persistence/Persistence.h"
+#include "Filter/AHRS.h"
 
 using namespace arducopterNg;
 
 class DataModel {
 private:
-	const static uint8_t motionRingIndexMax = 5;
-	const static uint8_t magRingIndexMax = 10;
 	HalApm *hal;
 	Persistence *persistence;
-	int16_t motionRing[6][motionRingIndexMax];
-	int32_t motionSummed[6];
-	uint8_t motionRingIndex;
+	AHRS filter;
 	int16_t motion[6];
-	int16_t magRing[3][magRingIndexMax];
-	uint8_t magRingIndex;
-	int32_t magSummed[3];
 	int16_t mag[3];
 	uint16_t input[8];
 	uint16_t inputMax[8];
@@ -45,13 +37,14 @@ private:
 	int16_t magMax[3];
 	int16_t magMin[3];
 	int16_t gyroBias[3];
-	float rollPitchYawLevel[3]; //Orientation - Level
-	float rollPitchYaw[3]; //Orientation
-	float rollPitchYawFiltered[3]; //Orientation
-	Kalman rollPitchYawKalman[3];
-	Kalman magCompensatedKalman[3];
-	PID rollPitchYawPid[3]; //PID
-	float rollPitchYawPidParams[9];
+	int32_t gyroBiasSum[3];
+	int32_t gyroBiasSumCount;
+	float orientationLevel[4]; //Orientation - Level
+	float orientation[4]; //Orientation
+	float orientationRate[4]; //Orientation
+	float orientationError[4]; //Orientation
+	float orientationInput[4]; //Orientation
+	float orientationErrorInput[4]; //Orientation
 	const static float GYRO_TO_RAD_PER_S_FACTOR = 0.00106413;
 	const static float SIN_60_COS_30 = 0.866025403784439;
 	float pressure;
@@ -61,11 +54,7 @@ private:
 	uint16_t activateBot;
 	float declinationAngle;
 	void calculateActivation();
-	void getInput();
-	void getYaw();
-	void getRollPitch();
 	void calcutateOutput();
-	void calcMag10ms();
 
 public:
 	DataModel(HalApm *hal, Persistence *persistence) :
@@ -73,11 +62,8 @@ public:
 		active = false;
 		tActivate = 0;
 		pressure = 0;
-		magRingIndex = 0;
-		motionRingIndex = 0;
 		persistence->readMagMax(magMax);
 		persistence->readMagMin(magMin);
-
 		persistence->readRcMin(inputMin, 4);
 		persistence->readRcMax(inputMax, 4);
 		persistence->readRcDefault(inputDefault, 4);
@@ -90,26 +76,32 @@ public:
 		declinationAngle = -0.02472549;
 		activateTop = inputMax[3] - 100;
 		activateBot = inputMin[3] + 100;
+
+		gyroBiasSumCount = 0;
 		for (int i = 0; i < 3; i++) {
-			rollPitchYawLevel[i] = 0;
-			rollPitchYaw[i] = 0;
-			rollPitchYawFiltered[i] = 0;
 			gyroBias[i] = 0;
+			gyroBiasSum[i] = 0;
+
+			orientation[i + 1] = 0;
+			orientationLevel[i + 1] = 0;
+			orientationRate[i + 1] = 0;
+			orientationError[i + 1] = 0;
 		}
-		persistence->readPID(rollPitchYawPidParams);
-		initPID(rollPitchYawPidParams);
+		orientation[0] = 1.0f;
+		orientationLevel[0] = 1.0f;
+		orientationRate[0] = 1.0f;
+		orientationError[0] = 1.0f;
+	}
+	virtual ~DataModel() {
 	}
 	void putMotion6(int16_t *axyzgxyz);
-	void calc2ms();
 	void calcOutput10ms();
 	void putBaro50ms(float altitude);
 	void putMag(int16_t* mag);
 	void calc10ms();
 	void putInput50ms(uint8_t ch, uint16_t pwm);
 	void calc50ms();
-	void initPID(float *rollPitchYawPidParams);
-	virtual ~DataModel() {
-	}
+
 };
 #endif /* DATAMODEL_H_ */
 

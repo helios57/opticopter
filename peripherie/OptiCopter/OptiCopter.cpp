@@ -250,7 +250,7 @@ namespace arducopterNg {
 				buffer_float[i] = conv4.floating;
 			}
 			persistence->savePID(buffer_float);
-			dm->initPID(buffer_float);
+			//dm->initPID(buffer_float);
 			break;
 		case Serializer::ID_IN_PARAM_KALMAN:
 			break;
