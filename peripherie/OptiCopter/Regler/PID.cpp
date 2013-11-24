@@ -10,7 +10,7 @@ void PID::resetI() {
 	diffSum = 0;
 }
 float PID::updatePID(float setpoint, float current, float rate, float dt) {
-	float diff = setpoint - current - rate * dt * 4;
+	float diff = setpoint - current;
 	diffSum += diff;
 	if (diffSum > windupGuard) {
 		diffSum = windupGuard;

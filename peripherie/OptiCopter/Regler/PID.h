@@ -29,8 +29,8 @@ public:
 		lastRate = 0;
 		accelToRateFactor = 0;
 		diffSum = 0;
-		kp = 0.1;
-		ki = 0.01;
+		kp = 0.3;
+		ki = 0.0;
 		kd = 0.0;
 		windupGuard = PI / 4;
 		max = PI / 4;

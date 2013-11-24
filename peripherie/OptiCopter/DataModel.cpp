@@ -22,8 +22,9 @@ void DataModel::calculateActivation() {
 		for (int i = 0; i < 3; i++) {
 			gyroBias[i] = gyroBiasSum[i] / gyroBiasSumCount;
 		}
-		for (int i = 0; i < 4; i++) {
-			orientationLevel[i] = orientation[i];
+		for (int i = 0; i < 3; i++) {
+			rollPitchYawPid[i].resetI();
+			rollPitchYawLevel[i] = rollPitchYaw[i];
 		}
 	} else if (!active && input[3] > activateTop && tActivate > 0) {
 		for (int i = 0; i < 3; i++) {
@@ -43,6 +44,7 @@ static long count = 0;
 
 void DataModel::calc10ms() {
 	calculateActivation();
+	calcMag10ms();
 	calcOutput10ms();
 }
 
@@ -59,44 +61,62 @@ void DataModel::putMag(int16_t* imag) {
 }
 
 void DataModel::calcOutput10ms() {
+	if (leveling && (inputRoll > 0.1 || inputRoll < 0.1)) {
+		rollPitchYawLevel[0] += inputRoll * 0.01;
+	}
+	if (leveling && (inputPitch > 0.1 || inputPitch < 0.1)) {
+		rollPitchYawLevel[1] += inputPitch * 0.01;
+	}
 	if (active) {
 		for (uint8_t i = 3; i < 6; i++) {
 			motion[i] -= gyroBias[i - 3];
 		}
 	}
+
 	for (int i = 0; i < 3; i++) {
 		magScaled[i] = (((float) ((mag[i])) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
 	}
 	magScaled[2] = -magScaled[2];
-	float dt = 0.002; //TODO check
+
 	filter.MadgwickAHRSupdateIMU( //
 	        motion[4] * GYRO_TO_RAD_PER_S_FACTOR, //
 	        motion[3] * GYRO_TO_RAD_PER_S_FACTOR, //
 	        motion[5] * GYRO_TO_RAD_PER_S_FACTOR, //
 	        motion[0], motion[1], motion[2], 0.01);
-	/*filter.MadgwickAHRSupdate( //
-	 motion[4] * GYRO_TO_RAD_PER_S_FACTOR, //
-	 motion[3] * GYRO_TO_RAD_PER_S_FACTOR, //
-	 motion[5] * GYRO_TO_RAD_PER_S_FACTOR, //
-	 motion[0], motion[1], motion[2], //
-	 magScaled[0], magScaled[1], magScaled[2], dt);*/
 
-	filter.getQuaternion(orientation);
-	Quaternion::diff(orientation, orientationLevel, orientationError);
-	Quaternion::multiply(orientationError, orientationInput, orientationErrorInput);
+	filter.getEuler(rollPitchYaw);
+	float rollLevel = rollPitchYawLevel[0];
+	float pitchLevel = rollPitchYawLevel[1];
+	float yawLevel = rollPitchYawLevel[2];
+	if (!leveling) {
+		//float yawA = 0;
+		rollLevel += inputRoll;
+		pitchLevel += inputPitch;
+		yawLevel += inputYaw;
+	}
+	float yawCurrent = rollPitchYaw[2];
+	while (yawLevel > PI) {
+		yawLevel -= PI * 2;
+	}
+	while (yawLevel < -PI) {
+		yawLevel += PI * 2;
+	}
+	double diff = yawLevel - yawCurrent;
+	if (diff < -PI) {
+		yawLevel += 2 * PI;
+	}
+	if (diff > PI) {
+		yawLevel -= 2 * PI;
+	}
 
-	float q0 = orientationErrorInput[0];
-	float q1 = orientationErrorInput[1];
-	float q2 = orientationErrorInput[2];
-	float q3 = orientationErrorInput[3];
-	float roll = -0.5 * atan2(2 * (q0 * q1 + q2 * q3), 1 - 2 * (q1 * q1 + q2 * q2));
-	float pitch = -0.5 * asin(2 * (q0 * q2 - q1 * q3));
-	float yaw = 0; //-0.01 * atan2(2 * (q0 * q3 + q1 * q2), 1 - 2 * (q2 * q2 + q3 * q3));
+	float rollA = rollPitchYawPid[0].updatePID(rollLevel, rollPitchYaw[0], motion[4] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
+	float pitchA = rollPitchYawPid[1].updatePID(pitchLevel, rollPitchYaw[1], motion[3] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
+	float yawA = 0; //rollPitchYawPid[2].updatePID(yawLevel, rollPitchYaw[2], 0.0/* -motion[5] * GYRO_TO_RAD_PER_S_FACTOR*/, 0.01);
 
-	thrust[0] = inputThrust + roll + yaw;
-	thrust[1] = inputThrust - roll + yaw;
-	thrust[2] = inputThrust - pitch - yaw;
-	thrust[3] = inputThrust + pitch - yaw;
+	thrust[0] = inputThrust + rollA + yawA;
+	thrust[1] = inputThrust - rollA + yawA;
+	thrust[2] = inputThrust - pitchA - yawA;
+	thrust[3] = inputThrust + pitchA - yawA;
 
 	/*float factor = 1.0;
 	 thrust[0] = inputThrust * (1.0 + factor * (-rollA - yawA));
@@ -106,7 +126,8 @@ void DataModel::calcOutput10ms() {
 	 thrust[4] = inputThrust * (1.0 + factor * (-rollA * SIN_60_COS_30 + pitchA * SIN_60_COS_30 + yawA));
 	 thrust[5] = inputThrust * (1.0 + factor * (rollA * SIN_60_COS_30 - pitchA * SIN_60_COS_30 - yawA));
 	 */
-	for (int i = 0; i < 6; i++) {
+
+	for (int i = 0; i < 4; i++) {
 		if (thrust[i] > 1) {
 			thrust[i] = 1;
 		} else if (thrust[i] < 0) {
@@ -123,35 +144,45 @@ void DataModel::calcOutput10ms() {
 	hal->setPmw(hal->OUT1, output[1]);
 	hal->setPmw(hal->OUT2, output[2]);
 	hal->setPmw(hal->OUT3, output[3]);
-	hal->setPmw(hal->OUT4, output[4]);
-	hal->setPmw(hal->OUT5, output[5]);
+	//hal->setPmw(hal->OUT4, output[4]);
+	//hal->setPmw(hal->OUT5, output[5]);
 
-	if (count++ >= 1000) {
+	if (count++ >= 5) {
 		Serial.print(millis());
 		Serial.print(",");
 		count = 0;
-		/*for (uint8_t i = 0; i < 6; i++) {
-		 Serial.print(motion[i]);
-		 Serial.print(",");
-		 }
-		 for (uint8_t i = 0; i < 3; i++) {
-		 Serial.print(magScaled[i]);
-		 Serial.print(",");
-		 }
-		 for (uint8_t i = 0; i < 4; i++) {
-		 Serial.print(orientation[i]);
-		 Serial.print(",");
-		 }
-		 Serial.print(roll * 1000);
-		 Serial.print(",");
-		 Serial.print(pitch * 1000);
-		 Serial.print(",");
-		 Serial.print(yaw * 1000);*/
+		for (uint8_t i = 0; i < 6; i++) {
+			Serial.print(motion[i]);
+			Serial.print(",");
+		}
+		for (uint8_t i = 0; i < 3; i++) {
+			Serial.print(magScaled[i]);
+			Serial.print(",");
+		}
+		for (uint8_t i = 0; i < 3; i++) {
+			Serial.print(rollPitchYaw[i] * 1000);
+			Serial.print(",");
+		}
+		Serial.print(rollA * 1000);
+		Serial.print(",");
+		Serial.print(pitchA * 1000);
+		Serial.print(",");
+		Serial.print(yawA * 1000);
+		Serial.print(",");
 		Serial.println();
 	}
 }
 
 void DataModel::putBaro50ms(float altitude) {
+}
+
+void DataModel::calcMag10ms() {
+	for (int i = 0; i < 3; i++) {
+		magScaled[i] = (((float) ((mag[i])) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
+	}
+	magScaled[2] = -magScaled[2];
+	heading.updateHeading(rollPitchYaw[0], rollPitchYaw[1], 0.0f, magScaled, 0.01);
+	rollPitchYaw[2] = heading.getYaw();
 }
 
 void DataModel::putInput50ms(uint8_t ch, uint16_t pwm) {
@@ -163,6 +194,11 @@ void DataModel::calc50ms() {
 	inputPitch = ((float) input[1] - inputDefault[1]) / (float) (inputMax[1] - inputMin[1]);
 	inputThrust = ((float) input[2] - inputDefault[2]) / (float) (inputMax[2] - inputMin[2]);
 	inputYaw = ((float) input[3] - inputDefault[3]) / (float) (inputMax[3] - inputMin[3]);
-	Quaternion::fromEuler(inputRoll, inputPitch, inputYaw, orientationInput);
 	leveling = input[4] < 1500;
+}
+
+void DataModel::initPID(float* rollPitchYawPidParams) {
+	rollPitchYawPid[0].init(rollPitchYawPidParams[0], rollPitchYawPidParams[1], rollPitchYawPidParams[2]);
+	rollPitchYawPid[1].init(rollPitchYawPidParams[3], rollPitchYawPidParams[4], rollPitchYawPidParams[5]);
+	rollPitchYawPid[2].init(rollPitchYawPidParams[6], rollPitchYawPidParams[7], rollPitchYawPidParams[8]);
 }

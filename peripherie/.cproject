@@ -36,7 +36,7 @@
 							</tool>
 							<tool id="de.innot.avreclipse.tool.cppcompiler.app.release.143233258" name="AVR C++ Compiler" superClass="de.innot.avreclipse.tool.cppcompiler.app.release">
 								<option id="de.innot.avreclipse.cppcompiler.option.debug.level.579445249" name="Generate Debugging Info" superClass="de.innot.avreclipse.cppcompiler.option.debug.level" value="de.innot.avreclipse.cppcompiler.option.debug.level.none" valueType="enumerated"/>
-								<option id="de.innot.avreclipse.cppcompiler.option.optimize.1314318778" name="Optimization Level" superClass="de.innot.avreclipse.cppcompiler.option.optimize" value="de.innot.avreclipse.cppcompiler.optimize.three" valueType="enumerated"/>
+								<option id="de.innot.avreclipse.cppcompiler.option.optimize.1314318778" name="Optimization Level" superClass="de.innot.avreclipse.cppcompiler.option.optimize" value="de.innot.avreclipse.cppcompiler.optimize.size" valueType="enumerated"/>
 								<option id="de.innot.avreclipse.cppcompiler.option.warnerr.1917797542" name="Warnings as Errors (-Werror)" superClass="de.innot.avreclipse.cppcompiler.option.warnerr" value="false" valueType="boolean"/>
 								<option id="de.innot.avreclipse.cppcompiler.option.verbose.1807612875" name="Verbose (-v)" superClass="de.innot.avreclipse.cppcompiler.option.verbose" value="false" valueType="boolean"/>
 								<option id="de.innot.avreclipse.cppcompiler.option.incpath.2000820921" name="Include Paths (-I)" superClass="de.innot.avreclipse.cppcompiler.option.incpath" valueType="includePath">

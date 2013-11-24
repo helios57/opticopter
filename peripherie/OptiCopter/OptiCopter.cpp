@@ -57,6 +57,8 @@ namespace arducopterNg {
 		t_10ms = millis();
 		t_20ms = millis();
 		t_50ms = millis();
+		Serial.print("Initialized in ms:");
+		Serial.println(millis());
 	}
 
 	void ArducopterNg::sendMotion6() {

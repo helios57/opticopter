@@ -49,7 +49,7 @@ void RCOutput::init() {
 	// The TIMER5 registers are assumed to be setup already.
 	gpio->pinMode(45, GPIO_OUTPUT); // CH_10 (PL4/OC5B)
 	gpio->pinMode(44, GPIO_OUTPUT); // CH_11 (PL5/OC5C)
-	for (int i = 0; i < 8; i++) {
+	for (int i = 0; i < 4; i++) {
 		enable_ch(i);
 	}
 }
