@@ -29,7 +29,7 @@ public:
 		lastRate = 0;
 		accelToRateFactor = 0;
 		diffSum = 0;
-		kp = 0.2;
+		kp = 0.1;
 		ki = 0.05;
 		kd = 0.01;
 		windupGuard = PI / 2;

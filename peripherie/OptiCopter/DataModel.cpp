@@ -36,6 +36,7 @@ static long count = 0;
 
 void DataModel::calc10ms() {
 	calculateActivation();
+	calcRollPitch10ms();
 	calcMag10ms();
 	calcOutput10ms();
 }
@@ -55,6 +56,13 @@ void DataModel::putMag(int16_t* mag) {
 	}
 }
 
+void DataModel::calcRollPitch10ms() {
+	rollPitchYaw[0] = atan2(-motion[0], motion[2]);
+	rollPitchYaw[1] = atan2(motion[1], motion[2]);
+	rollPitchYawFiltered[0] = rollPitchYawKalman[0].getAngle(rollPitchYaw[0], motion[4] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
+	rollPitchYawFiltered[1] = rollPitchYawKalman[1].getAngle(rollPitchYaw[1], motion[3] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
+}
+
 void DataModel::calcOutput10ms() {
 	if (leveling && (inputRoll > 0.1 || inputRoll < 0.1)) {
 		rollPitchYawLevel[0] += inputRoll * 0.01;
@@ -67,10 +75,6 @@ void DataModel::calcOutput10ms() {
 			motion[i] -= gyroBias[i - 3];
 		}
 	}
-	rollPitchYaw[0] = atan2(-motion[0], motion[2]);
-	rollPitchYaw[1] = atan2(motion[1], motion[2]);
-	rollPitchYawFiltered[0] = rollPitchYawKalman[0].getAngle(rollPitchYaw[0], motion[4] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
-	rollPitchYawFiltered[1] = rollPitchYawKalman[1].getAngle(rollPitchYaw[1], motion[3] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
 	float rollLevel = rollPitchYawLevel[0];
 	float pitchLevel = rollPitchYawLevel[1];
 	float yawLevel = rollPitchYawLevel[2];
@@ -97,7 +101,7 @@ void DataModel::calcOutput10ms() {
 
 	float rollA = rollPitchYawPid[0].updatePID(rollLevel, rollPitchYawFiltered[0], motion[4] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
 	float pitchA = rollPitchYawPid[1].updatePID(pitchLevel, rollPitchYawFiltered[1], motion[3] * GYRO_TO_RAD_PER_S_FACTOR, 0.01);
-	float yawA = rollPitchYawPid[2].updatePID(yawLevel, rollPitchYawFiltered[2], 0.0/* -motion[5] * GYRO_TO_RAD_PER_S_FACTOR*/, 0.01);
+	float yawA = 0.2 * rollPitchYawPid[2].updatePID(yawLevel, rollPitchYawFiltered[2], 0.0/* -motion[5] * GYRO_TO_RAD_PER_S_FACTOR*/, 0.01);
 
 	thrust[0] = inputThrust + rollA + yawA;
 	thrust[1] = inputThrust - rollA + yawA;
@@ -132,62 +136,22 @@ void DataModel::calcOutput10ms() {
 	hal->setPmw(hal->OUT4, output[4]);
 	hal->setPmw(hal->OUT5, output[5]);
 
-	if (count++ >= 0) {
+	if (count++ >= 10) {
 		Serial.print(millis());
 		Serial.print(",");
 		count = 0;
-		/*for (uint8_t i = 3; i < 6; i++) {
-		 Serial.print(motion[i]);
-		 Serial.print(",");
-		 }
-		 for (uint8_t i = 0; i < 3; i++) {
-		 Serial.print(mag[i]);
-		 Serial.print(",");
-		 }*/
-
-		Serial.print(motion[4]);
-		Serial.print(",");
-		Serial.print(rollPitchYawLevel[0] * 1000);
-		Serial.print(",");
-		/*Serial.print(rollPitchYawLevel[1] * 1000);
-		 Serial.print(",");
-		 Serial.print(rollPitchYaw[0] * 1000);
-		 Serial.print(",");
-		 Serial.print(rollPitchYaw[1] * 1000);
-		 Serial.print(",");
-		 Serial.print(rollPitchYaw[2] * 1000);
-		 Serial.print(",");*/
-		Serial.print(rollPitchYawFiltered[0] * 1000);
-		Serial.print(",");
-		/*Serial.print(rollPitchYawFiltered[1] * 1000);
-		 Serial.print(",");
-		 Serial.print(rollPitchYawFiltered[2] * 1000);
-		 Serial.print(",");*/
-		Serial.print(rollA * 1000);
-		/*Serial.print(",");
-		 Serial.print(pitchA * 1000);
-		 Serial.print(",");
-		 Serial.print(yawA * 1000);
-		 Serial.print(",");
-		 //		Serial.print(inputThrust);
-		 //		Serial.print(",");
-		 //		Serial.print(inputRoll);
-		 //		Serial.print(",");
-		 //		Serial.print(inputPitch);
-		 //		Serial.print(",");
-		 //		Serial.print(inputYaw);
-		 //		Serial.print(",");*/
-		/*		Serial.print(thrust[0]);
-		 Serial.print(",");
-		 Serial.print(thrust[1]);
-		 Serial.print(",");
-		 Serial.print(thrust[2]);
-		 Serial.print(",");
-		 Serial.print(thrust[3]);
-		 Serial.print(",");
-		 Serial.print(thrust[4]);
-		 Serial.print(",");
-		 Serial.println(thrust[5]);*/
+		for (uint8_t i = 0; i < 6; i++) {
+			Serial.print(motion[i]);
+			Serial.print(",");
+		}
+		for (uint8_t i = 0; i < 3; i++) {
+			Serial.print(mag[i]);
+			Serial.print(",");
+		}
+		for (uint8_t i = 0; i < 3; i++) {
+			Serial.print(rollPitchYawFiltered[i] * 1000);
+			Serial.print(",");
+		}
 		Serial.println();
 	}
 }
@@ -210,10 +174,10 @@ void DataModel::calcMag10ms() {
 		magScaled[i] = (((float) ((mag[i])) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
 	}
 	magScaled[2] = -magScaled[2];
-	float rollSin = sin(rollPitchYawFiltered[0]);
-	float rollCos = cos(rollPitchYawFiltered[0]);
-	float pitchSin = sin(rollPitchYawFiltered[1]);
-	float pitchCos = cos(rollPitchYawFiltered[1]);
+	float rollSin = sin(rollPitchYawFiltered[0] * 0.5);
+	float rollCos = cos(rollPitchYawFiltered[0] * 0.5);
+	float pitchSin = sin(rollPitchYawFiltered[1] * 0.2);
+	float pitchCos = cos(rollPitchYawFiltered[1] * 0.2);
 	if (rollCos < 0) {
 		rollCos = -rollCos;
 	}

@@ -24,9 +24,9 @@ public:
 	float R_measure; // Measurement noise variance - this is actually the variance of the measurement noise
 
 	Kalman() {
-		Q_angle = 0.05; // Process noise variance for the accelerometer
-		Q_bias = 0.5; // Process noise variance for the gyro bias
-		R_measure = 0.1; // Measurement noise variance - this is actually the variance of the measurement noise
+		Q_angle = 0.1; // Process noise variance for the accelerometer
+		Q_bias = 0.01; // Process noise variance for the gyro bias
+		R_measure = 0.2; // Measurement noise variance - this is actually the variance of the measurement noise
 		angle = 0;
 		bias = 0;
 		rate = 0;
