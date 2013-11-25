@@ -32,16 +32,22 @@
 								<option id="de.innot.avreclipse.compiler.option.optimize.1244978258" name="Optimization Level" superClass="de.innot.avreclipse.compiler.option.optimize" value="de.innot.avreclipse.compiler.optimize.three" valueType="enumerated"/>
 								<option id="de.innot.avreclipse.compiler.option.verbose.722814302" name="Verbose (-v)" superClass="de.innot.avreclipse.compiler.option.verbose" value="false" valueType="boolean"/>
 								<option id="de.innot.avreclipse.compiler.option.warnerr.717553186" name="Warnings as Errors (-Werror)" superClass="de.innot.avreclipse.compiler.option.warnerr" value="true" valueType="boolean"/>
+								<option id="de.innot.avreclipse.compiler.option.def.1020545519" name="Define Syms (-D)" superClass="de.innot.avreclipse.compiler.option.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="CONFIG_HAL_BOARD=HAL_BOARD_APM2"/>
+								</option>
 								<inputType id="de.innot.avreclipse.compiler.winavr.input.690455999" name="C Source Files" superClass="de.innot.avreclipse.compiler.winavr.input"/>
 							</tool>
 							<tool id="de.innot.avreclipse.tool.cppcompiler.app.release.143233258" name="AVR C++ Compiler" superClass="de.innot.avreclipse.tool.cppcompiler.app.release">
 								<option id="de.innot.avreclipse.cppcompiler.option.debug.level.579445249" name="Generate Debugging Info" superClass="de.innot.avreclipse.cppcompiler.option.debug.level" value="de.innot.avreclipse.cppcompiler.option.debug.level.none" valueType="enumerated"/>
 								<option id="de.innot.avreclipse.cppcompiler.option.optimize.1314318778" name="Optimization Level" superClass="de.innot.avreclipse.cppcompiler.option.optimize" value="de.innot.avreclipse.cppcompiler.optimize.size" valueType="enumerated"/>
-								<option id="de.innot.avreclipse.cppcompiler.option.warnerr.1917797542" name="Warnings as Errors (-Werror)" superClass="de.innot.avreclipse.cppcompiler.option.warnerr" value="true" valueType="boolean"/>
+								<option id="de.innot.avreclipse.cppcompiler.option.warnerr.1917797542" name="Warnings as Errors (-Werror)" superClass="de.innot.avreclipse.cppcompiler.option.warnerr" value="false" valueType="boolean"/>
 								<option id="de.innot.avreclipse.cppcompiler.option.verbose.1807612875" name="Verbose (-v)" superClass="de.innot.avreclipse.cppcompiler.option.verbose" value="false" valueType="boolean"/>
 								<option id="de.innot.avreclipse.cppcompiler.option.incpath.2000820921" name="Include Paths (-I)" superClass="de.innot.avreclipse.cppcompiler.option.incpath" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/OptiCopterPeripherie/Libraries}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/OptiCopterPeripherie/Arduino}&quot;"/>
+								</option>
+								<option id="de.innot.avreclipse.cppcompiler.option.def.1283902590" name="Define Syms (-D)" superClass="de.innot.avreclipse.cppcompiler.option.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="CONFIG_HAL_BOARD=HAL_BOARD_APM2"/>
 								</option>
 								<inputType id="de.innot.avreclipse.cppcompiler.input.1936543687" superClass="de.innot.avreclipse.cppcompiler.input"/>
 							</tool>
