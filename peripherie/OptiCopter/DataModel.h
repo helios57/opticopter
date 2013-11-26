@@ -9,25 +9,18 @@
 #define DATAMODEL_H_
 
 #include "../Libraries/Hal/HalApm.h"
-#include "Filter/Kalman.h"
+#include "Filter/Filter.h"
 #include "Regler/PID.h"
 #include "Persistence/Persistence.h"
+#include "Filter/Gyro.h"
 
 using namespace arducopterNg;
 
 class DataModel {
 private:
-	const static uint8_t motionRingIndexMax = 5;
-	const static uint8_t magRingIndexMax = 10;
 	HalApm *hal;
 	Persistence *persistence;
-	int16_t motionRing[6][motionRingIndexMax];
-	int32_t motionSummed[6];
-	uint8_t motionRingIndex;
 	int16_t motion[6];
-	int16_t magRing[3][magRingIndexMax];
-	uint8_t magRingIndex;
-	int32_t magSummed[3];
 	int16_t mag[3];
 	uint16_t input[8];
 	uint16_t inputMax[8];
@@ -44,15 +37,13 @@ private:
 	float magCompensated[3];
 	int16_t magMax[3];
 	int16_t magMin[3];
-	int16_t gyroBias[3];
 	float rollPitchYawLevel[3]; //Orientation - Level
 	float rollPitchYaw[3]; //Orientation
 	float rollPitchYawFiltered[3]; //Orientation
-	Kalman rollPitchYawKalman[3];
-	Kalman magCompensatedKalman[3];
+	Gyro gyro;
+	Filter rollPitchYawKalman[3];
 	PID rollPitchYawPid[3]; //PID
 	float rollPitchYawPidParams[9];
-	const static float GYRO_TO_RAD_PER_S_FACTOR = 0.0002660325; // 0.00106413;
 	const static float SIN_60_COS_30 = 0.866025403784439;
 	float pressure;
 	bool active;
@@ -74,8 +65,6 @@ public:
 		active = false;
 		tActivate = 0;
 		pressure = 0;
-		magRingIndex = 0;
-		motionRingIndex = 0;
 		persistence->readMagMax(magMax);
 		persistence->readMagMin(magMin);
 
@@ -95,7 +84,6 @@ public:
 			rollPitchYawLevel[i] = 0;
 			rollPitchYaw[i] = 0;
 			rollPitchYawFiltered[i] = 0;
-			gyroBias[i] = 0;
 		}
 		persistence->readPID(rollPitchYawPidParams);
 		initPID(rollPitchYawPidParams);
