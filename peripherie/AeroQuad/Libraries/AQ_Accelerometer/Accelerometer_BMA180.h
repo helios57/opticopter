@@ -22,7 +22,7 @@
 #define _AEROQUAD_ACCELEROMETER_BMA180_H_
 
 #include <Accelerometer.h>
-#include <Device_I2C.h>
+#include <AQ_I2C/Device_I2C.h>
 #include <SensorsStatus.h>
 
 #ifdef BMA180_ADDRESS_ALTERNATE

@@ -1,26 +1,26 @@
 /*
-  wiring.c - Partial implementation of the Wiring API for the ATmega8.
-  Part of Arduino - http://www.arduino.cc/
+ wiring.c - Partial implementation of the Wiring API for the ATmega8.
+ Part of Arduino - http://www.arduino.cc/
 
-  Copyright (c) 2005-2006 David A. Mellis
+ Copyright (c) 2005-2006 David A. Mellis
 
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2.1 of the License, or (at your option) any later version.
 
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
 
-  You should have received a copy of the GNU Lesser General
-  Public License along with this library; if not, write to the
-  Free Software Foundation, Inc., 59 Temple Place, Suite 330,
-  Boston, MA  02111-1307  USA
+ You should have received a copy of the GNU Lesser General
+ Public License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ Boston, MA  02111-1307  USA
 
-  $Id$
-*/
+ $Id$
+ */
 
 #include "wiring_private.h"
 
@@ -64,8 +64,7 @@ SIGNAL(TIMER0_OVF_vect)
 	timer0_overflow_count++;
 }
 
-unsigned long millis()
-{
+unsigned long millis() {
 	unsigned long m;
 	uint8_t oldSREG = SREG;
 
@@ -81,7 +80,7 @@ unsigned long millis()
 unsigned long micros() {
 	unsigned long m;
 	uint8_t oldSREG = SREG, t;
-	
+
 	cli();
 	m = timer0_overflow_count;
 #if defined(TCNT0)
@@ -89,29 +88,27 @@ unsigned long micros() {
 #elif defined(TCNT0L)
 	t = TCNT0L;
 #else
-	#error TIMER 0 not defined
+#error TIMER 0 not defined
 #endif
 
-  
 #ifdef TIFR0
 	if ((TIFR0 & _BV(TOV0)) && (t < 255))
 		m++;
 #else
 	if ((TIFR & _BV(TOV0)) && (t < 255))
-		m++;
+	m++;
 #endif
 
 	SREG = oldSREG;
-	
+
 	return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
 }
 
-void delay(unsigned long ms)
-{
-	uint16_t start = (uint16_t)micros();
+void delay(unsigned long ms) {
+	uint16_t start = (uint16_t) micros();
 
 	while (ms > 0) {
-		if (((uint16_t)micros() - start) >= 1000) {
+		if (((uint16_t) micros() - start) >= 1000) {
 			ms--;
 			start += 1000;
 		}
@@ -119,8 +116,7 @@ void delay(unsigned long ms)
 }
 
 /* Delay for the given number of microseconds.  Assumes a 8 or 16 MHz clock. */
-void delayMicroseconds(unsigned int us)
-{
+void delayMicroseconds(unsigned int us) {
 	// calling avrlib's delay_us() function with low values (e.g. 1 or
 	// 2 microseconds) gives delays longer than desired.
 	//delay_us(us);
@@ -130,15 +126,15 @@ void delayMicroseconds(unsigned int us)
 	// for a one-microsecond delay, simply wait 2 cycle and return. The overhead
 	// of the function call yields a delay of exactly a one microsecond.
 	__asm__ __volatile__ (
-		"nop" "\n\t"
-		"nop"); //just waiting 2 cycle
+			"nop" "\n\t"
+			"nop");//just waiting 2 cycle
 	if (--us == 0)
-		return;
+	return;
 
 	// the following loop takes a 1/5 of a microsecond (4 cycles)
 	// per iteration, so execute it five times for each microsecond of
 	// delay requested.
-	us = (us<<2) + us; // x5 us
+	us = (us<<2) + us;// x5 us
 
 	// account for the time taken in the preceeding commands.
 	us -= 2;
@@ -165,15 +161,15 @@ void delayMicroseconds(unsigned int us)
 	// the function calls takes more than two microseconds.  can't just
 	// subtract two, since us is unsigned; we'd overflow.
 	if (--us == 0)
-		return;
+	return;
 	if (--us == 0)
-		return;
+	return;
 
 	// the following loop takes half of a microsecond (4 cycles)
 	// per iteration, so execute it twice for each microsecond of
 	// delay requested.
 	us <<= 1;
-    
+
 	// partially compensate for the time taken by the preceeding commands.
 	// we can't subtract any more than this or we'd overflow w/ small delays.
 	us--;
@@ -181,17 +177,16 @@ void delayMicroseconds(unsigned int us)
 
 	// busy wait
 	__asm__ __volatile__ (
-		"1: sbiw %0,1" "\n\t" // 2 cycles
-		"brne 1b" : "=w" (us) : "0" (us) // 2 cycles
+			"1: sbiw %0,1" "\n\t" // 2 cycles
+			"brne 1b" : "=w" (us) : "0" (us)// 2 cycles
 	);
 }
 
-void init()
-{
+void init() {
 	// this needs to be called before setup() or some functions won't
 	// work there
 	sei();
-	
+
 	// on the ATmega168, timer 0 is also used for fast hardware pwm
 	// (using phase-correct PWM would mean that timer 0 overflowed half as often
 	// resulting in different millis() behavior on the ATmega8 and ATmega168)
@@ -217,7 +212,7 @@ void init()
 	sbi(TCCR0A, CS01);
 	sbi(TCCR0A, CS00);
 #else
-	#error Timer 0 prescale factor 64 not set correctly
+#error Timer 0 prescale factor 64 not set correctly
 #endif
 
 	// enable timer 0 overflow interrupt
@@ -226,7 +221,7 @@ void init()
 #elif defined(TIMSK0) && defined(TOIE0)
 	sbi(TIMSK0, TOIE0);
 #else
-	#error	Timer 0 overflow interrupt not set correctly
+#error	Timer 0 overflow interrupt not set correctly
 #endif
 
 	// timers 1 and 2 are used for phase-correct hardware pwm
@@ -252,7 +247,7 @@ void init()
 #if defined(TCCR1A) && defined(WGM10)
 	sbi(TCCR1A, WGM10);
 #elif defined(TCCR1)
-	#warning this needs to be finished
+#warning this needs to be finished
 #endif
 
 	// set timer 2 prescale factor to 64
@@ -261,7 +256,7 @@ void init()
 #elif defined(TCCR2B) && defined(CS22)
 	sbi(TCCR2B, CS22);
 #else
-	#warning Timer 2 not finished (may not be present on this CPU)
+#warning Timer 2 not finished (may not be present on this CPU)
 #endif
 
 	// configure timer 2 for phase correct pwm (8-bit)
@@ -270,7 +265,7 @@ void init()
 #elif defined(TCCR2A) && defined(WGM20)
 	sbi(TCCR2A, WGM20);
 #else
-	#warning Timer 2 not finished (may not be present on this CPU)
+#warning Timer 2 not finished (may not be present on this CPU)
 #endif
 
 #if defined(TCCR3B) && defined(CS31) && defined(WGM30)
@@ -283,9 +278,9 @@ void init()
 	sbi(TCCR4B, CS42);		// set timer4 prescale factor to 64
 	sbi(TCCR4B, CS41);
 	sbi(TCCR4B, CS40);
-	sbi(TCCR4D, WGM40);		// put timer 4 in phase- and frequency-correct PWM mode	
-	sbi(TCCR4A, PWM4A);		// enable PWM mode for comparator OCR4A
-	sbi(TCCR4C, PWM4D);		// enable PWM mode for comparator OCR4D
+	sbi(TCCR4D, WGM40);// put timer 4 in phase- and frequency-correct PWM mode
+	sbi(TCCR4A, PWM4A);// enable PWM mode for comparator OCR4A
+	sbi(TCCR4C, PWM4D);// enable PWM mode for comparator OCR4D
 #else /* beginning of timer4 block for ATMEGA1280 and ATMEGA2560 */
 #if defined(TCCR4B) && defined(CS41) && defined(WGM40)
 	sbi(TCCR4B, CS41);		// set timer 4 prescale factor to 64

@@ -19,12 +19,12 @@
 */
 
 #include <Wire.h>             // Arduino IDE bug, needed because that the ITG3200 use Wire!
-#include <Device_I2C.h>       // Arduino IDE bug, needed because that the ITG3200 use Wire!
+#include <AQ_I2C/Device_I2C.h>       // Arduino IDE bug, needed because that the ITG3200 use Wire!
 #include <Platform_CHR6DM.h>  // Arduino IDE bug, needed because that the CHR6DM use Wire!
 
-#include <GlobalDefined.h>
+#include <AQ_Defines/GlobalDefined.h>
 #include <APM_ADC.h>
-#include <AQMath.h>
+#include <AQ_Math/AQMath.h>
 #include <Accelerometer_ADXL500.h>
 
 

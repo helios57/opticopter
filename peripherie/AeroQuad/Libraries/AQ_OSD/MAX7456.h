@@ -59,7 +59,7 @@
 #include <stdarg.h>
 
 #include "OSD.h"
-#include "GlobalDefined.h"
+#include <AQ_Defines/GlobalDefined.h>
 
 #include "MAX7456_Config.h" // User configuration
 

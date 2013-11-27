@@ -19,9 +19,9 @@
 */
 
 #include <Wire.h>
-#include <Device_I2C.h>
-#include <GlobalDefined.h>
-#include <AQMath.h>
+#include <AQ_I2C/Device_I2C.h>
+#include <AQ_Defines/GlobalDefined.h>
+#include <AQ_Math/AQMath.h>
 #include <Accelerometer_BMA180.h>
 
 unsigned long timer;

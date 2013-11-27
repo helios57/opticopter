@@ -19,9 +19,9 @@
 */
 
 #include <Wire.h>
-#include <Device_I2C.h>
-#include <GlobalDefined.h>
-#include <AQMath.h>
+#include <AQ_I2C/Device_I2C.h>
+#include <AQ_Defines/GlobalDefined.h>
+#include <AQ_Math/AQMath.h>
 
 // if using 6DOF, uncomment this one:
 #include <Accelerometer_ADXL345.h>  

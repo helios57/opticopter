@@ -19,10 +19,10 @@
  */
 
 #include <Wire.h>
-#include <Device_I2C.h>
-#include <AQMath.h>
+#include <AQ_I2C/Device_I2C.h>
+#include <AQ_Math/AQMath.h>
 
-#include <GlobalDefined.h>
+#include <AQ_Defines/GlobalDefined.h>
 #include <BarometricSensor_BMP085.h>
 
 unsigned long timer = 0;

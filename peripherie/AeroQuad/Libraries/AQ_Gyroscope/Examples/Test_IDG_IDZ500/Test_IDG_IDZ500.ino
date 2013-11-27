@@ -20,10 +20,10 @@
 
 #include <Wire.h>             // @see Kenny, Arduino IDE compiliation bug
 
-#include <AQMath.h>
-#include <Device_I2C.h>
+#include <AQ_Math/AQMath.h>
+#include <AQ_I2C/Device_I2C.h>
 #include <Gyroscope_IDG_IDZ500.h>
-#include <GlobalDefined.h>
+#include <AQ_Defines/GlobalDefined.h>
 
 unsigned long timer;
 

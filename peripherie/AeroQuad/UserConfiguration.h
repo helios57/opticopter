@@ -1,34 +1,32 @@
 /*
-  AeroQuad v3.x - 2012
-  www.AeroQuad.com
-  Copyright (c) 2012 Ted Carancho.  All rights reserved.
-  An Open Source Arduino based multicopter.
+ AeroQuad v3.x - 2012
+ www.AeroQuad.com
+ Copyright (c) 2012 Ted Carancho.  All rights reserved.
+ An Open Source Arduino based multicopter.
 
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  GNU General Public License for more details.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 /****************************************************************************
-				The AeroQuad Manual can be found here:
-		http://aeroquad.com/showwiki.php?title=Book:AeroQuad+Manual
+ The AeroQuad Manual can be found here:
+ http://aeroquad.com/showwiki.php?title=Book:AeroQuad+Manual
  ****************************************************************************/
-
 
 /****************************************************************************
  ************************* Hardware Configuration ***************************
  ****************************************************************************/
 // Select which hardware you wish to use with the AeroQuad Flight Software
-
 // 328p processor
 //#define AeroQuad_v1         // Arduino Uno with AeroQuad Shield v1.7 and below
 //#define AeroQuad_v1_IDG     // Arduino Uno with AeroQuad Shield v1.7 and below using IDG yaw gyro
@@ -36,44 +34,39 @@
 //#define AeroQuad_Mini       // Arduino Pro Mini with AeroQuad Mini Shield v1.0
 //#define AeroQuad_Wii        // Arduino Uno with Wii Sensors and AeroQuad Shield v1.x
 //#define AeroQuad_Paris_v3   // Define along with either AeroQuad_Wii to include specific changes for MultiWiiCopter Paris v3.0 board
-
 // Mega processor
 //#define AeroQuadMega_v1     // Arduino Mega with AeroQuad Shield v1.7 and below
 //#define AeroQuadMega_v2     // Arduino Mega with AeroQuad Shield v2.0
-#define AeroQuadMega_v21	// Arduino Mega with AeroQuad Shield v2.1
+//#define AeroQuadMega_v21	// Arduino Mega with AeroQuad Shield v2.1
 //#define AeroQuadMega_Wii    // Arduino Mega with Wii Sensors and AeroQuad Shield v2.x
 //#define ArduCopter          // ArduPilot Mega (APM) with Oilpan Sensor Board
+#define ArduCopter25          // ArduPilot Mega (APM) with Oilpan Sensor Board
 //#define AeroQuadMega_CHR6DM // Clean Arduino Mega with CHR6DM as IMU/heading ref.
 //#define APM_OP_CHR6DM       // ArduPilot Mega with CHR6DM as IMU/heading ref., Oilpan for barometer (just uncomment AltitudeHoldBaro for baro), and voltage divider
 
 // STM32 processor
 //#define AeroQuadSTM32        // Baloo board
 
-
 /****************************************************************************
  *********************** Define Flight Configuration ************************
  ****************************************************************************/
 // Use only one of the following definitions
 //For more information please refer to http://aeroquad.com/showwiki.php?title=Flight+Configurations
-
 //#define quadXConfig
-//#define quadPlusConfig
+#define quadPlusConfig
 //#define hexPlusConfig
 //#define hexXConfig      
 //#define triConfig
 //#define quadY4Config
-#define hexY6Config
+//#define hexY6Config
 //#define octoX8Config
 //#define octoPlusConfig		// EXPERIMENTAL: not completely re-tested
 //#define octoXConfig			// EXPERIMENTAL: not completely re-tested
-
 
 // MOTOR ADVANCE CONFIG SECTION
 //#define CHANGE_YAW_DIRECTION	// only needed if you want to reverse the yaw correction direction
 
 #define USE_400HZ_ESC			// For ESC that support 400Hz update rate, ESC OR PLATFORM MAY NOT SUPPORT IT
-
-
 //
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // In the 3.0 code the motor numbering has changed to simplify motor configuration.
@@ -144,7 +137,6 @@
 #define LASTCHANNEL 8
 //#define LASTCHANNEL 10 // EXPERIMENTAL only tested with ReceiverSBUS on AQ32, test extensively before using other boards/receiver types
 
-
 //
 // *******************************************************************************************************************************
 // Optional telemetry (for debug or ground station tracking purposes)
@@ -154,7 +146,7 @@
 
 //#define MavLink               // Enables the MavLink protocol
 //#define MAV_SYSTEM_ID 100		// Needs to be enabled when using MavLink, used to identify each of your copters using MavLink
-								// If you've only got one, leave the default value unchanged, otherwise make sure that each copter has a different ID 
+// If you've only got one, leave the default value unchanged, otherwise make sure that each copter has a different ID
 
 //#define CONFIG_BAUDRATE 19200 // overrides default baudrate for serial port (Configurator/MavLink/WirelessTelemetry)
 
@@ -204,8 +196,6 @@
 // For more information please refer to http://aeroquad.com/showwiki.php?title=OnBoardMenu
 // *************************************************************.******************************************************************
 //#define SERIAL_LCD Serial3
-
-
 
 /****************************************************************************
  ****************************************************************************

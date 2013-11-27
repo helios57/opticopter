@@ -26,8 +26,8 @@
 #if !defined (AeroQuadSTM32)
   #include "Arduino.h"
   #include "pins_arduino.h"
-  #include <AQMath.h>
-  #include "GlobalDefined.h"
+  #include <AQ_Math/AQMath.h>
+  #include <AQ_Defines/GlobalDefined.h>
 #endif
 #include "Receiver.h"
 

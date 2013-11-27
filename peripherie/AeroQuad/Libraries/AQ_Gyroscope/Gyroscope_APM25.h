@@ -23,7 +23,7 @@
 
 int gyroRaw[3] = { 0, 0, 0 };
 
-#include <AQ_Platform_MPU6000/Platform_MPU6000.h>
+#include <AQ_Platform_APM/Hal/HalApm.h>
 #include "Gyroscope.h"
 
 #define GYRO_CALIBRATION_TRESHOLD 25
@@ -31,8 +31,6 @@ int gyroRaw[3] = { 0, 0, 0 };
 void initializeGyro() {
 	float range = 2 * 1000.0;
 	gyroScaleFactor = radians(range/65536.0);
-
-	initializeMPU6000Sensors();
 }
 
 void gyroUpdateHeading() {

@@ -51,7 +51,7 @@
   
 #elif defined MOTOR_I2C
   #include <Wire.h>
-  #include <Device_I2C.h>
+  #include <AQ_I2C/Device_I2C.h>
 
    void initMotors(NB_Motors motorConfig) {
     Wire.begin();

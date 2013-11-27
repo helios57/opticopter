@@ -1,25 +1,24 @@
 /*
-  AeroQuad v3.0 - May 2011
-  www.AeroQuad.com
-  Copyright (c) 2011 Ted Carancho.  All rights reserved.
-  An Open Source Arduino based multicopter.
+ AeroQuad v3.0 - May 2011
+ www.AeroQuad.com
+ Copyright (c) 2011 Ted Carancho.  All rights reserved.
+ An Open Source Arduino based multicopter.
 
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-  GNU General Public License for more details.
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 // parts of the init sequence were taken from AP_InertialSensor_MPU6000.h
-
 #ifndef _AEROQUAD_PLATFORM_MPU6000_H_
 #define _AEROQUAD_PLATFORM_MPU6000_H_
 
@@ -27,7 +26,7 @@
 //#define MPU6000_I2C
 
 #include "Arduino.h"
-#include <SensorsStatus.h>
+#include <AQ_Defines/SensorsStatus.h>
 
 //#define MPU6000_I2C	// insert this define before #include <Platform_MPU6000.h> when you use a I2C based MPU6050
 
@@ -62,7 +61,6 @@
 #define MPUREG_FIFO_COUNTL		0x73
 #define MPUREG_FIFO_R_W			0x74
 
-
 // Configuration bits
 #define BIT_SLEEP				0x40
 #define BIT_H_RESET				0x80
@@ -89,162 +87,148 @@
 #define BIT_I2C_IF_DIS          0x10
 #define BIT_INT_STATUS_DATA		0x01
 
-
 typedef struct {
-  short x;
-  short y;
-  short z;
+	short x;
+	short y;
+	short z;
 } tAxis;
 
 union uMPU6000 {
-  unsigned char rawByte[];
-  unsigned short rawWord[];
-  struct {
-	tAxis accel;
-	short temperature;
-	tAxis gyro;
-  } data;
+	unsigned char rawByte[];
+	unsigned short rawWord[];
+	struct {
+		tAxis accel;
+		short temperature;
+		tAxis gyro;
+	} data;
 } MPU6000;
 
-
 #ifdef MPU6000_I2C
-  #ifndef MPU6000_I2C_ADDRESS
-	#define MPU6000_I2C_ADDRESS 0x68
-  #endif
+#ifndef MPU6000_I2C_ADDRESS
+#define MPU6000_I2C_ADDRESS 0x68
+#endif
 #else
-  #include <HardwareSPIExt.h>
-  HardwareSPIExt spiMPU6000(4);
+#include <AQ_SPI/HardwareSPIExt.h>
+HardwareSPIExt spiMPU6000(4);
 #endif
 
-void MPU6000_SpiLowSpeed()
-{
-  #ifndef MPU6000_I2C
+void MPU6000_SpiLowSpeed() {
+#ifndef MPU6000_I2C
 	spiMPU6000.begin(SPI_562_500KHZ, MSBFIRST, 3);
-  #endif
+#endif
 }
 
-void MPU6000_SpiHighSpeed()
-{
-  #ifndef MPU6000_I2C
+void MPU6000_SpiHighSpeed() {
+#ifndef MPU6000_I2C
 	spiMPU6000.end();
-    spiMPU6000.begin(SPI_9MHZ, MSBFIRST, 3);
-  #endif
+	spiMPU6000.begin(SPI_9MHZ, MSBFIRST, 3);
+#endif
 }
 
-void MPU6000_WriteReg(int addr, byte data)
-{
-  #ifdef MPU6000_I2C
+void MPU6000_WriteReg(int addr, byte data) {
+#ifdef MPU6000_I2C
 	updateRegisterI2C(MPU6000_I2C_ADDRESS, addr, data);
-  #else
+#else
 	spiMPU6000.Write(addr, data);
-  #endif
-  delay(1);
+#endif
+	delay(1);
 }
 
-byte MPU6000_ReadReg(int addr)
-{
-  #ifdef MPU6000_I2C
+byte MPU6000_ReadReg(int addr) {
+#ifdef MPU6000_I2C
 	sendByteI2C(MPU6000_I2C_ADDRESS, addr);
 	byte data = readByteI2C(MPU6000_I2C_ADDRESS);
-  #else
+#else
 	byte data = spiMPU6000.Read(addr);
-  #endif
-  delay(1);
-  return data;
+#endif
+	delay(1);
+	return data;
 }
 
 bool initializeMPU6000SensorsDone = false;
-void initializeMPU6000Sensors()
-{
-  if(initializeMPU6000SensorsDone) {
-	return;
-  }
-  initializeMPU6000SensorsDone = true;
+void initializeMPU6000Sensors() {
+	if (initializeMPU6000SensorsDone) {
+		return;
+	}
+	initializeMPU6000SensorsDone = true;
 
-  MPU6000_SpiLowSpeed();
+	MPU6000_SpiLowSpeed();
 
-  unsigned char val;
+	unsigned char val;
 
-  val = MPU6000_ReadReg(MPUREG_WHOAMI);
-  if((val&0x7E) == 0x68) {
-	vehicleState |= GYRO_DETECTED;
-	vehicleState |= ACCEL_DETECTED;
-  } 
-  else {
-	return;
-  }
+	val = MPU6000_ReadReg(MPUREG_WHOAMI);
+	if ((val & 0x7E) == 0x68) {
+		vehicleState |= GYRO_DETECTED;
+		vehicleState |= ACCEL_DETECTED;
+	} else {
+		return;
+	}
 
-  // Chip reset
-  MPU6000_WriteReg(MPUREG_PWR_MGMT_1, BIT_H_RESET);
-  delay(100);  // Startup time delay
+	// Chip reset
+	MPU6000_WriteReg(MPUREG_PWR_MGMT_1, BIT_H_RESET);
+	delay(100);  // Startup time delay
 
-  #ifndef MPU6000_I2C
-    // Disable I2C bus
-    MPU6000_WriteReg(MPUREG_USER_CTRL, BIT_I2C_IF_DIS);
-  #endif
+#ifndef MPU6000_I2C
+	// Disable I2C bus
+	MPU6000_WriteReg(MPUREG_USER_CTRL, BIT_I2C_IF_DIS);
+#endif
 
-  // Wake Up device and select GyroZ clock (better performance)
-  MPU6000_WriteReg(MPUREG_PWR_MGMT_1, MPU_CLK_SEL_PLLGYROZ);
-  MPU6000_WriteReg(MPUREG_PWR_MGMT_2, 0);
+	// Wake Up device and select GyroZ clock (better performance)
+	MPU6000_WriteReg(MPUREG_PWR_MGMT_1, MPU_CLK_SEL_PLLGYROZ);
+	MPU6000_WriteReg(MPUREG_PWR_MGMT_2, 0);
 
-  // SAMPLE RATE
-  MPU6000_WriteReg(MPUREG_SMPLRT_DIV,0x00);     // Sample rate = 1kHz
+	// SAMPLE RATE
+	MPU6000_WriteReg(MPUREG_SMPLRT_DIV, 0x00);     // Sample rate = 1kHz
 
-  // FS & DLPF   FS=1000º/s, DLPF = 42Hz (low pass filter)
-  MPU6000_WriteReg(MPUREG_CONFIG, BITS_DLPF_CFG_42HZ);
-  MPU6000_WriteReg(MPUREG_GYRO_CONFIG,BITS_FS_1000DPS);  // Gyro scale 1000º/s
-  MPU6000_WriteReg(MPUREG_ACCEL_CONFIG,0x08);   // Accel scale +-4g (4096LSB/g)
+	// FS & DLPF   FS=1000ï¿½/s, DLPF = 42Hz (low pass filter)
+	MPU6000_WriteReg(MPUREG_CONFIG, BITS_DLPF_CFG_42HZ);
+	MPU6000_WriteReg(MPUREG_GYRO_CONFIG, BITS_FS_1000DPS);  // Gyro scale 1000ï¿½/s
+	MPU6000_WriteReg(MPUREG_ACCEL_CONFIG, 0x08);   // Accel scale +-4g (4096LSB/g)
 
-
-  // switch to high clock rate
-  MPU6000_SpiHighSpeed();
+	// switch to high clock rate
+	MPU6000_SpiHighSpeed();
 }
 
-
-void MPU6000SwapData(unsigned char *data, int datalen)
-{
-  datalen /= 2;
-  while(datalen--) {
-    unsigned char t = data[0];
-    data[0] = data[1];
-    data[1] = t;
-    data += 2;
-  }
+void MPU6000SwapData(unsigned char *data, int datalen) {
+	datalen /= 2;
+	while (datalen--) {
+		unsigned char t = data[0];
+		data[0] = data[1];
+		data[1] = t;
+		data += 2;
+	}
 }
 
-void readMPU6000Sensors()
-{
-  #ifdef MPU6000_I2C
-    sendByteI2C(MPU6000_I2C_ADDRESS, MPUREG_ACCEL_XOUT_H);
-    Wire.requestFrom(MPU6000_I2C_ADDRESS, sizeof(MPU6000));
-    for(byte i=0; i<sizeof(MPU6000)/sizeof(short); i++) {
-      MPU6000.rawWord[i] = readWordI2C();
-    }
-  #else
-    spiMPU6000.Read(MPUREG_ACCEL_XOUT_H, MPU6000.rawByte, sizeof(MPU6000));
-    MPU6000SwapData(MPU6000.rawByte, sizeof(MPU6000));
-  #endif
+void readMPU6000Sensors() {
+#ifdef MPU6000_I2C
+	sendByteI2C(MPU6000_I2C_ADDRESS, MPUREG_ACCEL_XOUT_H);
+	Wire.requestFrom(MPU6000_I2C_ADDRESS, sizeof(MPU6000));
+	for(byte i=0; i<sizeof(MPU6000)/sizeof(short); i++) {
+		MPU6000.rawWord[i] = readWordI2C();
+	}
+#else
+	spiMPU6000.Read(MPUREG_ACCEL_XOUT_H, MPU6000.rawByte, sizeof(MPU6000));
+	MPU6000SwapData(MPU6000.rawByte, sizeof(MPU6000));
+#endif
 }
 
-int readMPU6000Count=0;
-int readMPU6000AccelCount=0;
-int readMPU6000GyroCount=0;
+int readMPU6000Count = 0;
+int readMPU6000AccelCount = 0;
+int readMPU6000GyroCount = 0;
 
-void readMPU6000Accel()
-{
-  readMPU6000AccelCount++;
-  if(readMPU6000AccelCount != readMPU6000Count) {
-    readMPU6000Sensors();
-    readMPU6000Count++;
-  }
+void readMPU6000Accel() {
+	readMPU6000AccelCount++;
+	if (readMPU6000AccelCount != readMPU6000Count) {
+		readMPU6000Sensors();
+		readMPU6000Count++;
+	}
 }
 
-void readMPU6000Gyro()
-{
-  readMPU6000GyroCount++;
-  if(readMPU6000GyroCount != readMPU6000Count) {
-    readMPU6000Sensors();
-    readMPU6000GyroCount++;
-  }
+void readMPU6000Gyro() {
+	readMPU6000GyroCount++;
+	if (readMPU6000GyroCount != readMPU6000Count) {
+		readMPU6000Sensors();
+		readMPU6000GyroCount++;
+	}
 }
 #endif

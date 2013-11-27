@@ -19,10 +19,10 @@
 */
 
 #include <Wire.h>             // Arduino IDE bug, needed because that the ITG3200 use Wire!
-#include <Device_I2C.h>       // Arduino IDE bug, needed because that the ITG3200 use Wire!
+#include <AQ_I2C/Device_I2C.h>       // Arduino IDE bug, needed because that the ITG3200 use Wire!
 
-#include <GlobalDefined.h>
-#include <AQMath.h>
+#include <AQ_Defines/GlobalDefined.h>
+#include <AQ_Math/AQMath.h>
 
 //Uncomment the following two lines when testing the mag on v2.1 shield
 //#define SPARKFUN_9DOF_5883L

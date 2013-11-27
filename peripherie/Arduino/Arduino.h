@@ -12,7 +12,7 @@
 #include "binary.h"
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 
 #define HIGH 0x1
@@ -85,37 +85,37 @@ extern "C"{
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
-
-typedef unsigned int word;
+	typedef unsigned int word;
 
 #define bit(b) (1UL << (b))
 
-typedef uint8_t boolean;
-typedef uint8_t byte;
+	typedef uint8_t boolean;
+	typedef uint8_t byte;
 
-void init(void);
+	void init(void);
 
-void pinMode(uint8_t, uint8_t);
-void digitalWrite(uint8_t, uint8_t);
-int digitalRead(uint8_t);
-int analogRead(uint8_t);
-void analogReference(uint8_t mode);
-void analogWrite(uint8_t, int);
+	void pinMode(uint8_t, uint8_t);
+	void digitalWrite(uint8_t, uint8_t);
+	int digitalRead(uint8_t);
+	int analogRead(uint8_t);
+	void analogReference(uint8_t mode);
+	void analogWrite(uint8_t, int);
 
-unsigned long millis(void);
-unsigned long micros(void);
-void _delay(unsigned long);
-void delayMicroseconds(unsigned int us);
-unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
+	void delay(unsigned long ms);
+	unsigned long millis(void);
+	unsigned long micros(void);
+	void _delay(unsigned long);
+	void delayMicroseconds(unsigned int us);
+	unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
 
-void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
-uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);
+	void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
+	uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);
 
-void attachInterrupt(uint8_t, void (*)(void), int mode);
-void detachInterrupt(uint8_t);
+	void attachInterrupt(uint8_t, void (*)(void), int mode);
+	void detachInterrupt(uint8_t);
 
-void setup(void);
-void loop(void);
+	void setup(void);
+	void loop(void);
 
 // Get the bit location within the hardware port of the given virtual pin.
 // This comes from the pins_*.c file for the active board configuration.
@@ -124,14 +124,14 @@ void loop(void);
 
 // On the ATmega1280, the addresses of some of the port registers are
 // greater than 255, so we can't store them in uint8_t's.
-extern const uint16_t PROGMEM port_to_mode_PGM[];
-extern const uint16_t PROGMEM port_to_input_PGM[];
-extern const uint16_t PROGMEM port_to_output_PGM[];
+	extern const uint16_t PROGMEM port_to_mode_PGM[];
+	extern const uint16_t PROGMEM port_to_input_PGM[];
+	extern const uint16_t PROGMEM port_to_output_PGM[];
 
-extern const uint8_t PROGMEM digital_pin_to_port_PGM[];
+	extern const uint8_t PROGMEM digital_pin_to_port_PGM[];
 // extern const uint8_t PROGMEM digital_pin_to_bit_PGM[];
-extern const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[];
-extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
+	extern const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[];
+	extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 
 // Get the bit location within the hardware port of the given virtual pin.
 // This comes from the pins_*.c file for the active board configuration.
