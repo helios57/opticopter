@@ -9,10 +9,10 @@
 #define DATAMODEL_H_
 
 #include "../Libraries/Hal/HalApm.h"
-#include "Filter/Filter.h"
 #include "Regler/PID.h"
 #include "Persistence/Persistence.h"
 #include "Filter/Gyro.h"
+#include "Filter/AHRS.h"
 
 using namespace arducopterNg;
 
@@ -20,6 +20,7 @@ class DataModel {
 private:
 	HalApm *hal;
 	Persistence *persistence;
+	AHRS ahrs;
 	int16_t motion[6];
 	int16_t mag[3];
 	uint16_t input[8];
@@ -34,14 +35,11 @@ private:
 	uint16_t output[8];
 	float thrust[8];
 	float magScaled[3];
-	float magCompensated[3];
 	int16_t magMax[3];
 	int16_t magMin[3];
 	float rollPitchYawLevel[3]; //Orientation - Level
 	float rollPitchYaw[3]; //Orientation
-	float rollPitchYawFiltered[3]; //Orientation
 	Gyro gyro;
-	Filter rollPitchYawKalman[3];
 	PID rollPitchYawPid[3]; //PID
 	float rollPitchYawPidParams[9];
 	const static float SIN_60_COS_30 = 0.866025403784439;
@@ -56,7 +54,7 @@ private:
 	void getYaw();
 	void getRollPitch();
 	void calcutateOutput();
-	void calcMag10ms();
+	void calcAhrs10ms();
 	void calcRollPitch10ms();
 
 public:
@@ -83,7 +81,6 @@ public:
 		for (int i = 0; i < 3; i++) {
 			rollPitchYawLevel[i] = 0;
 			rollPitchYaw[i] = 0;
-			rollPitchYawFiltered[i] = 0;
 		}
 		persistence->readPID(rollPitchYawPidParams);
 		initPID(rollPitchYawPidParams);

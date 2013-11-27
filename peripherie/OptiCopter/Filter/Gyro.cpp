@@ -44,15 +44,15 @@ void Gyro::stopBiasRecording() {
 
 Gyro::~Gyro() {
 }
-
-float Gyro::getRoll() {
+//Roll
+float Gyro::getY() {
 	return (gyro[1] - gyroBias[1]) * gyroScaleFactor;
 }
-
-float Gyro::getPitch() {
+//Pitch
+float Gyro::getX() {
 	return (gyro[0] - gyroBias[0]) * gyroScaleFactor;
 }
-
-float Gyro::getYaw() {
+//Yaw
+float Gyro::getZ() {
 	return (gyro[2] - gyroBias[2]) * gyroScaleFactor;
 }

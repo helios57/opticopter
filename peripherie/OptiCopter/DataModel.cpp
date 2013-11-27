@@ -18,9 +18,9 @@ void DataModel::calculateActivation() {
 		rollPitchYawPid[0].resetI();
 		rollPitchYawPid[1].resetI();
 		rollPitchYawPid[2].resetI();
-		rollPitchYawLevel[0] = rollPitchYawFiltered[0];
-		rollPitchYawLevel[1] = rollPitchYawFiltered[1];
-		rollPitchYawLevel[2] = rollPitchYawFiltered[2];
+		rollPitchYawLevel[0] = rollPitchYaw[0];
+		rollPitchYawLevel[1] = rollPitchYaw[1];
+		rollPitchYawLevel[2] = rollPitchYaw[2];
 		gyro.stopBiasRecording();
 	}
 	if (active && input[3] < activateBot && tActivate == 0) {
@@ -34,7 +34,7 @@ static long count = 0;
 
 void DataModel::calc10ms() {
 	calculateActivation();
-	calcMag10ms();
+	calcAhrs10ms();
 	calcOutput10ms();
 }
 
@@ -43,20 +43,12 @@ void DataModel::putMotion6(int16_t *axyzgxyz) {
 		motion[i] = axyzgxyz[i];
 	}
 	gyro.update(axyzgxyz);
-	calcRollPitch10ms();
 }
 
 void DataModel::putMag(int16_t* imag) {
 	for (uint8_t i = 0; i < 3; i++) {
 		mag[i] = imag[i];
 	}
-}
-
-void DataModel::calcRollPitch10ms() {
-	rollPitchYaw[0] = atan2(-motion[0], motion[2]);
-	rollPitchYaw[1] = atan2(motion[1], motion[2]);
-	rollPitchYawFiltered[0] = rollPitchYawKalman[0].update(gyro.getRoll(), rollPitchYaw[0], 0.01, active);
-	rollPitchYawFiltered[1] = rollPitchYawKalman[1].update(gyro.getPitch(), rollPitchYaw[1], 0.01, active);
 }
 
 void DataModel::calcOutput10ms() {
@@ -75,7 +67,7 @@ void DataModel::calcOutput10ms() {
 		pitchLevel += inputPitch;
 		yawLevel += inputYaw;
 	}
-	float yawCurrent = rollPitchYawFiltered[2];
+	float yawCurrent = rollPitchYaw[2];
 	while (yawLevel > PI) {
 		yawLevel -= PI * 2;
 	}
@@ -90,9 +82,9 @@ void DataModel::calcOutput10ms() {
 		yawLevel -= 2 * PI;
 	}
 
-	float rollA = rollPitchYawPid[0].updatePID(rollLevel, rollPitchYawFiltered[0], gyro.getRoll(), 0.01);
-	float pitchA = rollPitchYawPid[1].updatePID(pitchLevel, rollPitchYawFiltered[1], gyro.getPitch(), 0.01);
-	float yawA = 0.2 * rollPitchYawPid[2].updatePID(yawLevel, rollPitchYawFiltered[2], gyro.getYaw(), 0.01);
+	float rollA = rollPitchYawPid[0].updatePID(rollLevel, rollPitchYaw[0], gyro.getY(), 0.01);
+	float pitchA = rollPitchYawPid[1].updatePID(pitchLevel, rollPitchYaw[1], gyro.getX(), 0.01);
+	float yawA = 0.1 * rollPitchYawPid[2].updatePID(yawLevel, rollPitchYaw[2], gyro.getZ(), 0.01);
 
 	thrust[0] = inputThrust + rollA + yawA;
 	thrust[1] = inputThrust - rollA + yawA;
@@ -127,7 +119,7 @@ void DataModel::calcOutput10ms() {
 	//hal->setPmw(hal->OUT4, output[4]);
 	//hal->setPmw(hal->OUT5, output[5]);
 
-	if (count++ >= 10) {
+	if (count++ >= 0) {
 		Serial.print(millis());
 		Serial.print(",");
 		count = 0;
@@ -135,14 +127,14 @@ void DataModel::calcOutput10ms() {
 			Serial.print(motion[i]);
 			Serial.print(",");
 		}
-		/*for (uint8_t i = 0; i < 3; i++) {
-		 Serial.print(mag[i]);
-		 Serial.print(",");
-		 }*/
 		for (uint8_t i = 0; i < 3; i++) {
-			Serial.print(rollPitchYawFiltered[i] * 1000);
+			Serial.print(magScaled[i]);
 			Serial.print(",");
 		}
+		/*for (uint8_t i = 0; i < 3; i++) {
+		 Serial.print(rollPitchYawFiltered[i] * 1000);
+		 Serial.print(",");
+		 }*/
 		Serial.println();
 	}
 }
@@ -150,23 +142,15 @@ void DataModel::calcOutput10ms() {
 void DataModel::putBaro50ms(float altitude) {
 }
 
-void DataModel::calcMag10ms() {
+void DataModel::calcAhrs10ms() {
 	for (int i = 0; i < 3; i++) {
 		magScaled[i] = (((float) ((mag[i])) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
 	}
 	magScaled[2] = -magScaled[2];
-	float rollSin = sin(rollPitchYawFiltered[0] * 0.5);
-	float rollCos = cos(rollPitchYawFiltered[0] * 0.5);
-	float pitchSin = sin(rollPitchYawFiltered[1] * 0.5);
-	float pitchCos = cos(rollPitchYawFiltered[1] * 0.5);
-	if (rollCos < 0) {
-		rollCos = -rollCos;
-	}
-	magCompensated[1] = magScaled[1] * pitchCos - magScaled[2] * pitchSin;
-	magCompensated[2] = magScaled[1] * pitchSin + magScaled[2] * pitchCos;
-	magCompensated[0] = magScaled[0] * rollCos + magCompensated[2] * rollSin;
-	rollPitchYaw[2] = atan2(magCompensated[1], magCompensated[0]);
-	rollPitchYawFiltered[2] = rollPitchYawKalman[2].update(gyro.getYaw(), rollPitchYaw[2], 0.01, active);
+	ahrs.update(gyro.getX(), gyro.getY(), gyro.getZ(), motion[0], motion[1], motion[2], magScaled[0], magScaled[1], magScaled[2], 0.01);
+	rollPitchYaw[0] = ahrs.getRoll();
+	rollPitchYaw[1] = ahrs.getPitch();
+	rollPitchYaw[2] = ahrs.getYaw();
 }
 
 void DataModel::putInput50ms(uint8_t ch, uint16_t pwm) {

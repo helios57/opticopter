@@ -22,9 +22,9 @@ public:
 	void startBiasRecording();
 	void stopBiasRecording();
 	void update(int16_t* motion6);
-	float getRoll();
-	float getPitch();
-	float getYaw();
+	float getY();
+	float getX();
+	float getZ();
 	Gyro();
 	virtual ~Gyro();
 };
