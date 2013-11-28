@@ -85,7 +85,7 @@ void DataModel::calcOutput10ms() {
 
 	float rollA = rollPitchYawPid[0].updatePID(rollLevel, rollPitchYaw[0], gyro.getY(), 0.01);
 	float pitchA = rollPitchYawPid[1].updatePID(pitchLevel, rollPitchYaw[1], gyro.getX(), 0.01);
-	float yawA = rollPitchYawPid[2].updatePID(yawLevel, rollPitchYaw[2], gyro.getZ(), 0.01);
+	float yawA = -rollPitchYawPid[2].updatePID(yawLevel, rollPitchYaw[2], gyro.getZ(), 0.01);
 
 	thrust[0] = inputThrust + rollA + yawA;
 	thrust[1] = inputThrust - rollA + yawA;

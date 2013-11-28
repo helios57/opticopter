@@ -84,9 +84,9 @@ public:
 		}
 		persistence->readPID(rollPitchYawPidParams);
 		initPID(rollPitchYawPidParams);
-		rollPitchYawPid[2].kd = 0.0f;
-		rollPitchYawPid[2].kp = 0.005;
-		rollPitchYawPid[2].ki = 0.0f;
+		/*rollPitchYawPid[2].kd = 0.0;
+		 rollPitchYawPid[2].kp = 0.04;
+		 rollPitchYawPid[2].ki = 0.0;*/
 	}
 	void putMotion6(int16_t *axyzgxyz);
 	void calc2ms();

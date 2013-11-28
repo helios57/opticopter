@@ -17,8 +17,8 @@ float PID::updatePID(float setpoint, float current, float rate, float dt) {
 	} else if (diffSum < -windupGuard) {
 		diffSum = -windupGuard;
 	}
-	float dTerm = rate;
-	//float dTerm = (current - lastPos) / dt;
+	//float dTerm = rate;
+	float dTerm = (current - lastPos) / dt;
 	lastPos = current;
 
 	float result = kp * diff + ki * diffSum + kd * dTerm;
