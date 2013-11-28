@@ -11,16 +11,17 @@ void PID::resetI() {
 }
 float PID::updatePID(float setpoint, float current, float rate, float dt) {
 	float diff = setpoint - current;
-	diffSum += diff * (dt / 2);
+	//diffSum += diff * dt;
 	if (diffSum > windupGuard) {
 		diffSum = windupGuard;
 	} else if (diffSum < -windupGuard) {
 		diffSum = -windupGuard;
 	}
-	float dTerm = (current - lastPos) * dt;
+	float dTerm = rate;
+	//float dTerm = (current - lastPos) / dt;
 	lastPos = current;
 
-	float result = kp * diff - ki * diffSum - kd * dTerm;
+	float result = kp * diff + ki * diffSum + kd * dTerm;
 
 	if (result > max) {
 		result = max;

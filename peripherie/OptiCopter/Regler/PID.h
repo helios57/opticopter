@@ -19,19 +19,19 @@ private:
 	float lastResult;
 	float lastRate;
 	float accelToRateFactor;
+public:
 	float kp;
 	float ki;
 	float kd;
-public:
 	PID() {
 		lastPos = 0;
 		lastResult = 0;
 		lastRate = 0;
 		accelToRateFactor = 0;
 		diffSum = 0;
-		kp = 0.1;
-		ki = 0.05;
-		kd = 0.01;
+		kp = 0.14;
+		ki = 0.0;
+		kd = -0.035;
 		windupGuard = PI / 2;
 		max = PI / 4;
 	}
