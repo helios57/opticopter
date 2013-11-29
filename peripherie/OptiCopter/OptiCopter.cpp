@@ -13,14 +13,10 @@ namespace arducopterNg {
 
 	ArducopterNg::ArducopterNg() {
 		persistence = 0;
-		emptyCycles = 0;
 		hal = 0;
 		serializer = 0;
 		debug = 0;
 		dm = 0;
-		t_1ms = 0;
-		t_2ms = 0;
-		t_5ms = 0;
 		t_10ms = 0;
 		t_20ms = 0;
 		t_50ms = 0;
@@ -56,9 +52,6 @@ namespace arducopterNg {
 		debug = new DebugStream(serializer);
 		hal = new HalApm(&Serial, debug);
 		dm = new DataModel(hal, persistence);
-		t_1ms = millis();
-		t_2ms = millis();
-		t_5ms = millis();
 		t_10ms = millis();
 		t_20ms = millis();
 		t_50ms = millis();
@@ -97,14 +90,6 @@ namespace arducopterNg {
 		serializer->beginn(Serializer::ID_GPS);
 		serializer->write(hal->getGPSDataBuffer(), 32);
 		serializer->end();
-	}
-
-	void ArducopterNg::resetEmptyCycles() {
-		serializer->beginn(Serializer::ID_CYCLES);
-		conv8.ulong = emptyCycles;
-		serializer->write(conv8.byte, 8);
-		serializer->end();
-		emptyCycles = 0;
 	}
 
 	void ArducopterNg::sendInput() {
@@ -282,30 +267,13 @@ namespace arducopterNg {
 	}
 
 	void ArducopterNg::loop() {
-		emptyCycles++;
 		uint8_t id = serializer->read(commandBuffer);
-
 		if (id > 0) {
 			handleIn(id);
 		}
-
 		if (sendData && millis() > t_sendData) {
 			sendData = false;
 		}
-
-		if ((millis() - t_1ms) >= 1) {
-			t_1ms = millis();
-			//hal->pollMotion();
-		}
-
-		if ((millis() - t_2ms) >= 2) {
-			t_2ms = millis();
-		}
-
-		if ((millis() - t_5ms) >= 5) {
-			t_5ms = millis();
-		}
-
 		if ((millis() - t_10ms) >= 10) {
 			t_10ms = millis();
 			if (hal->pollBaro()) {
@@ -323,14 +291,16 @@ namespace arducopterNg {
 			hal->pollMotion();
 			hal->getMotion6(axyzgxyz);
 			dm->putMotion6(axyzgxyz);
-
 			if (sendData) {
 				sendMotion6();
 			}
-			int16_t buffer[3];
-			hal->getHeading(buffer);
-			dm->putMag(buffer);
+			hal->getHeading(buffer_16t);
+			dm->putMag(buffer_16t);
 			dm->calc10ms();
+
+			if ((millis() - t_10ms) < 10) {
+				dm->debugLog();
+			}
 		}
 
 		if ((millis() - t_20ms) >= 20) {

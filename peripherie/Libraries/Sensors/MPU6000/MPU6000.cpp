@@ -65,12 +65,11 @@ bool MPU6000::initialize() {
 	delay(5);
 
 	//console->println("Setting sample rate to 200Hz...");
-	register_write(MPU6050_RA_SMPLRT_DIV, 0); // 1khz / (1 + 4) = 200 Hz
+	register_write(MPU6050_RA_SMPLRT_DIV, 1); // 1khz / (1 + 4) = 200 Hz
 	//register_write(MPU6050_RA_SMPLRT_DIV, 0); // 1khz
 
-	//console->println("Setting DLPF bandwidth to 42Hz...");
 	uint8_t oldConfig = register_read(MPU6050_RA_CONFIG);
-	oldConfig = (oldConfig & ~0x07) | MPU6050_DLPF_BW_42;
+	oldConfig = (oldConfig & ~0x07) | MPU6050_DLPF_BW_98;
 	register_write(MPU6050_RA_CONFIG, oldConfig);
 
 	//Gyro to (+/- 2000 degrees/sec)

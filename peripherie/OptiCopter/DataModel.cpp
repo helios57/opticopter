@@ -11,18 +11,11 @@
 void DataModel::calculateActivation() {
 	if (!active && input[3] > activateTop && tActivate == 0) {
 		tActivate = millis();
-		gyro.startBiasRecording();
+		startActivate();
 	} else if (!active && input[3] > activateTop && (tActivate + 5000) < millis()) {
 		active = true;
 		tActivate = 0;
-		rollPitchYawPid[0].resetI();
-		rollPitchYawPid[1].resetI();
-		rollPitchYawPid[2].resetI();
-		rollPitchYawLevel[0] = rollPitchYaw[0];
-		rollPitchYawLevel[1] = rollPitchYaw[1];
-		rollPitchYawLevel[2] = rollPitchYaw[2];
-		gyro.stopBiasRecording();
-		ahrs.onActivate();
+		onActivate();
 	}
 	if (active && input[3] < activateBot && tActivate == 0) {
 		tActivate = millis();
@@ -31,7 +24,21 @@ void DataModel::calculateActivation() {
 		tActivate = 0;
 	}
 }
-static long count = 0;
+
+void DataModel::startActivate() {
+	gyro.startBiasRecording();
+}
+
+void DataModel::onActivate() {
+	rollPitchYawPid[0].resetI();
+	rollPitchYawPid[1].resetI();
+	rollPitchYawPid[2].resetI();
+	rollPitchYawLevel[0] = rollPitchYaw[0];
+	rollPitchYawLevel[1] = rollPitchYaw[1];
+	rollPitchYawLevel[2] = rollPitchYaw[2];
+	gyro.stopBiasRecording();
+	ahrs.onActivate();
+}
 
 void DataModel::calc10ms() {
 	calculateActivation();
@@ -52,18 +59,22 @@ void DataModel::putMag(int16_t* imag) {
 	}
 }
 
+void DataModel::calcAhrs10ms() {
+	for (int i = 0; i < 3; i++) {
+		magScaled[i] = (((float) ((mag[i])) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
+	}
+	magScaled[2] = -magScaled[2];
+	ahrs.update(gyro.getX(), gyro.getY(), gyro.getZ(), motion[0], motion[1], motion[2], magScaled[0], magScaled[1], magScaled[2], 0.01);
+	rollPitchYaw[0] = ahrs.getRoll();
+	rollPitchYaw[1] = ahrs.getPitch();
+	rollPitchYaw[2] = ahrs.getYaw();
+}
+
 void DataModel::calcOutput10ms() {
-	if (leveling && (inputRoll > 0.1 || inputRoll < 0.1)) {
-		rollPitchYawLevel[0] += inputRoll * 0.01;
-	}
-	if (leveling && (inputPitch > 0.1 || inputPitch < 0.1)) {
-		rollPitchYawLevel[1] += inputPitch * 0.01;
-	}
 	float rollLevel = rollPitchYawLevel[0];
 	float pitchLevel = rollPitchYawLevel[1];
 	float yawLevel = rollPitchYawLevel[2];
 	if (!leveling) {
-		//float yawA = 0;
 		rollLevel += inputRoll;
 		pitchLevel += inputPitch;
 		yawLevel += inputYaw;
@@ -86,7 +97,10 @@ void DataModel::calcOutput10ms() {
 	float rollA = rollPitchYawPid[0].updatePID(rollLevel, rollPitchYaw[0], gyro.getY(), 0.01);
 	float pitchA = rollPitchYawPid[1].updatePID(pitchLevel, rollPitchYaw[1], gyro.getX(), 0.01);
 	float yawA = -rollPitchYawPid[2].updatePID(yawLevel, rollPitchYaw[2], gyro.getZ(), 0.01);
+	calcMotorThrust(rollA, pitchA, yawA);
+}
 
+void DataModel::calcMotorThrust(float rollA, float pitchA, float yawA) {
 	thrust[0] = inputThrust + rollA + yawA;
 	thrust[1] = inputThrust - rollA + yawA;
 	thrust[2] = inputThrust - pitchA - yawA;
@@ -100,64 +114,28 @@ void DataModel::calcOutput10ms() {
 	 thrust[4] = inputThrust * (1.0 + factor * (-rollA * SIN_60_COS_30 + pitchA * SIN_60_COS_30 + yawA));
 	 thrust[5] = inputThrust * (1.0 + factor * (rollA * SIN_60_COS_30 - pitchA * SIN_60_COS_30 - yawA));
 	 */
-	for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 4; i++) {
 		if (thrust[i] > 1) {
 			thrust[i] = 1;
 		} else if (thrust[i] < 0) {
 			thrust[i] = 0;
 		}
+
 		if (active && inputThrust > 0.01) {
 			output[i] = (inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[i])));
 		} else {
 			output[i] = inputMin[0];
 		}
 	}
-
 	hal->setPmw(hal->OUT0, output[0]);
 	hal->setPmw(hal->OUT1, output[1]);
 	hal->setPmw(hal->OUT2, output[2]);
 	hal->setPmw(hal->OUT3, output[3]);
 	//hal->setPmw(hal->OUT4, output[4]);
 	//hal->setPmw(hal->OUT5, output[5]);
-
-	if (count++ >= 0) {
-		Serial.print(millis());
-		Serial.print(",");
-		count = 0;
-		/*for (uint8_t i = 0; i < 6; i++) {
-		 Serial.print(motion[i]);
-		 Serial.print(",");
-		 }
-		 for (uint8_t i = 0; i < 3; i++) {
-		 Serial.print(magScaled[i] * 1000);
-		 Serial.print(",");
-		 }*/
-		for (uint8_t i = 0; i < 3; i++) {
-			Serial.print(rollPitchYaw[i] * 1000);
-			Serial.print(",");
-		}
-		Serial.print(rollA * 1000);
-		Serial.print(",");
-		Serial.print(pitchA * 1000);
-		Serial.print(",");
-		Serial.print(yawA * 1000);
-		Serial.print(",");
-		Serial.println();
-	}
 }
 
 void DataModel::putBaro50ms(float altitude) {
-}
-
-void DataModel::calcAhrs10ms() {
-	for (int i = 0; i < 3; i++) {
-		magScaled[i] = (((float) ((mag[i])) - magMin[i]) / (magMax[i] - magMin[i])) * 2 - 1.0;
-	}
-	magScaled[2] = -magScaled[2];
-	ahrs.update(gyro.getX(), gyro.getY(), gyro.getZ(), motion[0], motion[1], motion[2], magScaled[0], magScaled[1], magScaled[2], 0.01);
-	rollPitchYaw[0] = ahrs.getRoll();
-	rollPitchYaw[1] = ahrs.getPitch();
-	rollPitchYaw[2] = ahrs.getYaw();
 }
 
 void DataModel::putInput50ms(uint8_t ch, uint16_t pwm) {
@@ -170,6 +148,47 @@ void DataModel::calc50ms() {
 	inputThrust = ((float) input[2] - inputDefault[2]) / (float) (inputMax[2] - inputMin[2]);
 	inputYaw = ((float) input[3] - inputDefault[3]) / (float) (inputMax[3] - inputMin[3]);
 	leveling = input[4] < 1500;
+	if (leveling) {
+		calcLeveling();
+	}
+}
+
+void DataModel::calcLeveling() {
+	if (inputRoll > 0.1 || inputRoll < 0.1) {
+		rollPitchYawLevel[0] += inputRoll * 0.01;
+	}
+	if (inputPitch > 0.1 || inputPitch < 0.1) {
+		rollPitchYawLevel[1] += inputPitch * 0.01;
+	}
+}
+
+static long count = 0;
+
+void DataModel::debugLog() {
+	if (count++ >= 0) {
+		Serial.print(millis());
+		Serial.print(",");
+		count = 0;
+		for (uint8_t i = 0; i < 6; i++) {
+			Serial.print(motion[i]);
+			Serial.print(",");
+		}
+		for (uint8_t i = 0; i < 3; i++) {
+			Serial.print((int) (magScaled[i] * 1000));
+			Serial.print(",");
+		}
+		for (uint8_t i = 0; i < 4; i++) {
+			Serial.print(output[i]);
+			Serial.print(",");
+		}
+		Serial.print((int) (inputRoll * 1000));
+		Serial.print(",");
+		Serial.print((int) (inputPitch * 1000));
+		Serial.print(",");
+		Serial.print((int) (inputThrust * 1000));
+		Serial.print(",");
+		Serial.println((int) (inputYaw * 1000));
+	}
 }
 
 void DataModel::initPID(float* rollPitchYawPidParams) {

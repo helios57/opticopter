@@ -56,6 +56,10 @@ private:
 	void calcutateOutput();
 	void calcAhrs10ms();
 	void calcRollPitch10ms();
+	void calcLeveling();
+	void calcMotorThrust(float rollA, float pitchA, float yawA);
+	void onActivate();
+	void startActivate();
 
 public:
 	DataModel(HalApm *hal, Persistence *persistence) :
@@ -96,6 +100,7 @@ public:
 	void calc10ms();
 	void putInput50ms(uint8_t ch, uint16_t pwm);
 	void calc50ms();
+	void debugLog();
 	void initPID(float *rollPitchYawPidParams);
 	virtual ~DataModel() {
 	}
