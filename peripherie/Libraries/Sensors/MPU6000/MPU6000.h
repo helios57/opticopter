@@ -13,12 +13,12 @@
 #include <wiring_private.h>
 
 #include <Interfaces/DigitalSource.h>
-#include <Interfaces/SPIDeviceDriver.h>
+#include <Interfaces/SPIDeviceDriver0.h>
 
 class MPU6000 {
 
 private:
-	SPIDeviceDriver *spi;
+	SPIDeviceDriver0 *spi;
 	Stream *console;
 	const static uint8_t fifoBufferLength = 12;
 	uint8_t fifoBuffer[fifoBufferLength];
@@ -50,7 +50,7 @@ private:
 	void printHWRevisionInfos();
 
 public:
-	MPU6000(SPIDeviceDriver *spi, Stream *console) :
+	MPU6000(SPIDeviceDriver0 *spi, Stream *console) :
 			spi(spi), console(console) {
 		initialised = false;
 		motionCount = 0;

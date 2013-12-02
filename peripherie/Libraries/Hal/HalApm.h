@@ -16,8 +16,9 @@
 #include "Sensors/HMC5883L/HMC5883L.h"
 #include "Sensors/GPS/GPS_MTK.h"
 #include "Util/DebugStream.h"
+#include "Dataflash/DataFlash.h"
 
-namespace arducopterNg {
+namespace opticopter {
 
 	class HalApm {
 	private:
@@ -30,6 +31,7 @@ namespace arducopterNg {
 		MS5611 *ms5611;
 		HMC5883L *hmc5883l;
 		GPS_MTK *gps;
+		DataFlash *dataFlash;
 
 	public:
 		const static char IN0 = 0x0;
@@ -121,6 +123,9 @@ namespace arducopterNg {
 		DebugStream* getDebugStream() {
 			return debug;
 		}
+
+		void readData(uint8_t* data, const unsigned int start, const unsigned int length);
+		void writeData(const uint8_t* data, const unsigned int start, const unsigned int length);
 	};
 
 } /* namespace arducopterNg */

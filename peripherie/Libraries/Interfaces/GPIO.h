@@ -35,10 +35,16 @@ class GPIO {
 public:
 	GPIO();
 	virtual ~GPIO();
-	void pinMode(unsigned char pin, unsigned char output);
-	unsigned char read(unsigned char pin);
-	void write(unsigned char pin, unsigned char value);
-	DigitalSource* channel(unsigned short n);
+	void pinMode(const unsigned char pin, const unsigned char mode);
+	void pinMode(const DigitalSource* digitalSource, const unsigned char mode);
+	void pinMode(const unsigned char bit, const unsigned char port, const unsigned char mode);
+	unsigned char read(const unsigned char pin);
+	unsigned char read(const DigitalSource* digitalSource);
+	unsigned char read(const unsigned char bit, const unsigned char port);
+	void write(const unsigned char pin, const unsigned char value);
+	void write(const unsigned char bit, const unsigned char port, const unsigned char value);
+	void write(const DigitalSource* digitalSource, const unsigned char value);
+	DigitalSource* pinToDigitalSource(const unsigned short n);
 
 	/* Interrupt interface: */
 	bool attach_interrupt(unsigned char interrupt_num, Proc p, unsigned char mode);

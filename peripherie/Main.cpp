@@ -10,6 +10,6 @@
 
 int main(void) {
 	init();
-	arducopterNg::ArducopterNg ac;
+	opticopter::OptiCopter ac;
 	return ac.main();
 }

@@ -9,11 +9,9 @@
 #define DIGITALSOURCE_H_
 
 class DigitalSource {
-private:
+public:
 	const unsigned char _bit;
 	const unsigned char port;
-
-public:
 	DigitalSource(const unsigned char bit, const unsigned char port) :
 			_bit(bit), port(port) {
 	}

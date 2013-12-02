@@ -13,11 +13,11 @@
 #include <wiring_private.h>
 
 #include <Interfaces/DigitalSource.h>
-#include <Interfaces/SPIDeviceDriver.h>
+#include <Interfaces/SPIDeviceDriver0.h>
 
 class MS5611 {
 private:
-	SPIDeviceDriver *spi;
+	SPIDeviceDriver0 *spi;
 	Stream *console;
 	bool initialised;
 	bool calculated;
@@ -71,7 +71,7 @@ private:
 	static const uint8_t CMD_CONVERT_D2_OSR4096 = 0x58;   // Maximum resolution (oversampling)
 
 public:
-	MS5611(SPIDeviceDriver *spi, Stream *console) :
+	MS5611(SPIDeviceDriver0 *spi, Stream *console) :
 			spi(spi), console(console) {
 		initialised = false;
 		calculated = false;

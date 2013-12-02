@@ -25,14 +25,19 @@ GPIO::~GPIO() {
 void GPIO::pinMode(const unsigned char pin, const unsigned char mode) {
 	unsigned char bit = digitalPinToBitMask(pin);
 	unsigned char port = digitalPinToPort(pin);
-	volatile unsigned char *reg;
+	pinMode(bit, port, mode);
+}
 
+void GPIO::pinMode(const DigitalSource* digitalSource, const unsigned char mode) {
+	pinMode(digitalSource->_bit, digitalSource->port, mode);
+}
+
+void GPIO::pinMode(unsigned char bit, unsigned char port, const unsigned char mode) {
 	if (port == 0)
 		return;
-
+	volatile unsigned char* reg;
 	// JWS: can I let the optimizer do this?
 	reg = portModeRegister(port);
-
 	if (mode == GPIO_INPUT) {
 		unsigned char oldSREG = SREG;
 		cli();
@@ -49,10 +54,16 @@ void GPIO::pinMode(const unsigned char pin, const unsigned char mode) {
 unsigned char GPIO::read(unsigned char pin) {
 	unsigned char bit = digitalPinToBitMask(pin);
 	unsigned char port = digitalPinToPort(pin);
+	return read(bit, port);
+}
 
+unsigned char GPIO::read(const DigitalSource* digitalSource) {
+	return read(digitalSource->_bit, digitalSource->port);
+}
+
+unsigned char GPIO::read(const unsigned char bit, const unsigned char port) {
 	if (port == 0)
 		return 0;
-
 	if (*portInputRegister(port) & bit)
 		return 1;
 	return 0;
@@ -61,22 +72,25 @@ unsigned char GPIO::read(unsigned char pin) {
 void GPIO::write(unsigned char pin, unsigned char value) {
 	unsigned char bit = digitalPinToBitMask(pin);
 	unsigned char port = digitalPinToPort(pin);
-	volatile unsigned char *out;
+	write(bit, port, value);
+}
 
+void GPIO::write(const DigitalSource* digitalSource, const unsigned char value) {
+	write(digitalSource->_bit, digitalSource->port, value);
+}
+
+void GPIO::write(unsigned char bit, unsigned char port, unsigned char value) {
 	if (port == 0)
 		return;
-
+	volatile unsigned char* out;
 	out = portOutputRegister(port);
-
 	unsigned char oldSREG = SREG;
 	cli();
-
 	if (value == 0) {
 		*out &= ~bit;
 	} else {
 		*out |= bit;
 	}
-
 	SREG = oldSREG;
 }
 
@@ -100,11 +114,8 @@ bool GPIO::attach_interrupt(unsigned char interrupt_num, Proc proc, unsigned cha
 	}
 }
 
-DigitalSource* GPIO::channel(unsigned short pin) {
+DigitalSource* GPIO::pinToDigitalSource(unsigned short pin) {
 	unsigned char bit = digitalPinToBitMask(pin);
 	unsigned char port = digitalPinToPort(pin);
-	if (port == 0)
-		return NULL;
 	return new DigitalSource(bit, port);
 }
-

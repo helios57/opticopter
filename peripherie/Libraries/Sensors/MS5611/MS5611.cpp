@@ -30,12 +30,14 @@ void MS5611::init() {
 }
 
 void MS5611::sendTempD2Command() {
+	spi->setHighRate(false);
 	spi->begin();
 	spi->transfer(CMD_CONVERT_D2_OSR4096);
 	spi->end();
 }
 
 void MS5611::sendPressD1Command() {
+	spi->setHighRate(false);
 	spi->begin();
 	spi->transfer(CMD_CONVERT_D1_OSR4096);
 	spi->end();
@@ -157,6 +159,7 @@ float MS5611::getBarometerAltitude() {
 }
 
 void MS5611::read4BytesIntoBuffer() {
+	spi->setHighRate(false);
 	spi->begin();
 	buff[0] = spi->transfer(0);
 	buff[1] = spi->transfer(0);
@@ -166,6 +169,7 @@ void MS5611::read4BytesIntoBuffer() {
 }
 
 uint16_t MS5611::register_read(uint8_t reg) {
+	spi->setHighRate(false);
 	spi->begin();
 	spi->transfer(reg | 0x80);  // Set most significant bit
 	uint8_t result1 = spi->transfer(0);
@@ -175,6 +179,7 @@ uint16_t MS5611::register_read(uint8_t reg) {
 }
 
 void MS5611::register_write(uint8_t reg) {
+	spi->setHighRate(false);
 	spi->begin();
 	spi->transfer(reg);
 	spi->end();

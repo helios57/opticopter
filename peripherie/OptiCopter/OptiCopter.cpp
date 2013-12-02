@@ -9,9 +9,11 @@
 #include "../Arduino/Arduino.h"
 #include "../Libraries/Hal/HalApm.h"
 
-namespace arducopterNg {
+using namespace opticopter;
 
-	ArducopterNg::ArducopterNg() {
+namespace opticopter {
+
+	OptiCopter::OptiCopter() {
 		persistence = 0;
 		hal = 0;
 		serializer = 0;
@@ -20,11 +22,12 @@ namespace arducopterNg {
 		t_10ms = 0;
 		t_20ms = 0;
 		t_50ms = 0;
+		lastMicros = 0;
 		t_sendData = 0;
 		sendData = false;
 	}
 
-	ArducopterNg::~ArducopterNg() {
+	OptiCopter::~OptiCopter() {
 		delete hal;
 		delete serializer;
 		delete debug;
@@ -32,7 +35,7 @@ namespace arducopterNg {
 		delete persistence;
 	}
 
-	int ArducopterNg::main() {
+	int OptiCopter::main() {
 		this->setup();
 		for (;;) {
 			this->loop();
@@ -42,7 +45,7 @@ namespace arducopterNg {
 		return 0;
 	}
 
-	void ArducopterNg::setup() {
+	void OptiCopter::setup() {
 		Serial.begin(115200);
 		Serial1.begin(38400);
 		Serial.flush();
@@ -55,9 +58,10 @@ namespace arducopterNg {
 		t_10ms = millis();
 		t_20ms = millis();
 		t_50ms = millis();
+		lastMicros = micros();
 	}
 
-	void ArducopterNg::sendMotion6() {
+	void OptiCopter::sendMotion6() {
 		serializer->beginn(Serializer::ID_MOTION6);
 		for (uint8_t i = 0; i < 6; i++) {
 			conv2.sint = axyzgxyz[i];
@@ -66,14 +70,14 @@ namespace arducopterNg {
 		serializer->end();
 	}
 
-	void ArducopterNg::sendBaro() {
+	void OptiCopter::sendBaro() {
 		conv4.floating = hal->getBarometerAltitude();
 		serializer->beginn(Serializer::ID_BARO);
 		serializer->write(conv4.byte, 4);
 		serializer->end();
 	}
 
-	void ArducopterNg::sendMag() {
+	void OptiCopter::sendMag() {
 		int16_t buffer[3];
 		hal->getHeading(buffer);
 		serializer->beginn(Serializer::ID_MAG);
@@ -86,13 +90,13 @@ namespace arducopterNg {
 		serializer->end();
 	}
 
-	void ArducopterNg::sendGPS() {
+	void OptiCopter::sendGPS() {
 		serializer->beginn(Serializer::ID_GPS);
 		serializer->write(hal->getGPSDataBuffer(), 32);
 		serializer->end();
 	}
 
-	void ArducopterNg::sendInput() {
+	void OptiCopter::sendInput() {
 		serializer->beginn(serializer->ID_INPUT);
 		serializer->write(hal->IN7 - hal->IN0);
 		for (uint8_t i = hal->IN0; i <= hal->IN7; i++) {
@@ -103,7 +107,7 @@ namespace arducopterNg {
 		serializer->end();
 	}
 
-	void ArducopterNg::handleInSendData() {
+	void OptiCopter::handleInSendData() {
 		sendData = true;
 		for (uint8_t i = 0; i < 8; i++) {
 			conv8.byte[i] = commandBuffer[i];
@@ -111,7 +115,7 @@ namespace arducopterNg {
 		t_sendData = millis() + conv8.ulong;
 	}
 
-	void ArducopterNg::handleInReadParam() {
+	void OptiCopter::handleInReadParam() {
 		serializer->beginn(Serializer::ID_PARAM);
 		serializer->write(commandBuffer[0]);
 		switch (commandBuffer[0]) {
@@ -178,7 +182,7 @@ namespace arducopterNg {
 		serializer->end();
 	}
 
-	void ArducopterNg::handleInWriteData() {
+	void OptiCopter::handleInWriteData() {
 		switch (commandBuffer[0]) {
 		case Serializer::ID_IN_PARAM_MAG_MAX:
 			for (uint8_t i = 0; i < 3; i++) {
@@ -250,7 +254,7 @@ namespace arducopterNg {
 		serializer->end();
 	}
 
-	void ArducopterNg::handleIn(uint8_t id) {
+	void OptiCopter::handleIn(uint8_t id) {
 		switch (id) {
 		case Serializer::ID_IN_SEND_DATA:
 			handleInSendData();
@@ -266,7 +270,7 @@ namespace arducopterNg {
 		}
 	}
 
-	void ArducopterNg::loop() {
+	void OptiCopter::loop() {
 		uint8_t id = serializer->read(commandBuffer);
 		if (id > 0) {
 			handleIn(id);
@@ -274,6 +278,16 @@ namespace arducopterNg {
 		if (sendData && millis() > t_sendData) {
 			sendData = false;
 		}
+
+		if (hal->pollMotion()) {
+			long currentMicros = micros();
+			long microsDiff = currentMicros - lastMicros;
+			lastMicros = currentMicros;
+			hal->getMotion6(axyzgxyz);
+			dm->putMotion6(axyzgxyz);
+			dm->calc(microsDiff / 1000000.0);
+		}
+
 		if ((millis() - t_10ms) >= 10) {
 			t_10ms = millis();
 			if (hal->pollBaro()) {
@@ -288,18 +302,15 @@ namespace arducopterNg {
 			}
 			//dm->putBaro50ms(hal->getBarometerAltitude());
 
-			hal->pollMotion();
-			hal->getMotion6(axyzgxyz);
-			dm->putMotion6(axyzgxyz);
 			if (sendData) {
 				sendMotion6();
 			}
 			hal->getHeading(buffer_16t);
 			dm->putMag(buffer_16t);
-			dm->calc10ms();
 
+			dm->calculateActivation();
 			if ((millis() - t_10ms) < 10) {
-				dm->debugLog();
+				//dm->debugLog();
 			}
 		}
 

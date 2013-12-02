@@ -23,6 +23,7 @@ void MPU6000::init() {
 }
 
 bool MPU6000::poll() {
+	spi->setHighRate(true);
 	uint16_t fIfoCount = getFIFOCount();
 	if (fIfoCount > 1020) {
 		console->println("Fifo count too high");
@@ -53,6 +54,7 @@ void MPU6000::getMotion6(int16_t *axyzgxyz) {
 }
 
 bool MPU6000::initialize() {
+	spi->setHighRate(false);
 	// reset device
 	//console->println("Resetting MPU6050...");
 	//reset
@@ -65,11 +67,11 @@ bool MPU6000::initialize() {
 	delay(5);
 
 	//console->println("Setting sample rate to 200Hz...");
-	register_write(MPU6050_RA_SMPLRT_DIV, 1); // 1khz / (1 + 4) = 200 Hz
+	register_write(MPU6050_RA_SMPLRT_DIV, 0); // 1khz / (1 + 4) = 200 Hz
 	//register_write(MPU6050_RA_SMPLRT_DIV, 0); // 1khz
 
 	uint8_t oldConfig = register_read(MPU6050_RA_CONFIG);
-	oldConfig = (oldConfig & ~0x07) | MPU6050_DLPF_BW_98;
+	oldConfig = (oldConfig & ~0x07) | MPU6050_DLPF_BW_188;
 	register_write(MPU6050_RA_CONFIG, oldConfig);
 
 	//Gyro to (+/- 2000 degrees/sec)

@@ -5,8 +5,8 @@
  *      Author: helios
  */
 
-#ifndef ARDUCOPTERNG_H_
-#define ARDUCOPTERNG_H_
+#ifndef OPTICOPTER_H_
+#define OPTICOPTER_H_
 
 #include "../Libraries/Hal/HalApm.h"
 #include "Serializer/Serializer.h"
@@ -14,9 +14,9 @@
 #include "DataModel.h"
 #include "Persistence/Persistence.h"
 
-namespace arducopterNg {
+namespace opticopter {
 
-	class ArducopterNg {
+	class OptiCopter {
 	private:
 		HalApm *hal;
 		Serializer *serializer;
@@ -28,6 +28,7 @@ namespace arducopterNg {
 		unsigned long t_10ms;
 		unsigned long t_20ms;
 		unsigned long t_50ms;
+		unsigned long lastMicros;
 		union {
 			uint64_t ulong;
 			uint8_t byte[8];
@@ -64,8 +65,8 @@ namespace arducopterNg {
 		void handleIn(uint8_t id);
 
 	public:
-		ArducopterNg();
-		~ArducopterNg();
+		OptiCopter();
+		~OptiCopter();
 		int main();
 		void setup();
 		void loop();
