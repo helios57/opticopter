@@ -19,6 +19,7 @@ namespace opticopter {
 		serializer = 0;
 		debug = 0;
 		dm = 0;
+		logging = 0;
 		t_10ms = 0;
 		t_20ms = 0;
 		t_50ms = 0;
@@ -33,6 +34,7 @@ namespace opticopter {
 		delete debug;
 		delete dm;
 		delete persistence;
+		delete logging;
 	}
 
 	int OptiCopter::main() {
@@ -55,6 +57,7 @@ namespace opticopter {
 		debug = new DebugStream(serializer);
 		hal = new HalApm(&Serial, debug);
 		dm = new DataModel(hal, persistence);
+		logging = new Logging();
 		t_10ms = millis();
 		t_20ms = millis();
 		t_50ms = millis();

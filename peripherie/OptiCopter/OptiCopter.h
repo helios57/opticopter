@@ -13,6 +13,7 @@
 #include "Util/DebugStream.h"
 #include "DataModel.h"
 #include "Persistence/Persistence.h"
+#include "Logging/Logging.h"
 
 namespace opticopter {
 
@@ -23,6 +24,7 @@ namespace opticopter {
 		DebugStream *debug;
 		DataModel *dm;
 		Persistence *persistence;
+		Logging *logging;
 		bool sendData;
 		unsigned long t_sendData;
 		unsigned long t_10ms;
