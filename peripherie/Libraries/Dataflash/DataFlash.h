@@ -62,6 +62,7 @@ public:
 	void write(const uint8_t* data, const unsigned int start, const unsigned int length);
 	unsigned int writeBuffer(uint8_t BufferNum, const uint8_t* data, const unsigned int offset, const unsigned int bufferStart, const unsigned int length);
 	bool isReady();
+	void flush();
 };
 
 #endif

@@ -307,3 +307,13 @@ unsigned int DataFlash::getPage(unsigned int pos) {
 	return pos / pageSize;
 }
 
+void DataFlash::flush() {
+	if (bufferChangedA) {
+		BufferToPage(0, (uint16_t) pageInBufferA, false);
+	}
+	while (!isReady())
+		;
+	if (bufferChangedB) {
+		BufferToPage(1, (uint16_t) pageInBufferB, false);
+	}
+}

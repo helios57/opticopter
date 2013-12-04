@@ -56,8 +56,8 @@ namespace opticopter {
 		serializer = new Serializer(&Serial);
 		debug = new DebugStream(serializer);
 		hal = new HalApm(&Serial, debug);
-		dm = new DataModel(hal, persistence);
-		logging = new Logging();
+		logging = new Logging(hal);
+		dm = new DataModel(hal, persistence, logging);
 		t_10ms = millis();
 		t_20ms = millis();
 		t_50ms = millis();
@@ -274,12 +274,18 @@ namespace opticopter {
 	}
 
 	void OptiCopter::loop() {
-		uint8_t id = serializer->read(commandBuffer);
-		if (id > 0) {
-			handleIn(id);
-		}
-		if (sendData && millis() > t_sendData) {
-			sendData = false;
+		/*uint8_t id = serializer->read(commandBuffer);
+		 if (id > 0) {
+		 handleIn(id);
+		 }
+		 if (sendData && millis() > t_sendData) {
+		 sendData = false;
+		 }*/
+		if (Serial.available()) {
+			logging->setPos(0);
+			while (logging->getNext()) {
+				Serial.println(logging->getEntry()->timestamp);
+			}
 		}
 
 		if (hal->pollMotion()) {
@@ -303,7 +309,7 @@ namespace opticopter {
 					sendMag();
 				}
 			}
-			//dm->putBaro50ms(hal->getBarometerAltitude());
+//dm->putBaro50ms(hal->getBarometerAltitude());
 
 			if (sendData) {
 				sendMotion6();

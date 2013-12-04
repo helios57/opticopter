@@ -22,6 +22,9 @@ namespace opticopter {
 			tActivate = millis();
 		} else if (active && input[3] < activateBot && (tActivate + 5000) < millis()) {
 			active = false;
+			onDeactivate();
+			tActivate = 0;
+		} else if (active) {
 			tActivate = 0;
 		}
 	}
@@ -39,6 +42,9 @@ namespace opticopter {
 		rollPitchYawLevel[2] = rollPitchYaw[2];
 		gyro.stopBiasRecording();
 		ahrs.onActivate();
+	}
+	void DataModel::onDeactivate() {
+		hal->flushData();
 	}
 
 	void DataModel::calc(float dt) {
@@ -97,6 +103,24 @@ namespace opticopter {
 		float rollA = rollPitchYawPid[0].updatePID(rollLevel, rollPitchYaw[0], gyro.getY(), dt);
 		float pitchA = rollPitchYawPid[1].updatePID(pitchLevel, rollPitchYaw[1], gyro.getX(), dt);
 		float yawA = -rollPitchYawPid[2].updatePID(yawLevel, rollPitchYaw[2], gyro.getZ(), dt);
+
+		logging->getEntry()->roll = rollPitchYaw[0];
+		logging->getEntry()->pitch = rollPitchYaw[1];
+		logging->getEntry()->yaw = rollPitchYaw[2];
+		logging->getEntry()->rollLevel = rollLevel;
+		logging->getEntry()->pitchLevel = pitchLevel;
+		logging->getEntry()->yawLevel = yawLevel;
+		logging->getEntry()->accelX = motion[0];
+		logging->getEntry()->accelY = motion[1];
+		logging->getEntry()->accelZ = motion[2];
+		logging->getEntry()->gyroX = gyro.getX();
+		logging->getEntry()->gyroY = gyro.getY();
+		logging->getEntry()->gyroZ = gyro.getZ();
+		logging->getEntry()->magX = magScaled[0];
+		logging->getEntry()->magY = magScaled[1];
+		logging->getEntry()->magZ = magScaled[2];
+		logging->getEntry()->timestamp = micros();
+
 		calcMotorThrust(rollA, pitchA, yawA);
 	}
 
@@ -133,6 +157,14 @@ namespace opticopter {
 		hal->setPmw(hal->OUT3, output[3]);
 		//hal->setPmw(hal->OUT4, output[4]);
 		//hal->setPmw(hal->OUT5, output[5]);
+
+		logging->getEntry()->output0 = output[0];
+		logging->getEntry()->output1 = output[1];
+		logging->getEntry()->output2 = output[2];
+		logging->getEntry()->output3 = output[3];
+		if (active) {
+			logging->save();
+		}
 	}
 
 	void DataModel::putBaro50ms(float altitude) {

@@ -13,8 +13,10 @@ namespace opticopter {
 
 	class Logging {
 	private:
-		static const int preamble = 0xDDE5E7;
-		static const int postamble = 0xEF475E;
+		HalApm *hal;
+		static const int preamble = (int) 0xDDE5E7;
+		static const int postamble = (int) 0xEF475E;
+		unsigned int pos;
 	public:
 		struct Entry {
 			int preeamble;
@@ -47,10 +49,10 @@ namespace opticopter {
 			Entry entry;
 			uint8_t bytes[sizeof(Entry)];
 		};
-		static EntryConverter entryConverter;
+		EntryConverter entryConverter;
 
 		Entry* getEntry() {
-			return &entryConverter.entry;
+			return &(entryConverter.entry);
 		}
 
 		uint8_t* getBytes() {
@@ -61,14 +63,45 @@ namespace opticopter {
 			entryConverter.entry.preeamble = preamble;
 			entryConverter.entry.postamble = postamble;
 		}
+
 		bool checkPreAndPostAbmle() {
 			return entryConverter.entry.preeamble == preamble && entryConverter.entry.postamble == postamble;
 		}
-		Logging() {
+
+		Logging(HalApm *hal) :
+				hal(hal) {
+			pos = 0;
+		}
+		void init() {
+			for (;;) {
+				hal->readData(entryConverter.bytes, pos, sizeof(Entry));
+				if (checkPreAndPostAbmle()) {
+					pos += sizeof(Entry);
+				} else {
+					break;
+				}
+			}
+		}
+		void setPos(unsigned int iPos) {
+			pos = iPos;
+		}
+		void save() {
+			hal->writeData(entryConverter.bytes, pos, sizeof(Entry));
+			pos += sizeof(Entry);
+		}
+		bool getNext() {
+			hal->readData(entryConverter.bytes, pos, sizeof(Entry));
+			if (checkPreAndPostAbmle()) {
+				pos += sizeof(Entry);
+				return true;
+			} else {
+				return false;
+			}
 		}
 		virtual ~Logging() {
 		}
-	};
+	}
+	;
 
 } /* namespace opticopter */
 #endif /* LOGGING_H_ */

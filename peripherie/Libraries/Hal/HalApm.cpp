@@ -135,5 +135,8 @@ namespace opticopter {
 	void HalApm::writeData(const uint8_t* data, const unsigned int start, const unsigned int length) {
 		dataFlash->write(data, start, length);
 	}
-
+	void HalApm::flushData() {
+		dataFlash->flush();
+	}
 } /* namespace arducopterNg */
+

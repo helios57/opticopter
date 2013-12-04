@@ -126,6 +126,7 @@ namespace opticopter {
 
 		void readData(uint8_t* data, const unsigned int start, const unsigned int length);
 		void writeData(const uint8_t* data, const unsigned int start, const unsigned int length);
+		void flushData();
 	};
 
 } /* namespace arducopterNg */

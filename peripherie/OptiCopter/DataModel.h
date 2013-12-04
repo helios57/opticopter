@@ -13,6 +13,7 @@
 #include "Persistence/Persistence.h"
 #include "Filter/Gyro.h"
 #include "Filter/AHRS.h"
+#include "Logging/Logging.h"
 
 namespace opticopter {
 
@@ -20,6 +21,7 @@ namespace opticopter {
 	private:
 		HalApm *hal;
 		Persistence *persistence;
+		Logging *logging;
 		AHRS ahrs;
 		int16_t motion[6];
 		int16_t mag[3];
@@ -60,8 +62,8 @@ namespace opticopter {
 		void startActivate();
 
 	public:
-		DataModel(HalApm *hal, Persistence *persistence) :
-				hal(hal), persistence(persistence) {
+		DataModel(HalApm *hal, Persistence *persistence, Logging *logging) :
+				hal(hal), persistence(persistence), logging(logging) {
 			active = false;
 			tActivate = 0;
 			pressure = 0;
@@ -100,6 +102,8 @@ namespace opticopter {
 		void initPID(float *rollPitchYawPidParams);
 		virtual ~DataModel() {
 		}
+
+		void onDeactivate();
 	};
 }
 #endif /* DATAMODEL_H_ */
