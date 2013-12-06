@@ -24,8 +24,6 @@ namespace opticopter {
 			active = false;
 			onDeactivate();
 			tActivate = 0;
-		} else if (active) {
-			tActivate = 0;
 		}
 	}
 
@@ -110,6 +108,9 @@ namespace opticopter {
 		logging->getEntry()->rollLevel = rollLevel;
 		logging->getEntry()->pitchLevel = pitchLevel;
 		logging->getEntry()->yawLevel = yawLevel;
+		logging->getEntry()->rollPid = rollA;
+		logging->getEntry()->pitchPid = pitchA;
+		logging->getEntry()->yawPid = yawA;
 		logging->getEntry()->accelX = motion[0];
 		logging->getEntry()->accelY = motion[1];
 		logging->getEntry()->accelZ = motion[2];
@@ -119,8 +120,7 @@ namespace opticopter {
 		logging->getEntry()->magX = magScaled[0];
 		logging->getEntry()->magY = magScaled[1];
 		logging->getEntry()->magZ = magScaled[2];
-		logging->getEntry()->timestamp = micros();
-
+		logging->getEntry()->timestamp = millis();
 		calcMotorThrust(rollA, pitchA, yawA);
 	}
 

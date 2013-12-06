@@ -33,6 +33,7 @@ public:
 	static const uint8_t ID_DEBUG = 0x09;
 	static const uint8_t ID_CYCLES = 0x0A;
 	static const uint8_t ID_PARAM = 0x0B;
+	static const uint8_t ID_DATA = 0x0C;
 
 	//IN-ID's
 	static const uint8_t ID_IN_SEND_DATA = 0x01;
@@ -50,7 +51,6 @@ public:
 	static const uint8_t ID_IN_PARAM_DECLINATION_ANGLE = 0x07;
 	static const uint8_t ID_IN_PARAM_PID = 0x08;
 	static const uint8_t ID_IN_PARAM_KALMAN = 0x09;
-
 
 	Serializer(Stream *serial);
 	virtual ~Serializer();

@@ -18,6 +18,7 @@ public class Parser {
 	private static final int ID_DEBUG = 0x09;
 	private static final int ID_CYCLES = 0x0A;
 	private static final int ID_PARAM = 0x0B;
+	private static final int ID_DATA = 0x0C;
 
 	public static final byte ID_IN_PARAM_MAG_MAX = 0x01;
 	public static final byte ID_IN_PARAM_MAG_MIN = 0x02;
@@ -132,6 +133,56 @@ public class Parser {
 					reciever.recieved(pid);
 					break;
 				}
+			} else if (id == ID_DATA) {
+				int preeamble = bb.getInt();
+				long timestamp = bb.getInt();
+				short accelX = bb.getShort(); // 2
+				short accelY = bb.getShort(); // 2
+				short accelZ = bb.getShort(); // 2
+				float gyroX = bb.getFloat(); // 4
+				float gyroY = bb.getFloat(); // 4
+				float gyroZ = bb.getFloat(); // 4
+				float magX = bb.getFloat(); // 4
+				float magY = bb.getFloat(); // 4
+				float magZ = bb.getFloat(); // 4
+				float roll = bb.getFloat(); // 4
+				float pitch = bb.getFloat(); // 4
+				float yaw = bb.getFloat(); // 4
+				float rollLevel = bb.getFloat(); // 4
+				float pitchLevel = bb.getFloat(); // 4
+				float yawLevel = bb.getFloat(); // 4
+				float rollPid = bb.getFloat(); // 4
+				float pitchPid = bb.getFloat(); // 4
+				float yawPid = bb.getFloat(); // 4
+				short output0 = bb.getShort(); // 2
+				short output1 = bb.getShort(); // 2
+				short output2 = bb.getShort(); // 2
+				short output3 = bb.getShort(); // 2
+				// int postamble = bb.getInt(); // 4
+				System.err.println(timestamp + "," + //
+						accelX + "," + //
+						accelY + "," + //
+						accelZ + "," + //
+						gyroX + "," + //
+						gyroY + "," + //
+						gyroZ + "," + //
+						magX + "," + //
+						magY + "," + //
+						magZ + "," + //
+						roll + "," + //
+						pitch + "," + //
+						yaw + "," + //
+						rollLevel + "," + //
+						pitchLevel + "," + //
+						yawLevel + "," + //
+						rollPid + "," + //
+						pitchPid + "," + //
+						yawPid + "," + //
+						output0 + "," + //
+						output1 + "," + //
+						output2 + "," + //
+						output3);
+
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();

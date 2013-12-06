@@ -37,14 +37,14 @@ private:
 	void PageErase(uint16_t PageAdr);
 	void BlockErase(uint16_t BlockAdr);
 	void ChipErase();
-	unsigned int getPage(unsigned int pos);
+	uint32_t getPage(uint32_t pos);
 
 	GPIO* gpio;
 	SPIDeviceDriver3* spi;
-	unsigned int pageSize;
-	unsigned int pages;
-	unsigned int pageInBufferA;
-	unsigned int pageInBufferB;
+	uint32_t pageSize;
+	uint32_t pages;
+	uint32_t pageInBufferA;
+	uint32_t pageInBufferB;
 	bool bufferChangedA;
 	bool bufferChangedB;
 public:
@@ -52,15 +52,15 @@ public:
 			gpio(gpio), spi(spi) {
 		pageSize = 0;
 		pages = 0;
-		pageInBufferA = (unsigned int) 99999;
-		pageInBufferB = (unsigned int) 99999;
+		pageInBufferA = (uint32_t) 99999;
+		pageInBufferB = (uint32_t) 99999;
 		bufferChangedA = false;
 		bufferChangedB = false;
 	}
 	void Init();
-	void read(uint8_t* data, const unsigned int start, const unsigned int length);
-	void write(const uint8_t* data, const unsigned int start, const unsigned int length);
-	unsigned int writeBuffer(uint8_t BufferNum, const uint8_t* data, const unsigned int offset, const unsigned int bufferStart, const unsigned int length);
+	void read(uint8_t* data, const uint32_t start, const uint32_t length);
+	void write(const uint8_t* data, const uint32_t start, const uint32_t length);
+	uint32_t writeBuffer(uint8_t BufferNum, const uint8_t* data, const uint32_t offset, const uint32_t bufferStart, const uint32_t length);
 	bool isReady();
 	void flush();
 };

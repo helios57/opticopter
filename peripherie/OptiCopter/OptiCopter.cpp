@@ -56,7 +56,7 @@ namespace opticopter {
 		serializer = new Serializer(&Serial);
 		debug = new DebugStream(serializer);
 		hal = new HalApm(&Serial, debug);
-		logging = new Logging(hal);
+		logging = new Logging(hal, serializer);
 		dm = new DataModel(hal, persistence, logging);
 		t_10ms = millis();
 		t_20ms = millis();
@@ -282,9 +282,54 @@ namespace opticopter {
 		 sendData = false;
 		 }*/
 		if (Serial.available()) {
-			logging->setPos(0);
+			Serial.read();
+			Serial.println("timestamp,accelX,accelY,accelZ,gyroX,gyroY,gyroZ,magX,magY,magZ,roll,pitch,yaw,rollLevel,pitchLevel,yawLevel,rollPid,pitchPid,yawPid,output0,output1,output2,output3");
 			while (logging->getNext()) {
-				Serial.println(logging->getEntry()->timestamp);
+				Serial.print(logging->entry.timestamp);
+				Serial.print(",");
+				Serial.print(logging->entry.accelX);
+				Serial.print(",");
+				Serial.print(logging->entry.accelY);
+				Serial.print(",");
+				Serial.print(logging->entry.accelZ);
+				Serial.print(",");
+				Serial.print(logging->entry.gyroX * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.gyroY * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.gyroZ * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.magX * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.magY * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.magZ * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.roll * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.pitch * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.yaw * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.rollLevel * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.pitchLevel * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.yawLevel * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.rollPid * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.pitchPid * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.yawPid * 1000);
+				Serial.print(",");
+				Serial.print(logging->entry.output0);
+				Serial.print(",");
+				Serial.print(logging->entry.output1);
+				Serial.print(",");
+				Serial.print(logging->entry.output2);
+				Serial.print(",");
+				Serial.println(logging->entry.output3);
 			}
 		}
 

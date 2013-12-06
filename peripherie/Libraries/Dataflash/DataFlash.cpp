@@ -158,13 +158,13 @@ void DataFlash::BlockWrite(uint8_t BufferNum, uint16_t IntPageAdr, const uint8_t
 
 // transfer header, if any
 	if (hdr_size != 0) {
-		for (unsigned int i = 0; i < hdr_size; i++) {
+		for (uint32_t i = 0; i < hdr_size; i++) {
 			spi->transfer((uint8_t) pHeader[i]);
 		}
 	}
 
 // transfer data
-	for (unsigned int i = 0; i < size; i++) {
+	for (uint32_t i = 0; i < size; i++) {
 		spi->transfer((uint8_t) pBuffer[i]);
 	}
 	spi->end();
@@ -229,9 +229,9 @@ void DataFlash::ChipErase() {
 	spi->end();
 }
 
-void DataFlash::read(uint8_t* data, const unsigned int start, const unsigned int length) {
-	unsigned int page = getPage(start);
-	unsigned int offset = start % pageSize;
+void DataFlash::read(uint8_t* data, const uint32_t start, const uint32_t length) {
+	uint32_t page = getPage(start);
+	uint32_t offset = start % pageSize;
 	spi->begin();
 	/*To read send 03H opcode followed by three address bytes.
 	 * The first 13 bits (PA12 - PA0) of the 23-bit address =page
@@ -247,22 +247,23 @@ void DataFlash::read(uint8_t* data, const unsigned int start, const unsigned int
 	}
 	spi->transfer((uint8_t) (offset & 0xff));
 
-	for (unsigned int i = 0; i < length; i++) {
+	for (uint32_t i = 0; i < length; i++) {
 		data[i] = spi->transfer(0x00);
 	}
 	spi->end();
 }
 
-void DataFlash::write(const uint8_t* data, const unsigned int start, unsigned int length) {
-	unsigned int startPage = getPage(start);
-	unsigned int lastPage = getPage(start + length);
-	unsigned int offset = 0;
-	for (unsigned int page = startPage; page <= lastPage; page++) {
-		unsigned int lengthInPage = min(pageSize,length-offset);
-		unsigned int startInPage = 0;
+void DataFlash::write(const uint8_t* data, const uint32_t start, uint32_t length) {
+	uint32_t startPage = getPage(start);
+	uint32_t lastPage = getPage(start + length);
+	uint32_t offset = 0;
+	for (uint32_t page = startPage; page <= lastPage; page++) {
+		uint32_t startInPage = 0;
 		if (page == startPage) {
 			startInPage = start % pageSize;
 		}
+		uint32_t lengthInPage = min(pageSize - startInPage,length-offset);
+
 		if (pageInBufferA == page) {
 			offset += writeBuffer(0, data, offset, startInPage, lengthInPage);
 			bufferChangedA = true;
@@ -289,7 +290,7 @@ void DataFlash::write(const uint8_t* data, const unsigned int start, unsigned in
 	}
 }
 
-unsigned int DataFlash::writeBuffer(uint8_t BufferNum, const uint8_t* data, const unsigned int offset, const unsigned int bufferStart, const unsigned int length) {
+uint32_t DataFlash::writeBuffer(uint8_t BufferNum, const uint8_t* data, const uint32_t offset, const uint32_t bufferStart, const uint32_t length) {
 	spi->begin();
 	spi->transfer((uint8_t) (BufferNum ? DF_BUFFER_2_WRITE : DF_BUFFER_1_WRITE));
 	spi->transfer(0);
@@ -297,13 +298,13 @@ unsigned int DataFlash::writeBuffer(uint8_t BufferNum, const uint8_t* data, cons
 	spi->transfer((uint8_t) ((bufferStart) & 0xff));
 
 // transfer data
-	for (unsigned int i = 0; i < length; i++) {
+	for (uint32_t i = 0; i < length; i++) {
 		spi->transfer(data[offset + i]);
 	}
 	spi->end();
 	return length;
 }
-unsigned int DataFlash::getPage(unsigned int pos) {
+uint32_t DataFlash::getPage(uint32_t pos) {
 	return pos / pageSize;
 }
 
