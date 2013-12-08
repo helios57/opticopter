@@ -21,39 +21,23 @@ private:
 	uint8_t ReadStatusReg();
 	uint8_t ReadStatus();
 	uint16_t PageSize();
-
-	// write size bytes of data to a page. The caller must ensure that
-	// the data fits within the page, otherwise it will wrap to the
-	// start of the page
-	// If pHeader is not NULL then write the header bytes before the data
-	void BlockWrite(uint8_t BufferNum, uint16_t IntPageAdr, const uint8_t *pHeader, uint8_t hdr_size, const uint8_t *pBuffer, uint16_t size);
-
-	// read size bytes of data to a page. The caller must ensure that
-	// the data fits within the page, otherwise it will wrap to the
-	// start of the page
-	bool BlockRead(uint8_t BufferNum, uint16_t IntPageAdr, void *pBuffer, uint16_t size);
-	uint8_t BufferRead(uint8_t BufferNum, uint16_t IntPageAdr);
-
-	void PageErase(uint16_t PageAdr);
-	void BlockErase(uint16_t BlockAdr);
 	void ChipErase();
-	uint32_t getPage(uint32_t pos);
+
+	uint16_t getPage(uint32_t pos);
 
 	GPIO* gpio;
 	SPIDeviceDriver3* spi;
-	uint32_t pageSize;
-	uint32_t pages;
-	uint32_t pageInBufferA;
-	uint32_t pageInBufferB;
+	uint16_t pageSize;
+	uint16_t pageInBufferA;
+	uint16_t pageInBufferB;
 	bool bufferChangedA;
 	bool bufferChangedB;
 public:
 	DataFlash(GPIO* gpio, SPIDeviceDriver3* spi) :
 			gpio(gpio), spi(spi) {
 		pageSize = 0;
-		pages = 0;
-		pageInBufferA = (uint32_t) 99999;
-		pageInBufferB = (uint32_t) 99999;
+		pageInBufferA = (uint16_t) 9999;
+		pageInBufferB = (uint16_t) 9999;
 		bufferChangedA = false;
 		bufferChangedB = false;
 	}

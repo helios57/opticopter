@@ -124,8 +124,8 @@ namespace opticopter {
 			return debug;
 		}
 
-		void readData(uint8_t* data, const unsigned int start, const unsigned int length);
-		void writeData(const uint8_t* data, const unsigned int start, const unsigned int length);
+		void readData(uint8_t* data, const uint32_t start, const uint32_t length);
+		void writeData(const uint8_t* data, const uint32_t start, const uint32_t length);
 		void flushData();
 	};
 

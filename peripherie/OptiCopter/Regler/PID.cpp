@@ -23,15 +23,15 @@ namespace opticopter {
 		float dTerm = (current - lastPos) / dt;
 		lastPos = current;
 
-		float result = kp * diff + ki * diffSum + kd * dTerm;
+		float newValue = kp * diff + ki * diffSum + kd * dTerm;
 
-		if (result > max) {
-			result = max;
-		} else if (result < -max) {
-			result = -max;
+		if (newValue > max) {
+			newValue = max;
+		} else if (newValue < -max) {
+			newValue = -max;
 		}
-		lastResult = result;
+		oldValue += (newValue - oldValue) / (smoothing / dt);
 		lastRate = rate;
-		return result;
+		return oldValue;
 	}
 }

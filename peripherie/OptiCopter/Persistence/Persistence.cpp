@@ -123,4 +123,16 @@ namespace opticopter {
 			rollPitchYaw[i] = conv4.floating;
 		}
 	}
+	void Persistence::saveRollPitchYawLevel(float* rollPitchYawLevel) {
+		for (uint8_t i = 0; i < 3; i++) {
+			conv4.floating = rollPitchYawLevel[i];
+			writeUInt(conv4.byte, LOC_ROLL_PITCH_YAW_LEVEL + i * 4, 4);
+		}
+	}
+	void Persistence::readRollPitchYawLevel(float* rollPitchYawLevel) {
+		for (uint8_t i = 0; i < 3; i++) {
+			readUInt(conv4.byte, LOC_ROLL_PITCH_YAW_LEVEL + i * 4, 4);
+			rollPitchYawLevel[i] = conv4.floating;
+		}
+	}
 }

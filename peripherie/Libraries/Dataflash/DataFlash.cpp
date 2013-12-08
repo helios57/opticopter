@@ -142,78 +142,9 @@ void DataFlash::BufferToPage(uint8_t BufferNum, uint16_t PageAdr, bool wait) {
 	spi->transfer(0);
 	spi->end();
 
-//TODO check or delete
-// Check if we need to wait to write the buffer to memory or we can continue...
 	if (wait)
 		while (!ReadStatus())
 			;  //monitor the status register, wait until busy-flag is high
-}
-
-void DataFlash::BlockWrite(uint8_t BufferNum, uint16_t IntPageAdr, const uint8_t* pHeader, uint8_t hdr_size, const uint8_t* pBuffer, uint16_t size) {
-	spi->begin();
-	spi->transfer((uint8_t) (BufferNum ? DF_BUFFER_2_WRITE : DF_BUFFER_1_WRITE));
-	spi->transfer(0);
-	spi->transfer((uint8_t) (IntPageAdr >> 8));
-	spi->transfer((uint8_t) (IntPageAdr));
-
-// transfer header, if any
-	if (hdr_size != 0) {
-		for (uint32_t i = 0; i < hdr_size; i++) {
-			spi->transfer((uint8_t) pHeader[i]);
-		}
-	}
-
-// transfer data
-	for (uint32_t i = 0; i < size; i++) {
-		spi->transfer((uint8_t) pBuffer[i]);
-	}
-	spi->end();
-}
-
-bool DataFlash::BlockRead(uint8_t BufferNum, uint16_t IntPageAdr, void *pBuffer, uint16_t size) {
-	spi->begin();
-	if (BufferNum == 0)
-		spi->transfer(DF_BUFFER_1_READ);
-	else
-		spi->transfer(DF_BUFFER_2_READ);
-
-	spi->transfer(0x00);
-	spi->transfer((uint8_t) (IntPageAdr >> 8)); //upper part of internal buffer address
-	spi->transfer((uint8_t) (IntPageAdr));      //lower part of internal buffer address
-	spi->transfer(0x00);                        //don't cares
-
-	uint8_t *pData = (uint8_t *) pBuffer;
-	while (size--) {
-		*pData++ = spi->transfer(0x00);
-	}
-	spi->end();
-	return true;
-}
-
-uint8_t DataFlash::BufferRead(uint8_t BufferNum, uint16_t IntPageAdr) {
-	uint8_t tmp;
-	if (!BlockRead(BufferNum, IntPageAdr, &tmp, 1)) {
-		return 0;
-	}
-	return tmp;
-}
-
-void DataFlash::PageErase(uint16_t PageAdr) {
-	spi->begin();
-// Send page erase command
-	spi->transfer(DF_PAGE_ERASE);
-	if (pageSize == DF_BINARY_PAGESIZE) {
-		spi->transfer((uint8_t) (PageAdr >> 7));
-		spi->transfer((uint8_t) (PageAdr << 1));
-	} else {
-		spi->transfer((uint8_t) (PageAdr >> 6));
-		spi->transfer((uint8_t) (PageAdr << 2));
-	}
-	spi->transfer(0x00);
-	//initiate flash page erase
-	spi->end();
-	while (!ReadStatus())
-		;
 }
 
 void DataFlash::ChipErase() {
@@ -230,8 +161,8 @@ void DataFlash::ChipErase() {
 }
 
 void DataFlash::read(uint8_t* data, const uint32_t start, const uint32_t length) {
-	uint32_t page = getPage(start);
-	uint32_t offset = start % pageSize;
+	uint16_t page = getPage(start);
+	uint16_t offset = start % pageSize;
 	spi->begin();
 	/*To read send 03H opcode followed by three address bytes.
 	 * The first 13 bits (PA12 - PA0) of the 23-bit address =page
@@ -304,17 +235,17 @@ uint32_t DataFlash::writeBuffer(uint8_t BufferNum, const uint8_t* data, const ui
 	spi->end();
 	return length;
 }
-uint32_t DataFlash::getPage(uint32_t pos) {
+uint16_t DataFlash::getPage(uint32_t pos) {
 	return pos / pageSize;
 }
 
 void DataFlash::flush() {
 	if (bufferChangedA) {
-		BufferToPage(0, (uint16_t) pageInBufferA, false);
+		BufferToPage(0, pageInBufferA, false);
 	}
 	while (!isReady())
 		;
 	if (bufferChangedB) {
-		BufferToPage(1, (uint16_t) pageInBufferB, false);
+		BufferToPage(1, pageInBufferB, false);
 	}
 }

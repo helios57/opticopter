@@ -162,8 +162,13 @@ namespace opticopter {
 		bool getNext() {
 			hal->readData(bytes, pos, 86);
 			bytesToEntry();
-			pos += 86;
+			while (!checkPreAndPostAbmle() && pos < 86) {
+				pos++;
+				hal->readData(bytes, pos, 86);
+				bytesToEntry();
+			}
 			if (checkPreAndPostAbmle()) {
+				pos += 86;
 				return true;
 			} else {
 				return false;

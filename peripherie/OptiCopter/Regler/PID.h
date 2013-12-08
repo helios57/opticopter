@@ -17,24 +17,26 @@ namespace opticopter {
 		float windupGuard;
 		float max;
 		float lastPos;
-		float lastResult;
+		float oldValue;
 		float lastRate;
 		float accelToRateFactor;
 	public:
 		float kp;
 		float ki;
 		float kd;
+		float smoothing;
 		PID() {
 			lastPos = 0;
-			lastResult = 0;
+			oldValue = 0;
 			lastRate = 0;
 			accelToRateFactor = 0;
 			diffSum = 0;
-			kp = 0.14; //reduzieren
+			kp = 0.12; //reduzieren
 			ki = 0.0;
-			kd = -0.035; //erhöhen -> dämpfung
+			kd = -0.038; //erhöhen -> dämpfung
 			windupGuard = PI / 2;
 			max = PI / 4;
+			smoothing = 0.05;
 		}
 		void init(float ikp, float iki, float ikd) {
 			//kp = ikp;

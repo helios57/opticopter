@@ -32,12 +32,17 @@ namespace opticopter {
 	}
 
 	void DataModel::onActivate() {
+		if (leveling) {
+			rollPitchYawLevel[0] = rollPitchYaw[0];
+			rollPitchYawLevel[1] = rollPitchYaw[1];
+			rollPitchYawLevel[2] = rollPitchYaw[2];
+		} else {
+			persistence->readRollPitchYawLevel(rollPitchYawLevel);
+			rollPitchYawLevel[2] = rollPitchYaw[2];
+		}
 		rollPitchYawPid[0].resetI();
 		rollPitchYawPid[1].resetI();
 		rollPitchYawPid[2].resetI();
-		rollPitchYawLevel[0] = rollPitchYaw[0];
-		rollPitchYawLevel[1] = rollPitchYaw[1];
-		rollPitchYawLevel[2] = rollPitchYaw[2];
 		gyro.stopBiasRecording();
 		ahrs.onActivate();
 	}
@@ -179,7 +184,14 @@ namespace opticopter {
 		inputPitch = ((float) input[1] - inputDefault[1]) / (float) (inputMax[1] - inputMin[1]);
 		inputThrust = ((float) input[2] - inputDefault[2]) / (float) (inputMax[2] - inputMin[2]);
 		inputYaw = ((float) input[3] - inputDefault[3]) / (float) (inputMax[3] - inputMin[3]);
-		leveling = input[4] < 1500;
+		bool newLeveling = input[4] < 1500;
+
+		//Falling edge on leveling -> persist current state
+		if (leveling && !newLeveling) {
+			persistence->saveRollPitchYawLevel(rollPitchYawLevel);
+		}
+
+		leveling = newLeveling;
 		if (leveling) {
 			calcLeveling();
 		}

@@ -284,6 +284,7 @@ namespace opticopter {
 		if (Serial.available()) {
 			Serial.read();
 			Serial.println("timestamp,accelX,accelY,accelZ,gyroX,gyroY,gyroZ,magX,magY,magZ,roll,pitch,yaw,rollLevel,pitchLevel,yawLevel,rollPid,pitchPid,yawPid,output0,output1,output2,output3");
+			logging->setPos(0);
 			while (logging->getNext()) {
 				Serial.print(logging->entry.timestamp);
 				Serial.print(",");

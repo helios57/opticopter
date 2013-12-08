@@ -19,6 +19,7 @@ namespace opticopter {
 	static const uint16_t LOC_DECLINATION_ANGLE = 60; //64
 	static const uint16_t LOC_RC_IN_FUNCTION = 64; //72
 	static const uint16_t LOC_PID = 72; //72+9*3 = 99
+	static const uint16_t LOC_ROLL_PITCH_YAW_LEVEL = 100; //72+9*3 = 99
 
 	class Persistence {
 	private:
@@ -63,6 +64,8 @@ namespace opticopter {
 		void readRcInputFunction(uint8_t *function, uint8_t count);
 		void savePID(float *rollPitchYaw);
 		void readPID(float *rollPitchYaw);
+		void saveRollPitchYawLevel(float* rollPitchYawLevel);
+		void readRollPitchYawLevel(float* rollPitchYawLevel);
 	};
 }
 #endif /* PERSISTENCE_H_ */

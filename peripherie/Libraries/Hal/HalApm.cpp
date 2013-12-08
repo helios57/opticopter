@@ -128,11 +128,11 @@ namespace opticopter {
 		return gps->getDataBuffer();
 	}
 
-	void HalApm::readData(uint8_t* data, const unsigned int start, const unsigned int length) {
+	void HalApm::readData(uint8_t* data, const uint32_t start, const uint32_t length) {
 		dataFlash->read(data, start, length);
 	}
 
-	void HalApm::writeData(const uint8_t* data, const unsigned int start, const unsigned int length) {
+	void HalApm::writeData(const uint8_t* data, const uint32_t start, const uint32_t length) {
 		dataFlash->write(data, start, length);
 	}
 
