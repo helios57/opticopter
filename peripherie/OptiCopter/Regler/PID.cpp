@@ -30,7 +30,7 @@ namespace opticopter {
 		} else if (newValue < -max) {
 			newValue = -max;
 		}
-		oldValue += (newValue - oldValue) / (smoothing / dt);
+		oldValue = newValue; // (newValue - oldValue) / (smoothing / dt);
 		lastRate = rate;
 		return oldValue;
 	}
