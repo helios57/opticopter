@@ -205,7 +205,7 @@ void DataFlash::write(const uint8_t* data, const uint32_t start, uint32_t length
 			if (bufferChangedB) {
 				BufferToPage(1, (uint16_t) pageInBufferB, false);
 			}
-			PageToBuffer(0, page);
+			//PageToBuffer(0, page);
 			pageInBufferA = page;
 			offset += writeBuffer(0, data, offset, startInPage, lengthInPage);
 			bufferChangedA = true;
@@ -213,7 +213,7 @@ void DataFlash::write(const uint8_t* data, const uint32_t start, uint32_t length
 			if (bufferChangedA) {
 				BufferToPage(0, (uint16_t) pageInBufferA, false);
 			}
-			PageToBuffer(1, page);
+			//PageToBuffer(1, page);
 			pageInBufferB = page;
 			offset += writeBuffer(1, data, offset, startInPage, lengthInPage);
 			bufferChangedB = true;
