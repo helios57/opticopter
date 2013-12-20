@@ -62,31 +62,66 @@ void LogExit() {
 	exit(-1);
 }
 
-template<class T> int getPointsAboveTreshold(VRmImage* p_image, VRmDWORD threashold, VRmPointI* points, const int maxPoints, const int step) {
+class BoundingBox {
+public:
+	BoundingBox() :
+			top(-1), right(-1), left(-1), bottom(-1) {
+	}
+	int top;
+	int right;
+	int left;
+	int bottom;
+};
+
+BoundingBox boxes[100];
+static const int boxMatchingTolerance = 1;
+template<class T> int getPointsAboveTreshold(VRmImage* p_image, VRmDWORD threashold, const int step) {
 	if (!p_image)
 		return -1;
-
-	int foundPoints = 0;
+	int boundingBoxIndex = 0;
 	for (VRmDWORD ii = 0; ii < p_image->m_image_format.m_height; ii += step) {
 		T* ptr = (T*) (p_image->mp_buffer + ii * p_image->m_pitch);
 		for (VRmDWORD jj = 0; jj < p_image->m_image_format.m_width; jj += step) {
-			int x = ii;
-			int y = jj;
+			int x = jj;
+			int y = ii;
 			VRmDWORD value = (*ptr++);
 			if (value >= threashold) {
-				if (foundPoints < maxPoints) {
-					VRmPointI point;
-					point.m_x = x;
-					point.m_y = y;
-					points[foundPoints++] = point;
+				if (boundingBoxIndex == 0) {
+					boxes[boundingBoxIndex].top = y;
+					boxes[boundingBoxIndex].bottom = y;
+					boxes[boundingBoxIndex].left = x;
+					boxes[boundingBoxIndex].right = x;
+					boundingBoxIndex++;
 				}
 				else {
-					foundPoints++;
+					int indexMatchedBB = -1;
+					for (int i = 0; i < boundingBoxIndex; i++) {
+						BoundingBox current = boxes[i];
+						//expand matched Box
+						if (((current.top - boxMatchingTolerance) >= y) && ((current.bottom + boxMatchingTolerance) <= y) && ((current.left - boxMatchingTolerance) <= x) && ((current.right + boxMatchingTolerance) >= x)) {
+							current.top = max(y, current.top);
+							current.bottom = min(y, current.bottom);
+							current.left = min(x, current.left);
+							current.right = max(x, current.right);
+							indexMatchedBB = i;
+						}
+						if (indexMatchedBB > 0) {
+							//TODO merge boxes
+						}
+					}
+					//Add new box
+					if (indexMatchedBB < 0) {
+						boxes[boundingBoxIndex].top = y;
+						boxes[boundingBoxIndex].bottom = y;
+						boxes[boundingBoxIndex].left = x;
+						boxes[boundingBoxIndex].right = x;
+						boundingBoxIndex++;
+					}
 				}
 			}
 		}
 	}
-	return foundPoints;
+	return boundingBoxIndex;
 }
 
 int main(int argc, char** argv) {
@@ -147,7 +182,7 @@ int main(int argc, char** argv) {
 
 	int pointsAboveThreshold;
 	VRmDWORD threashold = 150;
-	int maxPoints = 100;
+	int maxPoints = 10000;
 	VRmPointI points[maxPoints];
 	long processedPictures = 0;
 	// MAIN LOOP
