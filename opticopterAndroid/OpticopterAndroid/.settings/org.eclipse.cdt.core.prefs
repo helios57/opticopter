@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+environment/project/0.129633445/NDKROOT/delimiter=\:
+environment/project/0.129633445/NDKROOT/operation=append
+environment/project/0.129633445/NDKROOT/value=/home/helios/workspace/android-ndks/android-ndk-r9c/
+environment/project/0.129633445/OPENCV_SDK/delimiter=\:
+environment/project/0.129633445/OPENCV_SDK/operation=append
+environment/project/0.129633445/OPENCV_SDK/value=/home/helios/workspace/opencv/OpenCV-2.4.7.1-android-sdk
+environment/project/0.129633445/append=true
+environment/project/0.129633445/appendContributed=true
