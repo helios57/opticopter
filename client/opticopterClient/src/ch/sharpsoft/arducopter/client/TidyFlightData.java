@@ -9,8 +9,8 @@ import java.io.IOException;
 public class TidyFlightData {
 
 	public static void main(final String[] args) throws IOException {
-		File in = new File("/home/helios/git/opticopter/client/opticopterClient/log/flightLogDataflash03.txt");
-		File out = new File("/home/helios/git/opticopter/client/opticopterClient/log/flightLogDataflash03.txt_clean.txt");
+		File in = new File("/home/helios/git/opticopter/client/opticopterClient/log/flightLogDataflash04.txt");
+		File out = new File("/home/helios/git/opticopter/client/opticopterClient/log/flightLogDataflash04.txt_clean.txt");
 		if (out.exists()) {
 			out.delete();
 			out.createNewFile();
