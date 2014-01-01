@@ -19,8 +19,20 @@
 						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.2006441180" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
 							<targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.2006441180.527973180" name=""/>
 							<builder autoBuildTarget="" command="${NDKROOT}/ndk-build" enableAutoBuild="true" enableCleanBuild="false" id="org.eclipse.cdt.build.core.settings.default.builder.180541221" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
-							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.791069665" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.791069665" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs">
+								<option id="org.eclipse.cdt.build.core.settings.holder.libfiles.1640145401" name="Library Files" superClass="org.eclipse.cdt.build.core.settings.holder.libfiles" valueType="libFiles">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="../m"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="../log"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="../android"/>
+								</option>
+								<option id="org.eclipse.cdt.build.core.settings.holder.libpaths.91378171" superClass="org.eclipse.cdt.build.core.settings.holder.libpaths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="/home/helios/workspace/android-ndks/android-ndk-r9c/platforms/android-19/arch-arm/usr/lib"/>
+								</option>
+							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.1894181736" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.994035151" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/sources/android&quot;"/>
+								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.588929884" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>
 							<tool id="org.eclipse.cdt.build.core.settings.holder.303359177" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
@@ -29,6 +41,7 @@
 									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/sources/cxx-stl/gnu-libstdc++/4.6/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi-v7a/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${OPENCV_SDK}/sdk/native/jni/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/sources/android/native_app_glue&quot;"/>
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.1424359063" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="ANDROID=1"/>
@@ -41,6 +54,7 @@
 									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/sources/cxx-stl/gnu-libstdc++/4.6/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/sources/cxx-stl/gnu-libstdc++/4.6/libs/armeabi-v7a/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${OPENCV_SDK}/sdk/native/jni/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${NDKROOT}/sources/android&quot;"/>
 								</option>
 								<option id="org.eclipse.cdt.build.core.settings.holder.symbols.719752707" name="Symbols" superClass="org.eclipse.cdt.build.core.settings.holder.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="ANDROID=1"/>

@@ -9,7 +9,7 @@ include ${OPENCV_SDK}/sdk/native/jni/OpenCV.mk
 
 LOCAL_SRC_FILES  := OpticopterAndroid_jni.cpp
 LOCAL_C_INCLUDES += $(LOCAL_PATH)
-LOCAL_LDLIBS     += -llog -ldl
+LOCAL_LDLIBS     += -lm -llog -ldl -landroid
 
 LOCAL_MODULE     := opticopter_android
 
