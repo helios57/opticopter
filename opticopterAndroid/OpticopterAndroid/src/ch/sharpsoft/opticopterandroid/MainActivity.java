@@ -64,21 +64,10 @@ public class MainActivity extends Activity implements SensorEventListener {
 	private final float[] currentRot = new float[4];
 	private final float[] leveled = new float[4];
 
-	private volatile boolean grabbing = false;
-	private final int roiWidth = 640;
-	private final int roiHeight = 360;
-	private final double correctureFactorH = 1200;// TODO calculate
-	private final double correctureFactorW = -1200;// TODO calculate
+	// private final double pprh = 0.0014097904947;// rad/px
+	private final double ppr = 0.0008870389392;// rad/px
 
-	private int constraint(int value, int bot, int top) {
-		if (value > top) {
-			return top;
-		}
-		if (value < bot) {
-			return bot;
-		}
-		return value;
-	}
+	private volatile boolean grabbing = false;
 
 	private final Runnable updateRunnable = new Runnable() {
 		@Override
@@ -89,19 +78,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 				final double hRad = Math.asin(2 * (diff[0] * diff[2] - diff[1] * diff[3]));
 				final double wRad = Math.atan2(2 * (diff[0] * diff[1] + diff[2] * diff[3]), 1 - 2 * (diff[1] * diff[1] + diff[2] * diff[2]));
 
-				// int roiHeightStart = constraint(160 + (int) (hRad *
-				// correctureFactorH), 0, roiHeight);
-				// int roiWidthStart = constraint(320 + (int) (wRad *
-				// correctureFactorW), 0, roiWidth);
-
-				// final double hRadAfterRoi = hRad - (roiHeightStart - 160) /
-				// correctureFactorH;
-				// final double wRadAfterRoi = wRad - (roiWidthStart - 320) /
-				// correctureFactorW;
-
-				final Mat roi = mGray;// mGray.submat(new Rect(roiWidthStart,
-										// roiHeightStart, roiWidth,
-										// roiHeight));
+				final Mat roi = mGray;
 				final MatOfRect detectedObjs = new MatOfRect();
 				mNativeDetector.detect(roi, detectedObjs);
 				final Rect[] detectedObjsArray = detectedObjs.toArray();
@@ -116,7 +93,12 @@ public class MainActivity extends Activity implements SensorEventListener {
 				if (biggest != null) {
 					int x = biggest.x + biggest.width / 2;
 					int y = biggest.y + biggest.height / 2;
-					Core.putText(roi, "x=" + x + " y=" + y, new Point(0, 150), Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 255, 0));
+
+					// double hdiff = ((720 / 2) - y) * pprh + hRad;
+					double hdiff = ((720 / 2) - y) * ppr + hRad;
+					double wdiff = ((1280 / 2) - x) * ppr - wRad;
+					Core.putText(roi, "x=" + x + " y=" + y, new Point(0, 300), Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 255, 255));
+					Core.putText(roi, "hdiff=" + hdiff + " wdiff=" + wdiff, new Point(0, 450), Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 255, 255));
 				}
 
 				// TODO scale
