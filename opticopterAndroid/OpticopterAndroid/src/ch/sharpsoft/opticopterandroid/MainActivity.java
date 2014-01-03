@@ -1,6 +1,8 @@
 package ch.sharpsoft.opticopterandroid;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +23,11 @@ import org.opencv.highgui.Highgui;
 import org.opencv.highgui.VideoCapture;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Canvas;
@@ -29,7 +35,10 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.hardware.usb.UsbAccessory;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -39,10 +48,22 @@ import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
+	private static final String ACTION_USB_PERMISSION = "com.google.android.DemoKit.action.USB_PERMISSION";
+
 	private static final String TAG = "OpticopterAndroidJava::Activity";
+
+	private UsbManager usbManager;
+	private PendingIntent mPermissionIntent;
+	private boolean mPermissionRequestPending;
+
+	private UsbAccessory accessory;
+	private ParcelFileDescriptor mFileDescriptor;
+	private FileInputStream mInputStream;
+	private FileOutputStream mOutputStream;
 
 	private static final Scalar DETECTED_OBJ_RECT_COLOR = new Scalar(0, 255, 0, 255);
 	public static final int JAVA_DETECTOR = 0;
@@ -68,6 +89,28 @@ public class MainActivity extends Activity implements SensorEventListener {
 	private final double ppr = 0.0008870389392;// rad/px
 
 	private volatile boolean grabbing = false;
+
+	private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String action = intent.getAction();
+			if (ACTION_USB_PERMISSION.equals(action)) {
+				synchronized (this) {
+					UsbAccessory laccessory = (UsbAccessory) intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
+
+					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+						if (laccessory != null) {
+							accessory = laccessory;
+							openAccessory();
+						}
+					} else {
+						Log.d(TAG, "permission denied for accessory " + laccessory);
+					}
+				}
+			}
+		}
+	};
 
 	private final Runnable updateRunnable = new Runnable() {
 		@Override
@@ -208,6 +251,42 @@ public class MainActivity extends Activity implements SensorEventListener {
 		ll.addView(level);
 		surfaceView = new SurfaceView(this);
 		ll.addView(surfaceView);
+		usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+		accessory = (UsbAccessory) getIntent().getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
+		if (accessory == null && usbManager != null) {
+			final UsbAccessory[] list = usbManager.getAccessoryList();
+			if (list != null) {
+				for (UsbAccessory a : list) {
+					accessory = a;
+				}
+			}
+		}
+		mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+		IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+		registerReceiver(mUsbReceiver, filter);
+		if (accessory != null) {
+			usbManager.requestPermission(accessory, mPermissionIntent);
+		}
+	}
+
+	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		accessory = (UsbAccessory) intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
+		if (accessory != null) {
+			usbManager.requestPermission(accessory, mPermissionIntent);
+		}
+	}
+
+	private void openAccessory() {
+		Log.d(TAG, "openAccessory: " + accessory);
+		Toast.makeText(this, "openAccessory " + accessory.getDescription(), Toast.LENGTH_LONG).show();
+		mFileDescriptor = usbManager.openAccessory(accessory);
+		if (mFileDescriptor != null) {
+			FileDescriptor fd = mFileDescriptor.getFileDescriptor();
+			mInputStream = new FileInputStream(fd);
+			mOutputStream = new FileOutputStream(fd);
+		}
 	}
 
 	@Override
@@ -237,6 +316,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 		if (server != null) {
 			server.close();
 		}
+		unregisterReceiver(mUsbReceiver);
 	}
 
 	float[] quatDiff(float[] rot, float[] level) {

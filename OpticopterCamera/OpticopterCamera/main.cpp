@@ -21,6 +21,7 @@
 #endif
 
 #include <sys/time.h>
+#include "libusb-1.0/libusb.h"
 
 using namespace std;
 
@@ -208,9 +209,9 @@ int main(int argc, char** argv) {
 			if (!VRmUsbCamGetPixelDepthFromColorFormat(p_src_image->m_image_format.m_color_format, &pixeldepth_src))
 				LogExit();
 			if (pixeldepth_src == 1)
-				pointsAboveThreshold = getPointsAboveTreshold<VRmBYTE>(p_src_image, threashold, points, maxPoints, 1);
+				pointsAboveThreshold = getPointsAboveTreshold<VRmBYTE>(p_src_image, threashold, 1);
 			else if (pixeldepth_src == 2)
-				pointsAboveThreshold = getPointsAboveTreshold<VRmWORD>(p_src_image, threashold, points, maxPoints, 1);
+				pointsAboveThreshold = getPointsAboveTreshold<VRmWORD>(p_src_image, threashold,  1);
 			else {
 				cout << "Pixeldepth >2 not supported!" << endl;
 				exit(-1);
