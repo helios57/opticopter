@@ -52,6 +52,7 @@ class HardwareSerial : public Stream
       volatile uint8_t *ucsra, volatile uint8_t *ucsrb,
       volatile uint8_t *ucsrc, volatile uint8_t *udr,
       uint8_t rxen, uint8_t txen, uint8_t rxcie, uint8_t udrie, uint8_t u2x);
+    virtual ~HardwareSerial();
     void begin(unsigned long);
     void begin(unsigned long, uint8_t);
     void end();

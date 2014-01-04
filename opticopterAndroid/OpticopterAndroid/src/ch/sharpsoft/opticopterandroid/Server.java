@@ -37,7 +37,7 @@ public class Server {
 						// os = new GZIPOutputStream(socket.getOutputStream());
 						os = socket.getOutputStream();
 					} catch (IOException e) {
-						e.printStackTrace();
+						break;
 					}
 				}
 			}

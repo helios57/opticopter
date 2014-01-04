@@ -335,8 +335,8 @@ namespace opticopter {
 		}
 
 		if (hal->pollMotion()) {
-			long currentMicros = micros();
-			long microsDiff = currentMicros - lastMicros;
+			unsigned long currentMicros = micros();
+			unsigned long microsDiff = currentMicros - lastMicros;
 			lastMicros = currentMicros;
 			hal->getMotion6(axyzgxyz);
 			dm->putMotion6(axyzgxyz);

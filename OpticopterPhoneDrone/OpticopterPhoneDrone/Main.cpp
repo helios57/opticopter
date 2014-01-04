@@ -10,6 +10,6 @@
 
 int main(void) {
 	init();
-	phonedrohne::PhoneDrohne pd;
+	PhoneDrohne pd;
 	return pd.main();
 }

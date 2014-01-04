@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.FpsMeter;
@@ -38,6 +40,7 @@ import android.hardware.SensorManager;
 import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.Menu;
@@ -56,9 +59,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 	private static final String TAG = "OpticopterAndroidJava::Activity";
 
+	private Handler handler;
 	private UsbManager usbManager;
 	private PendingIntent mPermissionIntent;
-	private boolean mPermissionRequestPending;
 
 	private UsbAccessory accessory;
 	private ParcelFileDescriptor mFileDescriptor;
@@ -98,7 +101,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 			if (ACTION_USB_PERMISSION.equals(action)) {
 				synchronized (this) {
 					UsbAccessory laccessory = (UsbAccessory) intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
-
 					if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
 						if (laccessory != null) {
 							accessory = laccessory;
@@ -147,15 +149,18 @@ public class MainActivity extends Activity implements SensorEventListener {
 				// TODO scale
 				Utils.matToBitmap(roi, mCacheBitmap);
 				Canvas canvas = surfaceView.getHolder().lockCanvas();
-				canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
+				if (canvas != null) {
+					canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
 
-				canvas.drawBitmap(mCacheBitmap, new android.graphics.Rect(0, 0, mCacheBitmap.getWidth(), mCacheBitmap.getHeight()), new android.graphics.Rect((canvas.getWidth() - mCacheBitmap.getWidth()) / 2,
-						(canvas.getHeight() - mCacheBitmap.getHeight()) / 2, (canvas.getWidth() - mCacheBitmap.getWidth()) / 2 + mCacheBitmap.getWidth(), (canvas.getHeight() - mCacheBitmap.getHeight()) / 2 + mCacheBitmap.getHeight()), null);
+					canvas.drawBitmap(mCacheBitmap, new android.graphics.Rect(0, 0, mCacheBitmap.getWidth(), mCacheBitmap.getHeight()),
+							new android.graphics.Rect((canvas.getWidth() - mCacheBitmap.getWidth()) / 2, (canvas.getHeight() - mCacheBitmap.getHeight()) / 2, (canvas.getWidth() - mCacheBitmap.getWidth()) / 2 + mCacheBitmap.getWidth(),
+									(canvas.getHeight() - mCacheBitmap.getHeight()) / 2 + mCacheBitmap.getHeight()), null);
 
-				mFpsMeter.measure();
-				mFpsMeter.draw(canvas, 20, 30);
+					mFpsMeter.measure();
+					mFpsMeter.draw(canvas, 20, 30);
 
-				surfaceView.getHolder().unlockCanvasAndPost(canvas);
+					surfaceView.getHolder().unlockCanvasAndPost(canvas);
+				}
 
 				SensorManager.getQuaternionFromVector(currentRot, rotation);
 
@@ -232,6 +237,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 	public void onCreate(Bundle savedInstanceState) {
 		Log.i(TAG, "called onCreate");
 		super.onCreate(savedInstanceState);
+		handler = new Handler();
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -286,6 +292,78 @@ public class MainActivity extends Activity implements SensorEventListener {
 			FileDescriptor fd = mFileDescriptor.getFileDescriptor();
 			mInputStream = new FileInputStream(fd);
 			mOutputStream = new FileOutputStream(fd);
+			new Thread(new Runnable() {
+				private final byte preamble0 = (byte) 0xE5;
+				private final byte preamble1 = (byte) 0xE7;
+				private final byte[] buffer = new byte[16];
+
+				@Override
+				public void run() {
+					while (mInputStream != null) {
+						try {
+							handler.post(new Runnable() {
+								@Override
+								public void run() {
+									Toast.makeText(MainActivity.this, "mInputStream in thread 1" + mInputStream, Toast.LENGTH_SHORT).show();
+								}
+							});
+							final int read = mInputStream.read(buffer);
+							handler.post(new Runnable() {
+								@Override
+								public void run() {
+									Toast.makeText(MainActivity.this, "mInputStream in thread 2" + mInputStream, Toast.LENGTH_SHORT).show();
+								}
+							});
+							if (read == 16 && preamble0 == buffer[0] && preamble1 == buffer[1]) {
+								byte sum = 0;
+								for (int i = 2; i < 15; i++) {
+									sum += buffer[i];
+								}
+								if (sum == buffer[15]) {
+									final ByteBuffer bb = ByteBuffer.wrap(buffer);
+									bb.order(ByteOrder.LITTLE_ENDIAN);
+									final byte flags = bb.get(2);
+									final float v0 = bb.getFloat(3);
+									final float v1 = bb.getFloat(7);
+									final float v2 = bb.getFloat(11);
+									handler.post(new Runnable() {
+										@Override
+										public void run() {
+											Toast.makeText(MainActivity.this, "Recieved f=" + flags + " v0=" + v0 + " v1=" + v1 + " v2=" + v2, Toast.LENGTH_SHORT).show();
+										}
+									});
+								} else {
+									handler.post(new Runnable() {
+										@Override
+										public void run() {
+											Toast.makeText(MainActivity.this, "Wrong checksum", Toast.LENGTH_SHORT).show();
+										}
+									});
+								}
+							} else {
+								handler.post(new Runnable() {
+									@Override
+									public void run() {
+										Toast.makeText(MainActivity.this, "Wrong preamble", Toast.LENGTH_SHORT).show();
+									}
+								});
+							}
+						} catch (final Exception e) {
+							handler.post(new Runnable() {
+								@Override
+								public void run() {
+									Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+								}
+							});
+							try {
+								Thread.sleep(10000);
+							} catch (InterruptedException e1) {
+								e1.printStackTrace();
+							}
+						}
+					}
+				}
+			}).start();
 		}
 	}
 
@@ -317,6 +395,31 @@ public class MainActivity extends Activity implements SensorEventListener {
 			server.close();
 		}
 		unregisterReceiver(mUsbReceiver);
+		if (mInputStream != null) {
+			try {
+				mInputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			mInputStream = null;
+		}
+		if (mOutputStream != null) {
+			try {
+				mOutputStream.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			mOutputStream = null;
+		}
+		if (mFileDescriptor != null) {
+			try {
+				mFileDescriptor.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			mFileDescriptor = null;
+		}
+
 	}
 
 	float[] quatDiff(float[] rot, float[] level) {

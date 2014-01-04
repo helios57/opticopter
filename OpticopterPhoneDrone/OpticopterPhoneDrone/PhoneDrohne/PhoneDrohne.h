@@ -7,23 +7,30 @@
 
 #ifndef PHONEDROHNE_H_
 #define PHONEDROHNE_H_
+
 #include <AndroidAccessory.h>
+#include <Arduino.h>
 
-namespace phonedrohne {
-	class PhoneDrohne {
-	private:
-		char buf[64];
-		unsigned long timer;
-		unsigned short len;
-		unsigned short bytes_sent;
-		AndroidAccessory* adk;
-	public:
-		PhoneDrohne();
-		virtual ~PhoneDrohne();
-		int main();
-		void setup();
-		void loop();
-	};
+class PhoneDrohne {
 
-} /* namespace phonedrohne */
+private:
+	uint8_t buf[16];
+	AndroidAccessory* adk;
+
+	Stream* serialArduino;
+	Stream* serialUSB;
+
+	union {
+		uint8_t byte[4];
+		float floating;
+	} conv4;
+
+	unsigned long t_1000ms;
+public:
+	PhoneDrohne();
+	virtual ~PhoneDrohne();
+	int main();
+	void setup();
+	void loop();
+};
 #endif /* PHONEDROHNE_H_ */

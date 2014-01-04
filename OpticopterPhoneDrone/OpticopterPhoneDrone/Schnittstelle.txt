@@ -1,0 +1,27 @@
+16 byte
+
+0		preamble0 = E5
+1		preamble1 = E7
+2		type
+3-6		value0 //float
+7-10	value1 //float
+11-14	value2 //float
+15		checksum = sum as byte over type and value 0-2
+
+type as byte
+0 Input from RC over Arduino
+1 Current Level from Arduino
+2 Current Orientation from Arduino
+3 Input from Android added to currentLevel volatile
+4 SetLevel from Android and clear Input of 3
+5 Reserved
+6 Reserved
+7 Reserved
+8 Reserved
+9 Reserved
+A Reserved
+B Reserved
+C Reserved
+D Reserved
+E Reserved
+F Reserved

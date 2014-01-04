@@ -30,7 +30,7 @@
 /* MAX3421E USB host controller support */
 
 #include "Max3421e.h"
-#include "Max3421e_constants.h"
+// #include "Max3421e_constants.h"
 
 static byte vbusState;
 
@@ -111,10 +111,10 @@ byte MAX3421E::getVbusState(void) {
 void MAX3421E::regWr(byte reg, byte val) {
 	digitalWrite(MAX_SS, LOW);
 	SPDR = (reg | 0x02);
-	while (!(SPSR & (1 << SPIF)))
+	while (!( SPSR & (1 << SPIF)))
 		;
 	SPDR = val;
-	while (!(SPSR & (1 << SPIF)))
+	while (!( SPSR & (1 << SPIF)))
 		;
 	digitalWrite(MAX_SS, HIGH);
 	return;
@@ -125,12 +125,12 @@ char * MAX3421E::bytesWr(byte reg, byte nbytes, char * data) {
 	digitalWrite(MAX_SS, LOW);
 	SPDR = (reg | 0x02);
 	while (nbytes--) {
-		while (!(SPSR & (1 << SPIF)))
+		while (!( SPSR & (1 << SPIF)))
 			;  //check if previous byte was sent
 		SPDR = (*data);               // send next data byte
 		data++;                         // advance data pointer
 	}
-	while (!(SPSR & (1 << SPIF)))
+	while (!( SPSR & (1 << SPIF)))
 		;
 	digitalWrite(MAX_SS, HIGH);
 	return (data);
@@ -139,9 +139,9 @@ char * MAX3421E::bytesWr(byte reg, byte nbytes, char * data) {
 /* GPOUT bits are in the low nibble. 0-3 in IOPINS1, 4-7 in IOPINS2 */
 /* upper 4 bits of IOPINS1, IOPINS2 are read-only, so no masking is necessary */
 void MAX3421E::gpioWr(byte val) {
-	regWr(rIOPINS1, val);
+	regWr( rIOPINS1, val);
 	val = val >> 4;
-	regWr(rIOPINS2, val);
+	regWr( rIOPINS2, val);
 
 	return;
 }
@@ -149,25 +149,25 @@ void MAX3421E::gpioWr(byte val) {
 byte MAX3421E::regRd(byte reg) {
 	digitalWrite(MAX_SS, LOW);
 	SPDR = reg;
-	while (!(SPSR & (1 << SPIF)))
+	while (!( SPSR & (1 << SPIF)))
 		;
 	SPDR = 0; //send empty byte
-	while (!(SPSR & (1 << SPIF)))
+	while (!( SPSR & (1 << SPIF)))
 		;
 	digitalWrite(MAX_SS, HIGH);
-	return (SPDR );
+	return ( SPDR);
 }
 /* multiple-bytes register read                             */
 /* returns a pointer to a memory position after last read   */
 char * MAX3421E::bytesRd(byte reg, byte nbytes, char * data) {
 	digitalWrite(MAX_SS, LOW);
 	SPDR = reg;
-	while (!(SPSR & (1 << SPIF)))
+	while (!( SPSR & (1 << SPIF)))
 		;    //wait
 	while (nbytes) {
 		SPDR = 0; //send empty byte
 		nbytes--;
-		while (!(SPSR & (1 << SPIF)))
+		while (!( SPSR & (1 << SPIF)))
 			;
 		*data = SPDR;
 		data++;
@@ -179,35 +179,24 @@ char * MAX3421E::bytesRd(byte reg, byte nbytes, char * data) {
 /* GPIN pins are in high nibbles of IOPINS1, IOPINS2    */
 byte MAX3421E::gpioRd(void) {
 	byte tmpbyte = 0;
-	tmpbyte = regRd(rIOPINS2);            //pins 4-7
+	tmpbyte = regRd( rIOPINS2);            //pins 4-7
 	tmpbyte &= 0xf0;                        //clean lower nibble
-	tmpbyte |= (regRd(rIOPINS1) >> 4); //shift low bits and OR with upper from previous operation. Upper nibble zeroes during shift, at least with this compiler
+	tmpbyte |= (regRd( rIOPINS1) >> 4);  //shift low bits and OR with upper from previous operation. Upper nibble zeroes during shift, at least with this compiler
 	return (tmpbyte);
 }
 /* reset MAX3421E using chip reset bit. SPI configuration is not affected   */
 boolean MAX3421E::reset() {
 	byte tmp = 0;
-	regWr(rUSBCTL, bmCHIPRES);           //Chip reset. This stops the oscillator
-	regWr(rUSBCTL, 0x00);                             //Remove the reset
-	while (!(regRd(rUSBIRQ) & bmOSCOKIRQ)) {      //wait until the PLL is stable
-		tmp++;                                      //timeout after 256 attempts
+	regWr( rUSBCTL, bmCHIPRES);                        //Chip reset. This stops the oscillator
+	regWr( rUSBCTL, 0x00);                             //Remove the reset
+	while (!(regRd( rUSBIRQ) & bmOSCOKIRQ)) {          //wait until the PLL is stable
+		tmp++;                                          //timeout after 256 attempts
 		if (tmp == 0) {
-			return (false);
+			return ( false);
 		}
 	}
-	return (true);
+	return ( true);
 }
-
-//TODO replace with:
-/* http://stackoverflow.com/questions/11213536/error-oscokirq-failed-to-assert
- boolean MAX3421E::reset()
- {
- regWr( rUSBCTL, bmCHIPRES );                        //Chip reset. This stops the   oscillator
- regWr( rUSBCTL, 0x00 );                             //Remove the reset
- while(!(regRd(rUSBIRQ) & bmOSCOKIRQ)) ;
- }
- */
-
 /* turn USB power on/off                                                */
 /* does nothing, returns TRUE. Left for compatibility with old sketches               */
 /* will be deleted eventually                                           */
@@ -230,37 +219,37 @@ boolean MAX3421E::vbusPwr(boolean action) {
 //    if (( regRd( rIOPINS2 ) & bmGPIN7 ) == 0 ) {     // check if overload is present. MAX4793 /FLAG ( pin 4 ) goes low if overload
 //        return( false );
 //    }                      
-	return (true);             // power on/off successful
+	return ( true);                                             // power on/off successful
 }
 /* probe bus to determine device presense and speed and switch host to this speed */
 void MAX3421E::busprobe(void) {
 	byte bus_sample;
-	bus_sample = regRd(rHRSL);            //Get J,K status
-	bus_sample &= (bmJSTATUS | bmKSTATUS);      //zero the rest of the byte
-	switch (bus_sample) {                  //start full-speed or low-speed host
-	case (bmJSTATUS):
-		if ((regRd(rMODE) & bmLOWSPEED) == 0) {
-			regWr(rMODE, MODE_FS_HOST);       //start full-speed host
+	bus_sample = regRd( rHRSL);            //Get J,K status
+	bus_sample &= ( bmJSTATUS | bmKSTATUS);      //zero the rest of the byte
+	switch (bus_sample) {                          //start full-speed or low-speed host
+	case ( bmJSTATUS):
+		if ((regRd( rMODE) & bmLOWSPEED) == 0) {
+			regWr( rMODE, MODE_FS_HOST);       //start full-speed host
 			vbusState = FSHOST;
 		} else {
-			regWr(rMODE, MODE_LS_HOST);        //start low-speed host
+			regWr( rMODE, MODE_LS_HOST);        //start low-speed host
 			vbusState = LSHOST;
 		}
 		break;
-	case (bmKSTATUS):
-		if ((regRd(rMODE) & bmLOWSPEED) == 0) {
-			regWr(rMODE, MODE_LS_HOST);       //start low-speed host
+	case ( bmKSTATUS):
+		if ((regRd( rMODE) & bmLOWSPEED) == 0) {
+			regWr( rMODE, MODE_LS_HOST);       //start low-speed host
 			vbusState = LSHOST;
 		} else {
-			regWr(rMODE, MODE_FS_HOST);       //start full-speed host
+			regWr( rMODE, MODE_FS_HOST);       //start full-speed host
 			vbusState = FSHOST;
 		}
 		break;
-	case (bmSE1):              //illegal state
+	case ( bmSE1):              //illegal state
 		vbusState = SE1;
 		break;
-	case (bmSE0):              //disconnected state
-		regWr(rMODE, bmDPPULLDN | bmDMPULLDN | bmHOST | bmSEPIRQ);
+	case ( bmSE0):              //disconnected state
+		regWr( rMODE, bmDPPULLDN | bmDMPULLDN | bmHOST | bmSEPIRQ);
 		vbusState = SE0;
 		break;
 	}              //end switch( bus_sample )
@@ -268,21 +257,21 @@ void MAX3421E::busprobe(void) {
 /* MAX3421E initialization after power-on   */
 void MAX3421E::powerOn() {
 	/* Configure full-duplex SPI, interrupt pulse   */
-	regWr(rPINCTL, (bmFDUPSPI + bmINTLEVEL + bmGPXB)); //Full-duplex SPI, level interrupt, GPX
-	if (reset() == false) {                          //stop/start the oscillator
+	regWr( rPINCTL, ( bmFDUPSPI + bmINTLEVEL + bmGPXB));    //Full-duplex SPI, level interrupt, GPX
+	if (reset() == false) {                                //stop/start the oscillator
 		Serial.println("Error: OSCOKIRQ failed to assert");
 	}
 
 	/* configure host operation */
-	regWr(rMODE, bmDPPULLDN | bmDMPULLDN | bmHOST | bmSEPIRQ); // set pull-downs, Host, Separate GPIN IRQ on GPX
-	regWr(rHIEN, bmCONDETIE | bmFRAMEIE);                 //connection detection
+	regWr( rMODE, bmDPPULLDN | bmDMPULLDN | bmHOST | bmSEPIRQ);      // set pull-downs, Host, Separate GPIN IRQ on GPX
+	regWr( rHIEN, bmCONDETIE | bmFRAMEIE);                                             //connection detection
 	/* check if device is connected */
-	regWr(rHCTL, bmSAMPLEBUS);                                 // sample USB bus
-	while (!(regRd(rHCTL) & bmSAMPLEBUS))
+	regWr( rHCTL, bmSAMPLEBUS);                                             // sample USB bus
+	while (!(regRd( rHCTL) & bmSAMPLEBUS))
 		;                                //wait for sample operation to finish
-	busprobe();                                 //check if anything is connected
-	regWr(rHIRQ, bmCONDETIRQ); //clear connection detect interrupt
-	regWr(rCPUCTL, 0x01);                                 //enable interrupt pin
+	busprobe();                                                             //check if anything is connected
+	regWr( rHIRQ, bmCONDETIRQ);                                            //clear connection detect interrupt
+	regWr( rCPUCTL, 0x01);                                                 //enable interrupt pin
 }
 /* MAX3421 state change task and interrupt handler */
 byte MAX3421E::Task(void) {
@@ -304,7 +293,7 @@ byte MAX3421E::Task(void) {
 byte MAX3421E::IntHandler() {
 	byte HIRQ;
 	byte HIRQ_sendback = 0x00;
-	HIRQ = regRd(rHIRQ);                  //determine interrupt source
+	HIRQ = regRd( rHIRQ);                  //determine interrupt source
 	//if( HIRQ & bmFRAMEIRQ ) {               //->1ms SOF interrupt handler
 	//    HIRQ_sendback |= bmFRAMEIRQ;
 	//}//end FRAMEIRQ handling
@@ -313,11 +302,11 @@ byte MAX3421E::IntHandler() {
 		HIRQ_sendback |= bmCONDETIRQ;
 	}
 	/* End HIRQ interrupts handling, clear serviced IRQs    */
-	regWr(rHIRQ, HIRQ_sendback);
+	regWr( rHIRQ, HIRQ_sendback);
 	return (HIRQ_sendback);
 }
 byte MAX3421E::GpxHandler() {
-	byte GPINIRQ = regRd(rGPINIRQ);          //read GPIN IRQ register
+	byte GPINIRQ = regRd( rGPINIRQ);          //read GPIN IRQ register
 //    if( GPINIRQ & bmGPINIRQ7 ) {            //vbus overload
 //        vbusPwr( OFF );                     //attempt powercycle
 //        delay( 1000 );

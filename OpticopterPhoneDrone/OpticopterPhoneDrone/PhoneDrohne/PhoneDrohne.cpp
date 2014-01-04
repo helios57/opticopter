@@ -6,45 +6,52 @@
  */
 
 #include "PhoneDrohne.h"
-#include <AndroidAccessory.h>
-#include <Max3421e.h>
-#include <Usb.h>
 
-namespace phonedrohne {
+void _delay(unsigned long ms) {
+	unsigned long start = millis();
+	while (start + ms > millis())
+		;
+}
 
-	PhoneDrohne::PhoneDrohne() {
-		timer = millis();
-		len = 0;
-		bytes_sent = 0;
-		adk = new AndroidAccessory("Sharpsoft", "PhoneDrone", "Phone Drone ADK by 3DRobotics", "1.0", "http://www.android.com", "0000000012345678");
+PhoneDrohne::PhoneDrohne() {
+	serialUSB = &Serial;
+	serialArduino = &Serial1;
+	t_1000ms = 0;
+	adk = new AndroidAccessory("Sharpsoft", "PhoneDrone", "Phone Drone ADK by 3DRobotics", "1.0", "http://www.android.com", "0000000012345678");
+}
+
+PhoneDrohne::~PhoneDrohne() {
+}
+
+int PhoneDrohne::main() {
+	this->setup();
+	for (;;) {
+		this->loop();
+		if (serialEventRun)
+			serialEventRun();
 	}
+	return 0;
+}
+void PhoneDrohne::setup() {
+	Serial.begin(115200);
+	Serial1.begin(115200);
+	adk->powerOn();
+}
 
-	PhoneDrohne::~PhoneDrohne() {
-		delete adk;
-	}
-
-	int PhoneDrohne::main() {
-		this->setup();
-		for (;;) {
-			this->loop();
-			if (serialEventRun)
-				serialEventRun();
+void PhoneDrohne::loop() {
+	if (adk->isConnected()) {
+		int recievedFromAndroid = adk->read(buf, 16, 1);
+		if (recievedFromAndroid > 0) {
+			serialArduino->write((uint8_t*) buf, recievedFromAndroid);
 		}
-		return 0;
-	}
-	void PhoneDrohne::setup() {
-		adk->powerOn();
-		Serial.begin(115200);
 	}
 
-	void PhoneDrohne::loop() {
+	if (serialArduino->available() > 0) {
+		for (int i = 0; i < 16; i++) {
+			buf[i] = serialArduino->read();
+		}
 		if (adk->isConnected()) {
-			int recieved = adk->read(buf, sizeof(buf), 1);
-			Serial.write((uint8_t*) buf, recieved);
-			if (Serial.available() > 0) {
-				int count = Serial.readBytes(buf, 64);
-				adk->write(buf, count);
-			}
+			adk->write(buf, 16);
 		}
 	}
-} /* namespace phonedrohne */
+}
