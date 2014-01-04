@@ -72,6 +72,7 @@ namespace opticopter {
 		int main();
 		void setup();
 		void loop();
+		void sendLoggedData();
 	};
 
 } /* namespace arducopterNg */

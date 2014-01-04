@@ -83,11 +83,11 @@ namespace opticopter {
 		float rollLevel = rollPitchYawLevel[0];
 		float pitchLevel = rollPitchYawLevel[1];
 		float yawLevel = rollPitchYawLevel[2];
-		if (!leveling) {
-			rollLevel += inputRoll;
-			pitchLevel += inputPitch;
-			yawLevel += inputYaw;
-		}
+
+		rollLevel += inputRoll;
+		pitchLevel += inputPitch;
+		yawLevel += inputYaw;
+
 		float yawCurrent = rollPitchYaw[2];
 		while (yawLevel > PI) {
 			yawLevel -= PI * 2;

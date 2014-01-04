@@ -24,7 +24,7 @@ namespace opticopter {
 		virtual ~AHRS() {
 		}
 		void onActivate() {
-			beta = 0.1;
+			beta = 0.2;
 		}
 		void update(float gx, float gy, float gz, float ax, float ay, float az, float dt);
 		void update(float gx, float gy, float gz, float ax, float ay, float az, float mx, float my, float mz, float dt);

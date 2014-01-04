@@ -273,65 +273,66 @@ namespace opticopter {
 		}
 	}
 
+	void OptiCopter::sendLoggedData() {
+		Serial.read();
+		Serial.println("timestamp,accelX,accelY,accelZ,gyroX,gyroY,gyroZ,magX,magY,magZ,roll,pitch,yaw,rollLevel,pitchLevel,yawLevel,rollPid,pitchPid,yawPid,output0,output1,output2,output3");
+		logging->setPos(0);
+		while (logging->getNext()) {
+			Serial.print(logging->entry.timestamp);
+			Serial.print(",");
+			Serial.print(logging->entry.accelX);
+			Serial.print(",");
+			Serial.print(logging->entry.accelY);
+			Serial.print(",");
+			Serial.print(logging->entry.accelZ);
+			Serial.print(",");
+			Serial.print(logging->entry.gyroX * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.gyroY * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.gyroZ * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.magX * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.magY * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.magZ * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.roll * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.pitch * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.yaw * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.rollLevel * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.pitchLevel * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.yawLevel * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.rollPid * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.pitchPid * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.yawPid * 1000);
+			Serial.print(",");
+			Serial.print(logging->entry.output0);
+			Serial.print(",");
+			Serial.print(logging->entry.output1);
+			Serial.print(",");
+			Serial.print(logging->entry.output2);
+			Serial.print(",");
+			Serial.println(logging->entry.output3);
+		}
+	}
+
 	void OptiCopter::loop() {
-		/*uint8_t id = serializer->read(commandBuffer);
-		 if (id > 0) {
-		 handleIn(id);
-		 }
-		 if (sendData && millis() > t_sendData) {
-		 sendData = false;
-		 }*/
-		if (Serial.available()) {
-			Serial.read();
-			Serial.println("timestamp,accelX,accelY,accelZ,gyroX,gyroY,gyroZ,magX,magY,magZ,roll,pitch,yaw,rollLevel,pitchLevel,yawLevel,rollPid,pitchPid,yawPid,output0,output1,output2,output3");
-			logging->setPos(0);
-			while (logging->getNext()) {
-				Serial.print(logging->entry.timestamp);
-				Serial.print(",");
-				Serial.print(logging->entry.accelX);
-				Serial.print(",");
-				Serial.print(logging->entry.accelY);
-				Serial.print(",");
-				Serial.print(logging->entry.accelZ);
-				Serial.print(",");
-				Serial.print(logging->entry.gyroX * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.gyroY * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.gyroZ * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.magX * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.magY * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.magZ * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.roll * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.pitch * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.yaw * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.rollLevel * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.pitchLevel * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.yawLevel * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.rollPid * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.pitchPid * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.yawPid * 1000);
-				Serial.print(",");
-				Serial.print(logging->entry.output0);
-				Serial.print(",");
-				Serial.print(logging->entry.output1);
-				Serial.print(",");
-				Serial.print(logging->entry.output2);
-				Serial.print(",");
-				Serial.println(logging->entry.output3);
-			}
+		uint8_t id = serializer->read(commandBuffer);
+		if (id > 0) {
+			handleIn(id);
+		}
+		if (sendData && millis() > t_sendData) {
+			sendData = false;
 		}
 
 		if (hal->pollMotion()) {
