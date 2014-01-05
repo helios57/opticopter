@@ -214,7 +214,6 @@ int USB::newInTransfer(byte addr, byte ep, unsigned int nbytes, char* data, unsi
 /* rcode 0 if no errors. rcode 01-0f is relayed from HRSL                       */
 /* major part of this function borrowed from code shared by Richard Ibbotson    */
 byte USB::outTransfer(byte addr, byte ep, unsigned int nbytes, char* data, unsigned int nak_limit) {
-	Serial.println("USB::outTransfer");
 	byte rcode = 0;
 	byte retry_count;
 	char* data_p = data;   //local copy of the data pointer

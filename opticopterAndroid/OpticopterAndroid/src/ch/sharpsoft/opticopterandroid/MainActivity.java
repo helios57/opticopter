@@ -301,19 +301,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 				public void run() {
 					while (mInputStream != null) {
 						try {
-							handler.post(new Runnable() {
-								@Override
-								public void run() {
-									Toast.makeText(MainActivity.this, "mInputStream in thread 1" + mInputStream, Toast.LENGTH_SHORT).show();
-								}
-							});
 							final int read = mInputStream.read(buffer);
-							handler.post(new Runnable() {
-								@Override
-								public void run() {
-									Toast.makeText(MainActivity.this, "mInputStream in thread 2" + mInputStream, Toast.LENGTH_SHORT).show();
-								}
-							});
 							if (read == 16 && preamble0 == buffer[0] && preamble1 == buffer[1]) {
 								byte sum = 0;
 								for (int i = 2; i < 15; i++) {
@@ -326,12 +314,21 @@ public class MainActivity extends Activity implements SensorEventListener {
 									final float v0 = bb.getFloat(3);
 									final float v1 = bb.getFloat(7);
 									final float v2 = bb.getFloat(11);
-									handler.post(new Runnable() {
-										@Override
-										public void run() {
-											Toast.makeText(MainActivity.this, "Recieved f=" + flags + " v0=" + v0 + " v1=" + v1 + " v2=" + v2, Toast.LENGTH_SHORT).show();
-										}
-									});
+
+									final ByteBuffer out = ByteBuffer.allocate(16);
+									out.order(ByteOrder.LITTLE_ENDIAN);
+									out.put(0, preamble0);
+									out.put(1, preamble1);
+									out.put(2, (byte) 0x02);
+									out.putFloat(3, v0);
+									out.putFloat(7, v1);
+									out.putFloat(11, v2);
+									byte outSum = 0;
+									for (int i = 2; i < 15; i++) {
+										outSum += out.get(i);
+									}
+									out.put(15, outSum);
+									mOutputStream.write(out.array());
 								} else {
 									handler.post(new Runnable() {
 										@Override

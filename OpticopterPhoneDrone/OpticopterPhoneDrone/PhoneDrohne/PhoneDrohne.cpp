@@ -34,7 +34,9 @@ int PhoneDrohne::main() {
 }
 void PhoneDrohne::setup() {
 	Serial.begin(115200);
+	Serial.flush();
 	Serial1.begin(115200);
+	Serial1.flush();
 	adk->powerOn();
 }
 
@@ -42,16 +44,45 @@ void PhoneDrohne::loop() {
 	if (adk->isConnected()) {
 		int recievedFromAndroid = adk->read(buf, 16, 1);
 		if (recievedFromAndroid > 0) {
+			serialUSB->print("Android to Arduino ");
+
+			for (int i = 0; i < 16; i++) {
+				serialUSB->print(buf[i], HEX);
+				serialUSB->print(" ");
+			}
+			serialUSB->println();
+
 			serialArduino->write((uint8_t*) buf, recievedFromAndroid);
 		}
 	}
 
-	if (serialArduino->available() > 0) {
+	if (serialArduino->available() >= 16) {
+		serialUSB->print("Arduino to Android ");
+		bool valid = false;
 		for (int i = 0; i < 16; i++) {
-			buf[i] = serialArduino->read();
+			uint8_t pre0 = (uint8_t) serialArduino->read();
+			uint8_t pre1 = (uint8_t) serialArduino->read();
+			if (pre0 == preamble0 && pre1 == preamble1) {
+				valid = true;
+				buf[0] = pre0;
+				buf[1] = pre1;
+				break;
+			}
 		}
-		if (adk->isConnected()) {
-			adk->write(buf, 16);
+		if (valid) {
+			for (int i = 2; i < 16; i++) {
+				buf[i] = (uint8_t) serialArduino->read();
+			}
+
+			for (int i = 0; i < 16; i++) {
+				serialUSB->print(buf[i], HEX);
+				serialUSB->print(" ");
+			}
+			serialUSB->println();
+
+			if (adk->isConnected()) {
+				adk->write(buf, 16);
+			}
 		}
 	}
 }

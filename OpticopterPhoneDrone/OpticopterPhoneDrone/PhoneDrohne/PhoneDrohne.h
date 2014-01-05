@@ -26,6 +26,9 @@ private:
 	} conv4;
 
 	unsigned long t_1000ms;
+	static const uint8_t preamble0 = 0xE5;
+	static const uint8_t preamble1 = 0xE7;
+
 public:
 	PhoneDrohne();
 	virtual ~PhoneDrohne();
