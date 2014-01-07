@@ -31,6 +31,7 @@ namespace opticopter {
 		unsigned long t_20ms;
 		unsigned long t_50ms;
 		unsigned long lastMicros;
+		unsigned long lastAndroidMs;
 		union {
 			uint64_t ulong;
 			uint8_t byte[8];
@@ -52,6 +53,7 @@ namespace opticopter {
 		float buffer_float[9];
 		uint8_t commandBuffer[64];
 		int16_t axyzgxyz[6];
+		float androidInput[3];
 
 		void sendMotion6();
 		void sendGyro();
@@ -73,6 +75,7 @@ namespace opticopter {
 		void setup();
 		void loop();
 		void sendLoggedData();
+		void readAndroidInput();
 	};
 
 } /* namespace arducopterNg */

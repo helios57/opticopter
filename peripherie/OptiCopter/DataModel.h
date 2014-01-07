@@ -33,6 +33,11 @@ namespace opticopter {
 		float inputPitch;
 		float inputThrust;
 		float inputYaw;
+
+		float inputRollAndroid;
+		float inputPitchAndroid;
+		float inputYawAndroid;
+
 		bool leveling;
 		uint16_t output[8];
 		float thrust[8];
@@ -51,11 +56,7 @@ namespace opticopter {
 		uint16_t activateTop;
 		uint16_t activateBot;
 		float declinationAngle;
-		void getInput();
-		void getYaw();
-		void getRollPitch();
 		void calcAhrs(float dt);
-		void calcRollPitch10ms();
 		void calcLeveling();
 		void calcMotorThrust(float rollA, float pitchA, float yawA);
 		void onActivate();
@@ -76,6 +77,10 @@ namespace opticopter {
 			inputRoll = 0;
 			inputPitch = 0;
 			inputThrust = 0;
+			inputRollAndroid = 0;
+			inputPitchAndroid = 0;
+			inputYawAndroid = 0;
+
 			inputYaw = 0;
 			leveling = false;
 			//declinationAngle = persistence->readDeclinationAngle();
@@ -90,13 +95,13 @@ namespace opticopter {
 			initPID(rollPitchYawPidParams);
 		}
 		void putMotion6(int16_t *axyzgxyz);
-		void calc2ms();
 		void calcOutput(float dt);
 		void calculateActivation();
 		void putBaro50ms(float altitude);
 		void putMag(int16_t* mag);
 		void calc(float dt);
 		void putInput50ms(uint8_t ch, uint16_t pwm);
+		void putInputAndroid(float roll, float pitch, float yaw);
 		void calc50ms();
 		void debugLog();
 		void initPID(float *rollPitchYawPidParams);

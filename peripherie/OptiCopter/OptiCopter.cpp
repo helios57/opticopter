@@ -25,6 +25,7 @@ namespace opticopter {
 		t_50ms = 0;
 		lastMicros = 0;
 		t_sendData = 0;
+		lastAndroidMs = 0;
 		sendData = false;
 	}
 
@@ -50,8 +51,10 @@ namespace opticopter {
 	void OptiCopter::setup() {
 		Serial.begin(115200);
 		Serial1.begin(38400);
+		Serial2.begin(115200);
 		Serial.flush();
 		Serial1.flush();
+		Serial2.flush();
 		persistence = new Persistence();
 		serializer = new Serializer(&Serial);
 		debug = new DebugStream(serializer);
@@ -326,7 +329,44 @@ namespace opticopter {
 		}
 	}
 
+	void OptiCopter::readAndroidInput() {
+		if (Serial2.available() >= 16) {
+			bool valid = false;
+			for (int i = 0; i < 16; i++) {
+				uint8_t pre0 = (uint8_t) Serial2.read();
+				if (pre0 != 0xE5) {
+					continue;
+				}
+				uint8_t pre1 = (uint8_t) Serial2.read();
+				if (pre0 == 0xE5 && pre1 == 0xE7) {
+					valid = true;
+					break;
+				}
+			}
+			if (valid) {
+				uint8_t sum = 0;
+				for (int i = 0; i < 13; i++) {
+					commandBuffer[i] = (uint8_t) Serial2.read();
+					sum += commandBuffer[i];
+				}
+				uint8_t sentSum = (uint8_t) Serial2.read();
+				if (sum == sentSum) { //correct package
+					if (commandBuffer[0] == 0x03) { //Input from Android added to currentLevel volatile
+						for (int i = 0; i < 3; i++) {
+							for (int j = 0; j < 4; j++) {
+								conv4.byte[j] = commandBuffer[1 + i * 4 + j];
+							}
+							androidInput[i] = conv4.floating;
+						}
+						lastAndroidMs = millis();
+					}
+				}
+			}
+		}
+	}
+
 	void OptiCopter::loop() {
+		readAndroidInput();
 		uint8_t id = serializer->read(commandBuffer);
 		if (id > 0) {
 			handleIn(id);
@@ -336,6 +376,13 @@ namespace opticopter {
 		}
 
 		if (hal->pollMotion()) {
+
+			if ((lastAndroidMs + 1000) > millis()) {
+				dm->putInputAndroid(androidInput[0], androidInput[1], androidInput[2]);
+			} else {
+				dm->putInputAndroid(0, 0, 0);
+			}
+
 			unsigned long currentMicros = micros();
 			unsigned long microsDiff = currentMicros - lastMicros;
 			lastMicros = currentMicros;
@@ -356,7 +403,7 @@ namespace opticopter {
 					sendMag();
 				}
 			}
-//dm->putBaro50ms(hal->getBarometerAltitude());
+			//dm->putBaro50ms(hal->getBarometerAltitude());
 
 			if (sendData) {
 				sendMotion6();

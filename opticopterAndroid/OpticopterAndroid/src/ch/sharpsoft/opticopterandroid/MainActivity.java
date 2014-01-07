@@ -58,6 +58,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 	private static final String ACTION_USB_PERMISSION = "com.google.android.DemoKit.action.USB_PERMISSION";
 
 	private static final String TAG = "OpticopterAndroidJava::Activity";
+	private final byte preamble0 = (byte) 0xE5;
+	private final byte preamble1 = (byte) 0xE7;
 
 	private Handler handler;
 	private UsbManager usbManager;
@@ -115,6 +117,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 	};
 
 	private final Runnable updateRunnable = new Runnable() {
+
 		@Override
 		public void run() {
 			while (grabbing && videoCapture.grab()) {
@@ -122,6 +125,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 				final float[] diff = quatDiff(currentRot, leveled);
 				final double hRad = Math.asin(2 * (diff[0] * diff[2] - diff[1] * diff[3]));
 				final double wRad = Math.atan2(2 * (diff[0] * diff[1] + diff[2] * diff[3]), 1 - 2 * (diff[1] * diff[1] + diff[2] * diff[2]));
+				final double yaw = Math.atan2(2 * (diff[0] * diff[3] + diff[1] * diff[2]), 1 - 2 * (diff[2] * diff[2] + diff[3] * diff[3]));
 
 				final Mat roi = mGray;
 				final MatOfRect detectedObjs = new MatOfRect();
@@ -142,6 +146,29 @@ public class MainActivity extends Activity implements SensorEventListener {
 					// double hdiff = ((720 / 2) - y) * pprh + hRad;
 					double hdiff = ((720 / 2) - y) * ppr + hRad;
 					double wdiff = ((1280 / 2) - x) * ppr - wRad;
+
+					if (mOutputStream != null) {
+						final ByteBuffer out = ByteBuffer.allocate(16);
+						out.order(ByteOrder.LITTLE_ENDIAN);
+						out.put(0, preamble0);
+						out.put(1, preamble1);
+						out.put(2, (byte) 0x03);
+						out.putFloat(3, (float) hdiff); // roll
+						out.putFloat(7, (float) -wdiff);// pitch
+						out.putFloat(11, (float) yaw);// yaw to level
+						byte outSum = 0;
+						for (int i = 2; i < 15; i++) {
+							outSum += out.get(i);
+						}
+						out.put(15, outSum);
+						synchronized (mOutputStream) {
+							try {
+								mOutputStream.write(out.array());
+							} catch (IOException e) {
+							}
+						}
+					}
+
 					Core.putText(roi, "x=" + x + " y=" + y, new Point(0, 300), Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 255, 255));
 					Core.putText(roi, "hdiff=" + hdiff + " wdiff=" + wdiff, new Point(0, 450), Core.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(255, 255, 255));
 				}
@@ -293,8 +320,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 			mInputStream = new FileInputStream(fd);
 			mOutputStream = new FileOutputStream(fd);
 			new Thread(new Runnable() {
-				private final byte preamble0 = (byte) 0xE5;
-				private final byte preamble1 = (byte) 0xE7;
 				private final byte[] buffer = new byte[16];
 
 				@Override
@@ -314,21 +339,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 									final float v0 = bb.getFloat(3);
 									final float v1 = bb.getFloat(7);
 									final float v2 = bb.getFloat(11);
+									// TODO use
 
-									final ByteBuffer out = ByteBuffer.allocate(16);
-									out.order(ByteOrder.LITTLE_ENDIAN);
-									out.put(0, preamble0);
-									out.put(1, preamble1);
-									out.put(2, (byte) 0x02);
-									out.putFloat(3, v0);
-									out.putFloat(7, v1);
-									out.putFloat(11, v2);
-									byte outSum = 0;
-									for (int i = 2; i < 15; i++) {
-										outSum += out.get(i);
-									}
-									out.put(15, outSum);
-									mOutputStream.write(out.array());
 								} else {
 									handler.post(new Runnable() {
 										@Override
@@ -355,7 +367,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 							try {
 								Thread.sleep(10000);
 							} catch (InterruptedException e1) {
-								e1.printStackTrace();
 							}
 						}
 					}

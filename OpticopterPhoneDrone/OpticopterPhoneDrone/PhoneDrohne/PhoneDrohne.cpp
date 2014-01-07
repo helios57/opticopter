@@ -61,6 +61,9 @@ void PhoneDrohne::loop() {
 		bool valid = false;
 		for (int i = 0; i < 16; i++) {
 			uint8_t pre0 = (uint8_t) serialArduino->read();
+			if (pre0 != preamble0) {
+				continue;
+			}
 			uint8_t pre1 = (uint8_t) serialArduino->read();
 			if (pre0 == preamble0 && pre1 == preamble1) {
 				valid = true;

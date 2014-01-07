@@ -46,6 +46,7 @@ namespace opticopter {
 		gyro.stopBiasRecording();
 		ahrs.onActivate();
 	}
+
 	void DataModel::onDeactivate() {
 		hal->flushData();
 	}
@@ -82,12 +83,24 @@ namespace opticopter {
 	void DataModel::calcOutput(float dt) {
 		float rollLevel = rollPitchYawLevel[0];
 		float pitchLevel = rollPitchYawLevel[1];
+
+		if (abs(inputRoll) > 0.1) {
+			rollLevel += inputRoll;
+		} else {
+			rollLevel += inputRollAndroid;
+		}
+		if (abs(inputPitch) > 0.1) {
+			pitchLevel += inputPitch;
+		} else {
+			pitchLevel += inputPitchAndroid;
+		}
+		if (abs(inputYaw) > 0.1) {
+			rollPitchYawLevel[2] += inputYaw * 0.1;
+		} else {
+			rollPitchYawLevel[2] += inputYawAndroid * 0.01;
+		}
+
 		float yawLevel = rollPitchYawLevel[2];
-
-		rollLevel += inputRoll;
-		pitchLevel += inputPitch;
-		yawLevel += inputYaw;
-
 		float yawCurrent = rollPitchYaw[2];
 		while (yawLevel > PI) {
 			yawLevel -= PI * 2;
@@ -150,7 +163,7 @@ namespace opticopter {
 				thrust[i] = 0;
 			}
 
-			if (active && inputThrust > 0.01) {
+			if (active && inputThrust > 0.1) {
 				output[i] = (inputMin[0] + ((inputMax[0] - inputMin[0]) * (thrust[i])));
 			} else {
 				output[i] = inputMin[0];
@@ -173,6 +186,12 @@ namespace opticopter {
 	}
 
 	void DataModel::putBaro50ms(float altitude) {
+	}
+
+	void DataModel::putInputAndroid(float roll, float pitch, float yaw) {
+		inputRollAndroid = roll;
+		inputPitchAndroid = pitch;
+		inputYawAndroid = yaw;
 	}
 
 	void DataModel::putInput50ms(uint8_t ch, uint16_t pwm) {
