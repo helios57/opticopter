@@ -68,6 +68,12 @@
                relationship="left"
                relative="ch.sharpsoft.arducopter.client.view.GraphView">
          </view>
+         <view
+               id="ch.sharpsoft.arducopter.client.view.LiveVideo"
+               minimized="false"
+               relationship="stack"
+               relative="ch.sharpsoft.arducopter.client.view.Kalibrierung">
+         </view>
       </perspectiveExtension>
    </extension>
    <extension
@@ -138,6 +144,11 @@
             class="ch.sharpsoft.arducopter.client.view.ParameterTuning"
             id="ch.sharpsoft.arducopter.client.view.ParameterTuning"
             name="ParameterTuning">
+      </view>
+      <view
+            class="ch.sharpsoft.arducopter.client.view.LiveVideo"
+            id="ch.sharpsoft.arducopter.client.view.LiveVideo"
+            name="LiveVideo">
       </view>
    </extension>
 
