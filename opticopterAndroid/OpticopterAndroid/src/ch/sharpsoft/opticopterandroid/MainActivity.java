@@ -82,6 +82,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 	private Mat mGray;
 	private SurfaceView surfaceView;
 	private final Bitmap mCacheBitmap = Bitmap.createBitmap(1280, 720, Bitmap.Config.ARGB_8888);
+	private final Object bitmapSendLock = new Object();
 	private FpsMeter mFpsMeter;
 	private SensorManager mSensorManager;
 	private Sensor mRotation;
@@ -174,37 +175,48 @@ public class MainActivity extends Activity implements SensorEventListener {
 				}
 
 				// TODO scale
-				Utils.matToBitmap(roi, mCacheBitmap);
+				synchronized (mCacheBitmap) {
+					Utils.matToBitmap(roi, mCacheBitmap);
+					mCacheBitmap.notifyAll();
+				}
 				Canvas canvas = surfaceView.getHolder().lockCanvas();
 				if (canvas != null) {
 					canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
-
 					canvas.drawBitmap(mCacheBitmap, new android.graphics.Rect(0, 0, mCacheBitmap.getWidth(), mCacheBitmap.getHeight()),
 							new android.graphics.Rect((canvas.getWidth() - mCacheBitmap.getWidth()) / 2, (canvas.getHeight() - mCacheBitmap.getHeight()) / 2, (canvas.getWidth() - mCacheBitmap.getWidth()) / 2 + mCacheBitmap.getWidth(),
 									(canvas.getHeight() - mCacheBitmap.getHeight()) / 2 + mCacheBitmap.getHeight()), null);
 
 					mFpsMeter.measure();
 					mFpsMeter.draw(canvas, 20, 30);
-
 					surfaceView.getHolder().unlockCanvasAndPost(canvas);
 				}
 
 				SensorManager.getQuaternionFromVector(currentRot, rotation);
-
-				final OutputStream os = server.getOS();
-				if (os != null) {
-					try {
-						os.write(new byte[] { 111, 22, 33, 44, 55 });
-						mCacheBitmap.compress(CompressFormat.JPEG, 90, os);
-					} catch (Exception e) {
-						server.reset();
-						e.printStackTrace();
-					}
-				}
 			}
 		};
 	};
 
+	private final Runnable sendRunnable = new Runnable() {
+
+		@Override
+		public void run() {
+			while (true) {
+				try {
+					Bitmap copy;
+					synchronized (mCacheBitmap) {
+						mCacheBitmap.wait();
+						copy = mCacheBitmap.copy(mCacheBitmap.getConfig(), false);
+					}
+					synchronized (bitmapSendLock) {
+						sendBitmap(copy);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
+		}
+	};
 	private final BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 		@Override
 		public void onManagerConnected(int status) {
@@ -245,6 +257,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 				grabbing = true;
 				server.init();
 				new Thread(updateRunnable).start();
+				new Thread(sendRunnable).start();
 			}
 				break;
 			default: {
@@ -472,5 +485,18 @@ public class MainActivity extends Activity implements SensorEventListener {
 
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+	}
+
+	private void sendBitmap(final Bitmap copy) {
+		final OutputStream os = server.getOS();
+		if (os != null) {
+			try {
+				os.write(new byte[] { 111, 22, 33, 44, 55 });
+				copy.compress(CompressFormat.JPEG, 90, os);
+			} catch (Exception e) {
+				server.reset();
+				e.printStackTrace();
+			}
+		}
 	}
 }
