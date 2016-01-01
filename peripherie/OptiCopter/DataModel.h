@@ -49,7 +49,7 @@ namespace opticopter {
 		Gyro gyro;
 		PID rollPitchYawPid[3]; //PID
 		float rollPitchYawPidParams[9];
-		const static float SIN_60_COS_30 = 0.866025403784439;
+		static constexpr float SIN_60_COS_30 = 0.866025403784439;
 		float pressure;
 		bool active;
 		unsigned long tActivate;

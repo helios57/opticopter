@@ -32,7 +32,7 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 */
- 
+
 
 #include <stdlib.h>
 #include <inttypes.h>
@@ -58,7 +58,7 @@ struct __freelist {
  * calls must not require more stack space, or they'll risk to collide
  * with the data segment.
  */
- 
+
 
 #define STACK_POINTER() ((char *)AVR_STACK_POINTER_REG)
 extern char __heap_start;
@@ -69,7 +69,7 @@ char *__brkval_maximum = (char *)100;
 void *
 malloc(size_t len)
 {
-	struct __freelist *fp1, *fp2, *sfp1, *sfp2;
+	struct __freelist *fp1, *fp2, *sfp1=0, *sfp2=0;
 	char *cp;
 	size_t s, avail;
 
@@ -377,4 +377,3 @@ realloc(void *ptr, size_t len)
 	free(ptr);
 	return memp;
 }
-

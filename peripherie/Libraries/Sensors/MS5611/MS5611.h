@@ -56,7 +56,7 @@ private:
 	int8_t digitalTemp_D2_ringIndex;
 	int8_t readState;
 
-	static const float sea_press = 1013.25;
+	static constexpr float sea_press = 1013.25;
 
 	static const uint8_t CMD_MS5611_RESET = 0x1E;
 	static const uint8_t CMD_MS5611_PROM_Setup = 0xA0;

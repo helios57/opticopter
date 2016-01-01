@@ -14,6 +14,10 @@ void operator delete(void * ptr)
 {
   free(ptr);
 }
+void operator delete(void * ptr, unsigned int i)
+{
+  free(ptr);
+}
 
 void operator delete[](void * ptr)
 {

@@ -13,7 +13,7 @@
 namespace opticopter {
 	class Gyro {
 	private:
-		static const float gyroScaleFactor = 0.00106413 * 0.25;
+		static constexpr float gyroScaleFactor = 0.00106413 * 0.25;
 		int16_t gyro[3];
 		int16_t gyroBias[3];
 		int32_t gyroSummed[3];
